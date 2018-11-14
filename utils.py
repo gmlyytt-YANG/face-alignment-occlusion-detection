@@ -15,13 +15,12 @@ Date: 2018/11/11 09:47:31
 import cv2
 import logging
 import numpy as np
-import os
 
 
 def logger(msg):
     """Get logger format"""
     logging.basicConfig(level=logging.DEBUG,
-                        format='[%(asctime)s] - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
+                        format='[%(asctime)s] - %(levelname)s: %(message)s')
     logging.info(msg)
 
 
@@ -105,63 +104,70 @@ def flip(face, pts_data):
     return face_flipped_by_x, landmark_
 
 
-def reproject(bbox, point, occlusion=True):
-    x = bbox[0] + (bbox[1] - bbox[0]) * point[0]
-    y = bbox[2] + (bbox[3] - bbox[2]) * point[1]
+def reproject(height, width, point, occlusion=True):
+    x = width * point[0]
+    y = height * point[1]
     if occlusion:
         return np.asarray([x, y, point[2]])
     else:
         return np.asarray([x, y])
 
 
-def reproject_landmark(bbox, landmark, occlusion=True):
+def reproject_landmark(height, width, landmark, occlusion=True):
     landmark_size = 2
     if occlusion:
         landmark_size = 3
     p = np.zeros((len(landmark), landmark_size))
     for i in range(len(landmark)):
-        p[i] = reproject(bbox, landmark[i], occlusion)
+        p[i] = reproject(height, width, landmark[i], occlusion)
     return p
 
 
-def project(bbox, point, occlusion=True):
-    x = (point[0] - bbox[0]) / (bbox[1] - bbox[0])
-    y = (point[1] - bbox[2]) / (bbox[3] - bbox[2])
+def project(height, width, point, occlusion=True):
+    x = point[0] / width
+    y = point[1] / height
     if occlusion:
         return np.asarray([x, y, point[2]])
     else:
         return np.asarray([x, y])
 
 
-def project_landmark(bbox, landmark, occlusion=True):
+def project_landmark(height, width, landmark, occlusion=True):
     landmark_size = 2
     if occlusion:
         landmark_size = 3
     p = np.zeros((len(landmark), landmark_size))
     for i in range(len(landmark)):
-        p[i] = project(bbox, landmark[i], occlusion)
+        p[i] = project(height, width, landmark[i], occlusion)
     return p
 
 
-def rotate(img, bbox, landmark, alpha):
+def rotate(face, landmark, alpha):
     """Given a face with bbox and landmark, rotate with alpha
         and return rotated face with bbox, landmark (absolute position)
     """
     # convert to real size
-    landmark_real = reproject_landmark(bbox, landmark)
+    height = face.shape[0]
+    width = face.shape[1]
+    landmark_real = reproject_landmark(height, width, landmark)
 
     # rotate by center of image
-    center = ((bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2)
+    center = (width / 2, height / 2)
     rot_mat = cv2.getRotationMatrix2D(center, alpha, 1)
-    img_rotated_by_alpha = cv2.warpAffine(img, rot_mat, img.shape)
+    face_rotated_by_alpha = cv2.warpAffine(face, rot_mat, face.shape)
     landmark_rotated = np.asarray([(rot_mat[0][0] * x + rot_mat[0][1] * y + rot_mat[0][2],
                                     rot_mat[1][0] * x + rot_mat[1][1] * y + rot_mat[1][2], _)
                                    for (x, y, _) in landmark_real])
-    face = img_rotated_by_alpha[bbox[2]:bbox[3], bbox[0]:bbox[1]]
+    # landmark_num = len(landmark)
+    # for landmark_index in range(landmark_num):
+    #     x = int(landmark_rotated[landmark_index][0])
+    #     y = int(landmark_rotated[landmark_index][1])
+    #     cv2.circle(face_rotated_by_alpha, (x, y), 1, (255, 0, 0), thickness=-1)
+    # show(face_rotated_by_alpha)
 
     # landmark projects to [0, 1]
-    landmark_ = project_landmark(bbox, landmark_rotated)
-    return face, landmark_
+    landmark_01 = project_landmark(height, width, landmark_rotated)
+    return face_rotated_by_alpha, landmark_01
 
 
 def data_aug(img, pts_data, bbox, img_size, landmark_num):
@@ -184,16 +190,16 @@ def data_aug(img, pts_data, bbox, img_size, landmark_num):
     face_flipped, landmark_flipped = flip(face, pts_data)
     occlusion_flipped = landmark_flipped[:, 2]
     face_flipped = cv2.resize(face_flipped, (img_size, img_size))
-    faces.append(face_flipped.reshape(1, img_size, img_size))
+    faces.append(face_flipped)
     landmarks.append(landmark_flipped[:, :-1])
     occlusions.append(occlusion_flipped)
 
     # rotation1
-    face_rotated_by_alpha, landmark_rotated = rotate(img, bbox, pts_data, alpha)
+    face_rotated_by_alpha, landmark_rotated = rotate(face, pts_data, alpha)
     landmark_rotated[:, :2] = np.clip(landmark_rotated[:, :2], 0, 1)  # exception dealing
     occlusion_rotated = landmark_rotated[:, 2]
     face_rotated_by_alpha = cv2.resize(face_rotated_by_alpha, (img_size, img_size))
-    faces.append(face_rotated_by_alpha.reshape((1, img_size, img_size)))
+    faces.append(face_rotated_by_alpha)
     landmarks.append(landmark_rotated[:, :-1])
     occlusions.append(occlusion_rotated)
 
@@ -201,16 +207,16 @@ def data_aug(img, pts_data, bbox, img_size, landmark_num):
     face_flipped, landmark_flipped = flip(face_rotated_by_alpha, landmark_rotated)
     occlusion_flipped = landmark_flipped[:, 2]
     face_flipped = cv2.resize(face_flipped, (img_size, img_size))
-    faces.append(face_flipped.reshape((1, img_size, img_size)))
+    faces.append(face_flipped)
     landmarks.append(landmark_flipped[:, :-1])
     occlusions.append(occlusion_flipped)
 
     # rotation2
-    face_rotated_by_alpha, landmark_rotated = rotate(img, bbox, pts_data, -alpha)
+    face_rotated_by_alpha, landmark_rotated = rotate(face, pts_data, -alpha)
     landmark_rotated[:, :2] = np.clip(landmark_rotated[:, :2], 0, 1)
     occlusion_rotated = landmark_rotated[:, 2]
     face_rotated_by_alpha = cv2.resize(face_rotated_by_alpha, (img_size, img_size))
-    faces.append(face_rotated_by_alpha.reshape((1, img_size, img_size)))
+    faces.append(face_rotated_by_alpha)
     landmarks.append(landmark_rotated[:, :-1])
     occlusions.append(occlusion_rotated)
 
@@ -218,12 +224,13 @@ def data_aug(img, pts_data, bbox, img_size, landmark_num):
     face_flipped, landmark_flipped = flip(face_rotated_by_alpha, landmark_rotated)
     occlusion_flipped = landmark_flipped[:, 2]
     face_flipped = cv2.resize(face_flipped, (img_size, img_size))
-    faces.append(face_flipped.reshape((1, img_size, img_size)))
+    faces.append(face_flipped)
     landmarks.append(landmark_flipped[:, :-1])
     occlusions.append(occlusion_flipped)
 
     # origin
-    faces.append(cv2.resize(face, (img_size, img_size)))
+    face = cv2.resize(face, (img_size, img_size))
+    faces.append(face)
     landmarks.append(pts_data[:, :2])
     occlusions.append(pts_data[:, 2])
 
@@ -242,7 +249,6 @@ def point_in_bbox(pt, bbox):
 
 
 def show(img):
-    cv2.namedWindow("Image")
     cv2.imshow("Image", img)
     cv2.waitKey(0)
 
@@ -259,16 +265,11 @@ def get_patch(imgs, landmarks, occlusions, patch_size, patches, labels, landmark
     """
     data_size = len(imgs)
     for index in range(data_size):
-        face = imgs[index][0]
-        face_size = len(face)
+        face = imgs[index]
+        face_size = face.shape[0]
         landmark = landmarks[index]
         occlusion = occlusions[index]
-        landmark = reproject_landmark([0, face_size, 0, face_size], landmark, occlusion=False)
-        for landmark_index in range(landmark_num):
-            x = int(landmark[landmark_index][0])
-            y = int(landmark[landmark_index][1])
-            cv2.circle(face, (x, y), 1, (255, 0, 0), thickness=-1)
-        # show(face)
+        landmark = reproject_landmark(face_size, face_size, landmark, occlusion=False)
         for landmark_index in range(landmark_num):
             [x_center, y_center] = landmark[landmark_index]
 
@@ -289,7 +290,5 @@ def get_patch(imgs, landmarks, occlusions, patch_size, patches, labels, landmark
             right = left + patch_size
             bottom = top + patch_size
             face_part = face[int(top): int(bottom), int(left): int(right)]
-            show(face_part)
             patches[landmark_index].append(face_part)
-            show(face[top: bottom, left: right])
             labels[landmark_index].append(occlusion[landmark_index])

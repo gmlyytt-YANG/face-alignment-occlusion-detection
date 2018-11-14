@@ -10,9 +10,11 @@
 File: get_data.py
 Author: Yang Li
 Date: 2018/11/10 17:43:31
+Description: Data Augment
 """
 
 import cv2
+import pickle
 import os
 import numpy as np
 import scipy.io as scio
@@ -20,6 +22,7 @@ import scipy.io as scio
 from utils import get_patch, read_pts, logger, data_aug
 
 # init variable
+debug = False
 patch_size = 10
 landmark_num = 68
 img_size = 224
@@ -37,6 +40,8 @@ data_size = len(imgs_path)
 for index in range(data_size):
     # file path building
     img_path = imgs_path[index][0][0]
+    if debug:
+        logger("processing {}".format(img_path))
     prefix = img_path.split('.')[0]
     pts_path = prefix + '.pts_occlu'
     img_path = os.path.join(img_root, img_path)
@@ -64,4 +69,17 @@ for index in range(data_size):
     get_patch(face_dups, landmark_dups, occlusion_dups,
               patch_size, patches, labels, landmark_num)
 
+    if (index + 1) % 100 == 0:
+        logger("processed {} images".format(index + 1))
+
 # save patches and occlusion flag
+f_pickle = open('./data/patches_occlusion.pickle', 'wb')
+data = {'patches': patches, 'occlusion': labels}
+pickle.dump(data, f_pickle)
+f_pickle.close()
+
+# with open('patches_occlusion.pickle', 'rb') as f_pickle:
+#     data = pickle.load(f_pickle)
+#
+# patches = data['patches']
+# labels = data['occlusion']
