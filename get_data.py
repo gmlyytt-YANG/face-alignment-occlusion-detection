@@ -78,8 +78,4 @@ data = {'patches': patches, 'occlusion': labels}
 pickle.dump(data, f_pickle)
 f_pickle.close()
 
-# with open('patches_occlusion.pickle', 'rb') as f_pickle:
-#     data = pickle.load(f_pickle)
-#
-# patches = data['patches']
-# labels = data['occlusion']
+

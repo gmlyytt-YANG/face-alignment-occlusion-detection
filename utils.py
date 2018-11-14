@@ -24,6 +24,16 @@ def logger(msg):
     logging.info(msg)
 
 
+def str_or_float(obj):
+    """if obj is float-like format,
+        convert obj to float, else return self"""
+    try:
+        obj_convert = float(obj)
+    except ValueError:
+        obj_convert = obj
+    return obj_convert
+
+
 def read_pts(pts_path, landmark_num=68):
     """Read pts file and convert to matrix"""
     data = np.zeros(shape=(landmark_num, 3), dtype=np.float)
