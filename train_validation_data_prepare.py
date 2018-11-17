@@ -40,7 +40,12 @@ img_server = ImageServer(data_size=len(img_paths),
 logger("preparing data")
 img_server.prepare_data(img_root=img_root, img_paths=img_paths,
                         bounding_boxes=bboxes, print_debug=print_debug)
+
 logger("loading imgs")
 img_server.load_imgs(print_debug=print_debug)
+
+logger("train validation splitting")
+img_server.train_validation_split(test_size=test_size, random_state=random_state)
+
 logger("saving data")
 img_server.save(dataset_save_path)

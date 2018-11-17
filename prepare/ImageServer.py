@@ -15,10 +15,9 @@ Description: Data Preparation
 
 import cv2
 import numpy as np
-import pickle
 import os
 
-from prepare.utils import read_pts, logger, data_aug
+from prepare.utils import read_pts, logger, data_aug, dataset_split
 
 
 class ImageServer(object):
@@ -35,12 +34,14 @@ class ImageServer(object):
 
     def __init__(self, data_size, img_size=None, landmark_size=68, color=False):
         self.landmarks = []
-        self.faces = []
+        self.faces_landmarks = []
         self.aug_landmarks = []
         self.occlusions = []
         self.img_paths = []
         self.imgs = []
         self.bounding_boxes = []
+        self.train_data = None
+        self.validation_data = None
         self.data_size = data_size
         self.landmark_size = landmark_size
         self.color = color
@@ -68,7 +69,7 @@ class ImageServer(object):
                     logger("processed {} basic infos".format(index + 1))
 
     def load_imgs(self, print_debug):
-        """load imgs"""
+        """Load imgs"""
         for index in range(self.data_size):
             # load img
             if self.color:
@@ -94,8 +95,7 @@ class ImageServer(object):
                                                                 bbox,
                                                                 self.img_size,
                                                                 self.color)
-            self.faces.extend(face_dups)
-            self.aug_landmarks.extend(landmark_dups)
+            self.faces_landmarks.extend([face_dups, landmark_dups])
             self.occlusions.extend(occlusion_dups)
             if print_debug:
                 if (index + 1) % 100 == 0:
@@ -103,10 +103,18 @@ class ImageServer(object):
             if index > 100:
                 break
 
+    def train_validation_split(self, test_size, random_state):
+        """Train validation data split"""
+        self.train_data, self.validation_data = \
+            dataset_split(self.faces_landmarks, self.occlusions,
+                          test_size=test_size, random_state=random_state)
+        del self.faces_landmarks
+        del self.occlusions
+
     def save(self, dataset_path, file_name=None):
         """Save data"""
         if file_name is None:
-            file_name = "dataset_nimgs={0}_size={1}".format(len(self.faces), self.img_size)
+            file_name = "dataset_nimgs={0}_size={1}".format(len(self.faces_landmarks), self.img_size)
             if self.color:
                 file_name += "_color={0}".format(self.color)
             file_name += ".npz"
