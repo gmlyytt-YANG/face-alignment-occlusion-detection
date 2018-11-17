@@ -17,7 +17,7 @@ import numpy as np
 import pickle
 import os
 
-from utils import logger
+from prepare.utils import logger
 
 # init data
 landmark_size = 68
@@ -39,9 +39,7 @@ labels_ratio = np.zeros((landmark_size,))
 for index in range(landmark_size):
     den = len(labels[index])
     labels[index] = np.reshape(labels[index], (1, den))
-    # labels[index] = [int(_) for _ in labels[index]]
     num = np.sum(labels[index])
     labels_ratio[index] = float(num) / den
     print(float(num) / den)
 
-# plot

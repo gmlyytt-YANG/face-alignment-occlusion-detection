@@ -15,6 +15,7 @@ Date: 2018/11/11 09:47:31
 import cv2
 import logging
 import numpy as np
+from sklearn.model_selection import train_test_split
 
 
 def logger(msg):
@@ -164,7 +165,7 @@ def rotate(face, landmark, alpha):
     # rotate by center of image
     center = (width / 2, height / 2)
     rot_mat = cv2.getRotationMatrix2D(center, alpha, 1)
-    face_rotated_by_alpha = cv2.warpAffine(face, rot_mat, face.shape)
+    face_rotated_by_alpha = cv2.warpAffine(face, rot_mat, face.shape[:2])
     landmark_rotated = np.asarray([(rot_mat[0][0] * x + rot_mat[0][1] * y + rot_mat[0][2],
                                     rot_mat[1][0] * x + rot_mat[1][1] * y + rot_mat[1][2], _)
                                    for (x, y, _) in landmark_real])
@@ -180,12 +181,13 @@ def rotate(face, landmark, alpha):
     return face_rotated_by_alpha, landmark_01
 
 
-def data_aug(img, pts_data, bbox, img_size, landmark_num):
+def data_aug(img, pts_data, bbox, img_size, color):
     """Data augment
     :param img:
     :param pts_data:
     :param bbox:
     :param img_size:
+    :param color:
     :return: faces, landmarks
     """
     assert img is not None
@@ -302,3 +304,43 @@ def get_patch(imgs, landmarks, occlusions, patch_size, patches, labels, landmark
             face_part = face[int(top): int(bottom), int(left): int(right)]
             patches[landmark_index].append(face_part)
             labels[landmark_index].append(occlusion[landmark_index])
+
+
+def dataset_split(x, y, test_size=0.3, random_state=0):
+    """Dataset Splitting using sklearn
+
+    :param x: image dataset
+    :param y: label
+    :param test_size:
+    :param random_state:
+    :return:
+    """
+    assert len(x) == len(y)
+    dataset_size = len(x)
+    x_reshaped = []
+
+    # row-trans dataset
+    img_size = [0, 0]
+    for index in range(dataset_size):
+        if index == 0:
+            img_size = x[index].shape
+        else:
+            if x[index].shape != img_size:
+                logger("matrix dim in img_size")
+                continue
+        one_instance = x[index]
+        x_reshaped.append(np.reshape(one_instance, (1, img_size[0] * img_size[1])))
+        y[index] = int(y[index])
+
+    # data splitting
+    x_train, x_test, y_train, y_test = train_test_split(x_reshaped, y,
+                                                        shuffle=True,
+                                                        test_size=test_size,
+                                                        random_state=random_state)
+    data_container = {
+        'x_train': x_train,
+        'x_test': x_test,
+        'y_train': y_train,
+        'y_test': y_test,
+    }
+    return data_container

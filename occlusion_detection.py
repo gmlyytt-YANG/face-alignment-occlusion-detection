@@ -21,8 +21,8 @@ from sklearn import svm
 from sklearn.metrics import zero_one_loss
 import os
 
-from ml import dataset_split
-from utils import logger, str_or_float
+from prepare.utils import dataset_split
+from prepare.utils import logger, str_or_float
 
 # init data
 landmark_size = 68
