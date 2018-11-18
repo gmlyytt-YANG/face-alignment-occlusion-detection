@@ -51,25 +51,6 @@ def read_pts(pts_path, landmark_num=68):
     return data
 
 
-def normalize(data, minmax):
-    """Normalize data
-    :param data:
-    :param minmax: minmax flag, if True, processed_data = (data - min(data)) / (max(data) - min(data)),
-                   else processed_data = (data - mean(data)) / std(data)
-    :return: normalized_data
-    """
-    if not data:
-        return -1
-
-    eps = 1e-8
-    if minmax:
-        normalized_data = (data - np.min(data)) / (eps + np.max(data) - np.min(data))
-    else:
-        normalized_data = (data - np.mean(data)) / (eps + np.std(data))
-
-    return normalized_data
-
-
 def flip(face, pts_data):
     """Flip image"""
     face_flipped_by_x = cv2.flip(face, 1)
@@ -203,7 +184,7 @@ def data_aug(img, pts_data, bbox, img_size, color):
     occlusion_flipped = landmark_flipped[:, 2]
     face_flipped = cv2.resize(face_flipped, (img_size, img_size))
     faces.append(face_flipped)
-    landmarks.append(landmark_flipped[:, :-1])
+    landmarks.append(np.clip(landmark_flipped[:, :-1], 0, 1))
     occlusions.append(occlusion_flipped)
 
     # rotation1
@@ -265,6 +246,27 @@ def show(img):
     cv2.waitKey(0)
 
 
+def range_search(x, y, patch_size, face_size):
+    left = x - patch_size / 2 if x - patch_size / 2 >= 0 else 0
+    top = y - patch_size / 2 if y - patch_size / 2 >= 0 else 0
+
+    # right out of bound
+    if left + patch_size >= face_size:
+        left = face_size - patch_size
+        # right bottom out of bound
+        if top + patch_size >= face_size:
+            top = face_size - patch_size
+
+    # left bottom out of bound
+    elif top + patch_size >= face_size:
+        top = face_size - patch_size
+
+    right = left + patch_size
+    bottom = top + patch_size
+
+    return left, right, top, bottom
+
+
 def get_patch(imgs, landmarks, occlusions, patch_size, patches, labels, landmark_num):
     """Get patch of each landmark
     :param imgs:
@@ -284,23 +286,7 @@ def get_patch(imgs, landmarks, occlusions, patch_size, patches, labels, landmark
         landmark = reproject_landmark(face_size, face_size, landmark, occlusion=False)
         for landmark_index in range(landmark_num):
             [x_center, y_center] = landmark[landmark_index]
-
-            left = x_center - patch_size / 2 if x_center - patch_size / 2 >= 0 else 0
-            top = y_center - patch_size / 2 if y_center - patch_size / 2 >= 0 else 0
-
-            # right out of bound
-            if left + patch_size >= face_size:
-                left = face_size - patch_size
-                # right bottom out of bound
-                if top + patch_size >= face_size:
-                    top = face_size - patch_size
-
-            # left bottom out of bound
-            elif top + patch_size >= face_size:
-                top = face_size - patch_size
-
-            right = left + patch_size
-            bottom = top + patch_size
+            left, right, top, bottom = range_search(x_center, y_center, patch_size, face_size)
             face_part = face[int(top): int(bottom), int(left): int(right)]
             patches[landmark_index].append(face_part)
             labels[landmark_index].append(occlusion[landmark_index])
@@ -316,27 +302,36 @@ def dataset_split(x, y, test_size=0.3, random_state=0):
     :return:
     """
     assert len(x) == len(y)
-    dataset_size = len(x)
-    x_reshaped = []
-
-    # row-trans dataset
-    img_size = [0, 0]
-    for index in range(dataset_size):
-        if index == 0:
-            img_size = x[index].shape
-        else:
-            if x[index].shape != img_size:
-                logger("matrix dim in img_size")
-                continue
-        one_instance = x[index]
-        x_reshaped.append(np.reshape(one_instance, (1, img_size[0] * img_size[1])))
-        y[index] = int(y[index])
 
     # data splitting
-    x_train, x_test, y_train, y_test = train_test_split(x_reshaped, y,
-                                                        shuffle=True,
+    x_train, x_test, y_train, y_test = train_test_split(x, y, shuffle=True,
                                                         test_size=test_size,
                                                         random_state=random_state)
     train_data = {'data': x_train, 'label': y_train}
     validation_data = {'data': x_test, 'label': 'y_test'}
     return train_data, validation_data
+
+
+def heat_map_dist(point, matrix):
+    sigma = 0.05
+    D = np.min(np.sqrt(np.sum((point - matrix) ** 2, axis=1)))
+    M = np.exp(np.multiply(D ** 2, - 2 * sigma ** 2))
+    return M
+
+
+def heat_map_compute(param):
+    face = param['face']
+    landmark = param['landmark']
+    landmark_is_01 = param['landmark_01']
+    face_size = face.shape[:2]
+    heat_map_mask = np.zeros_like(face[:, :, 0], dtype=np.float)
+    if landmark_is_01:
+        landmark = np.multiply(landmark, np.array([face_size[1], face_size[0]]))
+    for x in range(face_size[1]):
+        for y in range(face_size[0]):
+            heat_map_mask[y][x] = heat_map_dist([x, y], landmark)
+    heat_map_mask = heat_map_mask[:, :, np.newaxis]
+    heat_map_mask = heat_map_mask.repeat([3], axis=2)
+    heat_map = np.multiply(face, heat_map_mask)
+    # show(heat_map)
+    return heat_map

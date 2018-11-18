@@ -22,7 +22,7 @@ from prepare.utils import logger
 # init variable
 print_debug = True
 landmark_num = 68
-img_size = 512
+img_size = 256
 test_size = 0.3
 random_state = 0
 dataset_save_path = "/home/kb250/yl/3_graduate-design/6_YL_18_FACEALIGNMENT/data"
@@ -37,15 +37,13 @@ bboxes = data['bbox']
 # data prepare
 img_server = ImageServer(data_size=len(img_paths),
                          img_size=img_size, color=True)
-logger("preparing data")
-img_server.prepare_data(img_root=img_root, img_paths=img_paths,
-                        bounding_boxes=bboxes, print_debug=print_debug)
+img_server.process(img_root=img_root, img_paths=img_paths,
+                   bounding_boxes=bboxes, print_debug=print_debug)
 
-logger("loading imgs")
-img_server.load_imgs(print_debug=print_debug)
-
+# splitting
 logger("train validation splitting")
 img_server.train_validation_split(test_size=test_size, random_state=random_state)
 
+# saving
 logger("saving data")
 img_server.save(dataset_save_path)
