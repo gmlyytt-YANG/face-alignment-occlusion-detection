@@ -44,7 +44,7 @@ class ImageServer(object):
     def __init__(self, data_size, img_size=None, landmark_size=68, color=False):
         self.landmarks = []
         self.faces = []
-        self.heat_maps = []
+        # self.heat_maps = []
         self.aug_landmarks = []
         self.occlusions = []
         self.img_paths = []
@@ -68,8 +68,8 @@ class ImageServer(object):
         logger("normalizing")
         self._normalize_imgs()
 
-        logger("heat_map generating")
-        self._heat_map_gen()
+        # logger("heat_map generating")
+        # self._heat_map_gen()
 
     def _prepare_data(self, img_root, img_paths, bounding_boxes, print_debug=False):
         """Getting data
@@ -134,25 +134,18 @@ class ImageServer(object):
         std_face = np.std(self.faces, axis=0)
         self.faces = self.faces / std_face
 
-    def _heat_map_gen(self):
-        # s = time.time()
-        pool = Pool(20)
-        candidates = [{'face': face, 'landmark': landmark, 'landmark_01': True} for [face, landmark] in
-                      zip(self.faces, self.aug_landmarks)]
-        self.heat_maps = pool.map(heat_map_compute, candidates)
-        self.heat_maps = [heat_map_compute({'face': face, 'landmark': landmark, 'landmark_01': True})
-                          for [face, landmark] in zip(self.faces, self.aug_landmarks)]
-
-        # end = time.time()
-        # logger("spending {} seconds".format(int(end - s)))
-        # length = len(self.heat_maps)
-        # for index in range(length):
-        #     show(self.heat_maps[index])
+    # def _heat_map_gen(self):
+    #     pool = Pool(20)
+    #     candidates = [{'face': face, 'landmark': landmark, 'landmark_01': True} for [face, landmark] in
+    #                   zip(self.faces, self.aug_landmarks)]
+    #     self.heat_maps = pool.map(heat_map_compute, candidates)
+    #     self.heat_maps = [heat_map_compute({'face': face, 'landmark': landmark, 'landmark_01': True})
+    #                       for [face, landmark] in zip(self.faces, self.aug_landmarks)]
 
     def train_validation_split(self, test_size, random_state):
         """Train validation data split"""
         self.train_data, self.validation_data = \
-            dataset_split(self.heat_maps, self.occlusions,
+            dataset_split(self.faces, self.occlusions,
                           test_size=test_size, random_state=random_state)
 
     def save(self, dataset_path, file_name=None):
@@ -165,7 +158,7 @@ class ImageServer(object):
             file_name += ".npz"
 
         # delete useless data
-        del self.faces
+        # del self.faces
         del self.landmarks
         del self.aug_landmarks
 
