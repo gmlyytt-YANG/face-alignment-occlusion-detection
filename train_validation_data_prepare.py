@@ -47,4 +47,4 @@ img_server.train_validation_split(test_size=test_size, random_state=random_state
 
 # saving
 logger("saving data")
-img_server.save(dataset_save_path)
+img_server.save(dataset_save_path, print_debug=print_debug)

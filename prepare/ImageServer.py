@@ -149,7 +149,7 @@ class ImageServer(object):
             dataset_split(self.faces, self.occlusions,
                           test_size=test_size, random_state=random_state)
 
-    def _save_core(self, data_base, dataset_path, mode):
+    def _save_core(self, data_base, dataset_path, mode, print_debug):
         dataset = data_base['data']
         labels = data_base['label']
 
@@ -166,8 +166,11 @@ class ImageServer(object):
             f_data = open(os.path.join(data_path, data_name), 'wb')
             pickle.dump(data, f_data)
             f_data.close()
+            if print_debug:
+                if (index + 1) % 500 == 0:
+                    logger("saved {} data".format(index + 1))
 
-    def save(self, dataset_path):
+    def save(self, dataset_path, print_debug=False):
         """Save data"""
-        self._save_core(self.train_data, dataset_path, "train")
-        self._save_core(self.validation_data, dataset_path, "validation")
+        self._save_core(self.train_data, dataset_path, "train", print_debug)
+        self._save_core(self.validation_data, dataset_path, "validation",print_debug)
