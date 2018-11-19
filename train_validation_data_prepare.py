@@ -22,11 +22,11 @@ from prepare.utils import logger
 # init variable
 print_debug = True
 landmark_num = 68
-img_size = 128
+img_size = 128 
 test_size = 0.3
 random_state = 0
-dataset_save_path = "/home/kb250/yl/3_graduate-design/6_YL_18_FACEALIGNMENT/data"
-img_root = "/home/kb250/yl/3_graduate-design/0_DATASET/origin_img"
+dataset_save_path = "/home/zwl/yl/6_YL_18_FACEALIGNMENT/data"
+img_root = "/home/zwl/yl/0_DATASET/origin_img"
 
 # load data(img, bbox, pts)
 data = scio.loadmat(os.path.join(img_root, 'raw_300W_release.mat'))
