@@ -1,0 +1,8 @@
+record/
+__pycache__/
+data/
+logs/
+venv/
+.idea/
+
+*.pyc
