@@ -7,7 +7,7 @@
 ########################################################################
 
 """
-File: get_data.py
+File: train_validation_data_prepare.py
 Author: Yang Li
 Date: 2018/11/10 17:43:31
 Description: Data Augment
