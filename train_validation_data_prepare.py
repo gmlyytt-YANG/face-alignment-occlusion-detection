@@ -25,8 +25,9 @@ landmark_num = 68
 img_size = 128 
 test_size = 0.3
 random_state = 0
-dataset_save_path = "/home/zwl/yl/6_YL_18_FACEALIGNMENT/data"
-img_root = "/home/zwl/yl/0_DATASET/origin_img"
+root_dir = os.path.abspath('..')
+dataset_save_path = os.path.join(os.getcwd(), "data")
+img_root = os.path.join(root_dir, "0_DATASET/origin_img")
 
 # load data(img, bbox, pts)
 data = scio.loadmat(os.path.join(img_root, 'raw_300W_release.mat'))
