@@ -125,8 +125,8 @@ class ImageServer(object):
             if print_debug:
                 if (index + 1) % 100 == 0:
                     logger("processed {} images".format(index + 1))
-            if index > 10:
-                break
+            # if index > 10:
+            #     break
 
     def _normalize_imgs(self):
         # self.faces = self.faces.astype(np.float)
