@@ -66,6 +66,9 @@ class ImageServer(object):
         logger("loading imgs")
         self._load_imgs(print_debug=print_debug)
 
+        logger("occlusion stating")
+        self._balance()
+
         logger("normalizing")
         self._normalize_imgs()
 
@@ -114,11 +117,12 @@ class ImageServer(object):
             del x_normalized, y_normalized
 
             # data augment
-            face_dups, landmark_dups, occlusion_dups = data_aug(img,
-                                                                landmark_normalized,
-                                                                bbox,
-                                                                self.img_size,
-                                                                self.color)
+            bbox = [int(i) for i in bbox]
+            face = img[bbox[2]:bbox[3], bbox[0]: bbox[1]]
+            face_dups, landmark_dups, occlusion_dups = data_aug(face=face,
+                                                                pts_data=landmark_normalized,
+                                                                img_size=self.img_size,
+                                                                color=self.color)
             self.faces.extend(face_dups)
             self.aug_landmarks.extend(landmark_dups)
             self.occlusions.extend(occlusion_dups)
@@ -127,6 +131,19 @@ class ImageServer(object):
                     logger("processed {} images".format(index + 1))
             # if index > 10:
             #     break
+
+    def _balance(self):
+        occlu_indices = []
+        occlu_count = 0
+        occlu_ratio = 0.0
+        data_size = len(self.occlusions)
+        for index, occlusion in enumerate(self.occlusions):
+            if np.sum(occlusion) > 0:
+                occlu_count += 1
+                occlu_indices.append(index)
+
+        occlu_ratio = float(occlu_count) / data_size
+        logger("occlu ratio is {}".format(occlu_ratio))
 
     def _normalize_imgs(self):
         # self.faces = self.faces.astype(np.float)
@@ -173,4 +190,4 @@ class ImageServer(object):
     def save(self, dataset_path, print_debug=False):
         """Save data"""
         self._save_core(self.train_data, dataset_path, "train", print_debug)
-        self._save_core(self.validation_data, dataset_path, "validation",print_debug)
+        self._save_core(self.validation_data, dataset_path, "validation", print_debug)

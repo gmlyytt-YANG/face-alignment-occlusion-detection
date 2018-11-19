@@ -162,22 +162,20 @@ def rotate(face, landmark, alpha):
     return face_rotated_by_alpha, landmark_01
 
 
-def data_aug(img, pts_data, bbox, img_size, color):
+def data_aug(face, pts_data, img_size, color):
     """Data augment
-    :param img:
+    :param face:
     :param pts_data:
     :param bbox:
     :param img_size:
     :param color:
     :return: faces, landmarks
     """
-    assert img is not None
+    assert face is not None
     faces = []
     landmarks = []
     occlusions = []
     alpha = 5  # rotate degree
-    bbox = [int(i) for i in bbox]
-    face = img[bbox[2]:bbox[3], bbox[0]: bbox[1]]
 
     # flip1
     face_flipped, landmark_flipped = flip(face, pts_data)
@@ -320,6 +318,13 @@ def heat_map_dist(point, matrix):
 
 
 def heat_map_compute(param):
+    """Heat map compute
+
+    :param param: dict{"face", "landmark", "landmark_01"}
+    face: face image
+    landmark: landmark points set
+    landmark_01: whether landmark is normalized
+    """
     face = param['face']
     landmark = param['landmark']
     landmark_is_01 = param['landmark_01']
@@ -335,3 +340,15 @@ def heat_map_compute(param):
     heat_map = np.multiply(face, heat_map_mask)
     # show(heat_map)
     return heat_map
+
+
+def occlusion_ratio(landmark_size, labels):
+    """Stat occlusion ratio in landmark"""
+    labels_ratio = []
+    for index in range(landmark_size):
+        den = len(labels[index])
+        labels[index] = np.reshape(labels[index], (1, den))
+        num = np.sum(labels[index])
+        labels_ratio.append(float(num) / den)
+
+    return labels_ratio
