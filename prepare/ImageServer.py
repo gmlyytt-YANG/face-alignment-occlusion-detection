@@ -66,8 +66,8 @@ class ImageServer(object):
         logger("loading imgs")
         self._load_imgs(print_debug=print_debug)
 
-        logger("occlusion stating")
-        self._balance()
+        # logger("occlusion stating")
+        # self._balance()
 
         logger("normalizing")
         self._normalize_imgs()

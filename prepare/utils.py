@@ -342,13 +342,9 @@ def heat_map_compute(param):
     return heat_map
 
 
-def occlusion_ratio(landmark_size, labels):
-    """Stat occlusion ratio in landmark"""
-    labels_ratio = []
-    for index in range(landmark_size):
-        den = len(labels[index])
-        labels[index] = np.reshape(labels[index], (1, den))
-        num = np.sum(labels[index])
-        labels_ratio.append(float(num) / den)
-
-    return labels_ratio
+def generate_batch_data_random(x, y, batch_size):
+    length = len(y)
+    loop_count = length // batch_size
+    while True:
+        i = np.random.randint(0, loop_count)
+        yield x[i * batch_size:(i + 1) * batch_size], y[i * batch_size:(i + 1) * batch_size]
