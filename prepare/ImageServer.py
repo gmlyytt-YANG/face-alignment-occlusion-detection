@@ -149,27 +149,25 @@ class ImageServer(object):
             dataset_split(self.faces, self.occlusions,
                           test_size=test_size, random_state=random_state)
 
-    def _save_core(self, data_base, dataset_path):
+    def _save_core(self, data_base, dataset_path, mode):
         dataset = data_base['data']
         labels = data_base['label']
 
-        train_data_path = os.path.join(dataset_path, "train")
-        if not os.path.exists(train_data_path):
-            os.mkdir(train_data_path)
+        data_path = os.path.join(dataset_path, mode)
+        if not os.path.exists(data_path):
+            os.mkdir(data_path)
 
         for index in range(len(dataset)):
             data_name = "{}.pkl".format(index)
-            image = dataset[index]
-            label = [int(i) for i in labels[index]]
-            data = {'image': image, 'label': label}
-            f_data = open(os.path.join(train_data_path, data_name), 'wb')
+            data = {
+                'image': dataset[index],
+                'label': [int(i) for i in labels[index]]
+            }
+            f_data = open(os.path.join(data_path, data_name), 'wb')
             pickle.dump(data, f_data)
             f_data.close()
 
     def save(self, dataset_path):
         """Save data"""
-        train_data_path = os.path.join(dataset_path, "train")
-        validation_data_path = os.path.join(dataset_path, "validation")
-
-        self._save_core(self.train_data, train_data_path)
-        self._save_core(self.validation_data, validation_data_path)
+        self._save_core(self.train_data, dataset_path, "train")
+        self._save_core(self.validation_data, dataset_path, "validation")

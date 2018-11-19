@@ -308,7 +308,7 @@ def dataset_split(x, y, test_size=0.3, random_state=0):
                                                         test_size=test_size,
                                                         random_state=random_state)
     train_data = {'data': x_train, 'label': y_train}
-    validation_data = {'data': x_test, 'label': 'y_test'}
+    validation_data = {'data': x_test, 'label': y_test}
     return train_data, validation_data
 
 
