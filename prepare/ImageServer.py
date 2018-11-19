@@ -136,7 +136,7 @@ class ImageServer(object):
 
     def _heat_map_gen(self):
         # s = time.time()
-        pool = Pool(20)
+        pool = Pool(5)
         candidates = [{'face': face, 'landmark': landmark, 'landmark_01': True} for [face, landmark] in
                       zip(self.faces, self.aug_landmarks)]
         self.heat_maps = pool.map(heat_map_compute, candidates)
