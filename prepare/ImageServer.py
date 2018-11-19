@@ -134,22 +134,6 @@ class ImageServer(object):
         std_face = np.std(self.faces, axis=0)
         self.faces = self.faces / std_face
 
-<<<<<<< HEAD
-    def _heat_map_gen(self):
-        # s = time.time()
-        pool = Pool(5)
-        candidates = [{'face': face, 'landmark': landmark, 'landmark_01': True} for [face, landmark] in
-                      zip(self.faces, self.aug_landmarks)]
-        self.heat_maps = pool.map(heat_map_compute, candidates)
-        self.heat_maps = [heat_map_compute({'face': face, 'landmark': landmark, 'landmark_01': True})
-                          for [face, landmark] in zip(self.faces, self.aug_landmarks)]
-
-        # end = time.time()
-        # logger("spending {} seconds".format(int(end - s)))
-        # length = len(self.heat_maps)
-        # for index in range(length):
-        #     show(self.heat_maps[index])
-=======
     # def _heat_map_gen(self):
     #     pool = Pool(20)
     #     candidates = [{'face': face, 'landmark': landmark, 'landmark_01': True} for [face, landmark] in
@@ -157,7 +141,6 @@ class ImageServer(object):
     #     self.heat_maps = pool.map(heat_map_compute, candidates)
     #     self.heat_maps = [heat_map_compute({'face': face, 'landmark': landmark, 'landmark_01': True})
     #                       for [face, landmark] in zip(self.faces, self.aug_landmarks)]
->>>>>>> db516d7c8b6deaffed060cebbd3260965e873ae7
 
     def train_validation_split(self, test_size, random_state):
         """Train validation data split"""
