@@ -16,6 +16,7 @@ Description: Data Preparation
 import cv2
 import numpy as np
 import os
+import pickle
 from multiprocessing import Pool
 import time
 
@@ -124,8 +125,8 @@ class ImageServer(object):
             if print_debug:
                 if (index + 1) % 100 == 0:
                     logger("processed {} images".format(index + 1))
-            # if index > 10:
-            #     break
+            if index > 10:
+                break
 
     def _normalize_imgs(self):
         # self.faces = self.faces.astype(np.float)
@@ -148,20 +149,27 @@ class ImageServer(object):
             dataset_split(self.faces, self.occlusions,
                           test_size=test_size, random_state=random_state)
 
-    def save(self, dataset_path, file_name=None):
+    def _save_core(self, data_base, dataset_path):
+        dataset = data_base['data']
+        labels = data_base['label']
+
+        train_data_path = os.path.join(dataset_path, "train")
+        if not os.path.exists(train_data_path):
+            os.mkdir(train_data_path)
+
+        for index in range(len(dataset)):
+            data_name = "{}.pkl".format(index)
+            image = dataset[index]
+            label = [int(i) for i in labels[index]]
+            data = {'image': image, 'label': label}
+            f_data = open(os.path.join(train_data_path, data_name), 'wb')
+            pickle.dump(data, f_data)
+            f_data.close()
+
+    def save(self, dataset_path):
         """Save data"""
-        if file_name is None:
-            file_name = "dataset_nimgs={0}_size={1}". \
-                format(len(self.train_data) + len(self.validation_data), self.img_size)
-            if self.color:
-                file_name += "_color={0}".format(self.color)
-            file_name += ".npz"
+        train_data_path = os.path.join(dataset_path, "train")
+        validation_data_path = os.path.join(dataset_path, "validation")
 
-        # delete useless data
-        # del self.faces
-        del self.landmarks
-        del self.aug_landmarks
-
-        arrays = {key: value for key, value in self.__dict__.items()
-                  if not key.startswith('__') and not callable(key)}
-        np.savez(os.path.join(dataset_path, file_name), **arrays)
+        self._save_core(self.train_data, train_data_path)
+        self._save_core(self.validation_data, validation_data_path)
