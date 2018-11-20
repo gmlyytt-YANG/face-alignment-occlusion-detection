@@ -73,4 +73,4 @@ H = model.fit_generator(
 logger("saving model")
 if not os.path.exists(param['model_dir']):
     os.mkdir(param['model_dir'])
-model.save(param['model_dir'])
+model.save(os.path.join(param['model_dir'], param['model_name']))

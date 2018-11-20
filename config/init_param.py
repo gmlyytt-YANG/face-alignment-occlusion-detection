@@ -23,6 +23,7 @@ param = {
     'img_root_dir': os.path.join(os.path.abspath('..'), "0_DATASET/origin_img"),
     'data_save_dir': os.path.join(os.getcwd(), "data"),
     'model_dir': './model',
+    'model_name': 'occlu_detection.h5',
 
     # dataset related
     'landmark_num': 68,
