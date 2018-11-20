@@ -340,11 +340,3 @@ def heat_map_compute(param):
     heat_map = np.multiply(face, heat_map_mask)
     # show(heat_map)
     return heat_map
-
-
-def generate_batch_data_random(x, y, batch_size):
-    length = len(y)
-    loop_count = length // batch_size
-    while True:
-        i = np.random.randint(0, loop_count)
-        yield x[i * batch_size:(i + 1) * batch_size], y[i * batch_size:(i + 1) * batch_size]

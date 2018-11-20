@@ -20,36 +20,14 @@ from keras.optimizers import Adam
 
 from config.init_param import param
 from model_structure.model import SmallerVGGNet
-from prepare.utils import generate_batch_data_random, logger
-
-
-# load data
-def load_data(mode, print_debug=False):
-    data_list = []
-    labels_list = []
-    root_path = os.path.join(param['data_save_dir'], mode)
-    count = 0
-    for path in os.listdir(root_path):
-        data_path = os.path.join(root_path, path)
-        f_data = open(data_path, 'rb')
-        data = pickle.load(f_data)
-        data_list.append(data['image'])
-        labels_list.append(data['label'])
-        f_data.close()
-        if print_debug:
-            if (count + 1) % 500 == 0:
-                logger("loaded {} data in phase {}".format(count + 1, mode))
-        count = count + 1
-        # if count > 1000:
-        #     break
-    return np.array(data_list), np.array(labels_list)
-
+from prepare.utils import logger
+from prepare.data_gen import train_data_feed, validation_data_feed
 
 # loading data
 logger("loading data")
-train_data, train_labels = load_data("train", print_debug=param['print_debug'])
-validation_data, validation_labels = load_data("validation",
-                                               print_debug=param['print_debug'])
+train_dir = os.path.join(param['data_save_dir'], "train")
+validation_dir = os.path.join(param['data_save_dir'], "validation")
+validation_data, validation_labels = validation_data_feed(validation_dir, print_debug=param['print_debug'])
 
 # build model
 logger("building model")
@@ -64,9 +42,9 @@ model.compile(loss="binary_crossentropy", optimizer=opt,
 # train model
 logger("training")
 H = model.fit_generator(
-    generate_batch_data_random(train_data, train_labels, batch_size=param['bs']),
+    train_data_feed(param['bs'], train_dir),
     validation_data=(validation_data, validation_labels),
-    steps_per_epoch=len(train_data) // param['bs'],
+    steps_per_epoch=len(os.listdir(train_dir)) // param['bs'],
     epochs=param['epochs'], verbose=1)
 
 # save model
