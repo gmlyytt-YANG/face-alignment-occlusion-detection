@@ -21,22 +21,21 @@ from prepare.utils import logger
 
 
 def train_data_feed(batch_size, data_dir):
-    start = 0
-    end = len(os.listdir(data_dir))
-    indices = [_ for _ in range(end)]
-    loop_count = end // batch_size
-    count = 0
+    data_size = len(os.listdir(data_dir))
+    batch_offset = 0
+    indices = [_ for _ in range(data_size)]
     while True:
-        if count >= loop_count:
+        start = batch_offset
+        batch_offset += batch_size
+        if batch_offset > data_size:
             np.random.shuffle(indices)
             start = 0
-            count = 0
-
-        chosen_indices = indices[start * batch_size: (start + 1) * batch_size]
-        start += batch_size
+            batch_offset = batch_size
+        end = batch_offset
+        chosen_indices = indices[start: end]
+        # print(chosen_indices)
         data = []
         labels = []
-        count += 1
         for index in chosen_indices:
             f_dataset = open(os.path.join(data_dir, "{}.pkl".format(index)), 'rb')
             base = pickle.load(f_dataset)
@@ -61,6 +60,6 @@ def validation_data_feed(data_dir, print_debug=False):
             if (count + 1) % 500 == 0:
                 logger("loaded {} data in phase validation".format(count + 1))
         count = count + 1
-        if count > 1000:
-            break
+        # if count > 1000:
+        #     break
     return np.array(data_list), np.array(labels_list)
