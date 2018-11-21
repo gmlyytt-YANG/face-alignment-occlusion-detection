@@ -13,9 +13,13 @@ Date: 2018/11/10 17:43:31
 Description: Data Augment
 """
 
+import cv2
+import numpy as np
 import os
 import scipy.io as scio
+from keras.models import load_model
 from keras.optimizers import Adam
+from keras.preprocessing.image import img_to_array
 
 from config.init_param import occlu_param
 from model_structure.occlu_model import SmallerVGGNet
@@ -79,3 +83,17 @@ class OcclusionDetection(object):
         if not os.path.exists(occlu_param['model_dir']):
             os.mkdir(occlu_param['model_dir'])
         model.save(os.path.join(occlu_param['model_dir'], occlu_param['model_name']))
+
+    @staticmethod
+    def classify(img_path):
+        if not os.path.exists(img_path):
+            logger("no image at all!")
+            return
+        img = cv2.imread(img_path)
+        img = cv2.resize(img, (occlu_param['img_size'], occlu_param['img_size']))
+        img = img.astype("float") / 255.0
+        img = img_to_array(img)
+        img = np.expand_dims(img, axis=0)
+        model = load_model(os.path.join(occlu_param['model_dir'], occlu_param['model_name']))
+        prob = model.predict(img)[0]
+        print(prob)
