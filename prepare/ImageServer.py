@@ -135,7 +135,6 @@ class ImageServer(object):
     def _balance(self):
         occlu_indices = []
         occlu_count = 0
-        occlu_ratio = 0.0
         data_size = len(self.occlusions)
         for index, occlusion in enumerate(self.occlusions):
             if np.sum(occlusion) > 0:

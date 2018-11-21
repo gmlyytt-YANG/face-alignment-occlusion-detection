@@ -4,6 +4,7 @@ data/
 logs/
 venv/
 model/
+tmp/
 .idea/
 
 *.pyc
