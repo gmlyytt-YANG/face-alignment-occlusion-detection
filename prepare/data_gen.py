@@ -30,11 +30,13 @@ def train_data_feed(batch_size, data_dir):
         if count >= loop_count:
             np.random.shuffle(indices)
             start = 0
+            count = 0
 
         chosen_indices = indices[start * batch_size: (start + 1) * batch_size]
         start += batch_size
         data = []
         labels = []
+        count += 1
         for index in chosen_indices:
             f_dataset = open(os.path.join(data_dir, "{}.pkl".format(index)), 'rb')
             base = pickle.load(f_dataset)

@@ -12,10 +12,7 @@ Author: Yang Li
 Date: 2018/11/19 11:28:31
 Description: Model Train
 """
-import numpy as np
 import os
-import pickle
-
 from keras.optimizers import Adam
 
 from config.init_param import param
