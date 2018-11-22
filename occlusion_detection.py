@@ -23,6 +23,7 @@ from keras.optimizers import Adam
 from keras.preprocessing.image import img_to_array
 from keras.applications.resnet50 import ResNet50
 from keras.layers import Dense
+from keras.callbacks import ModelCheckpoint
 
 from config.init_param import occlu_param
 from model_structure.occlu_model import SmallerVGGNet
@@ -78,11 +79,13 @@ class OcclusionDetection(object):
 
         # train model
         logger("training")
+        checkpoint = ModelCheckpoint(filepath='record', monitor='acc', mode='auto', save_best_only='True')
+        callback_list = [checkpoint]
         H = model.fit_generator(
             train_data_feed(occlu_param['bs'], train_dir),
             validation_data=(validation_data, validation_labels),
             steps_per_epoch=len(os.listdir(train_dir)) // occlu_param['bs'],
-            epochs=occlu_param['epochs'], verbose=1)
+            epochs=occlu_param['epochs'], verbose=1, callbacks=callback_list)
 
         # save model
         logger("saving model")
