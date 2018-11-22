@@ -33,7 +33,7 @@ occlu_param = {
     'random_state': 0,  # split random state
 
     # dl-related
-    'epochs': 75,
+    'epochs': 100,
     'init_lr': 1e-3,
-    'bs': 32
+    'bs': 64 
 }

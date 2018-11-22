@@ -65,13 +65,13 @@ class OcclusionDetection(object):
 
         # build model
         logger("building model")
-        # model = SmallerVGGNet.build(
-        #     width=occlu_param['img_size'], height=occlu_param['img_size'],
-        #     depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
-        #     final_act="sigmoid")
-        base_model = ResNet50(weights='imagenet', include_top=False, pooling='avg')
-        predictions = Dense(3, activation='softmax')(base_model.output)
-        model = Model(inputs=base_model.input, outputs=predictions)
+        model = SmallerVGGNet.build(
+            width=occlu_param['img_size'], height=occlu_param['img_size'],
+            depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
+            final_act="sigmoid")
+        # base_model = ResNet50(weights='imagenet', include_top=False, pooling='avg')
+        # predictions = Dense(68, activation='softmax')(base_model.output)
+        # model = Model(inputs=base_model.input, outputs=predictions)
         opt = Adam(lr=occlu_param['init_lr'], decay=occlu_param['init_lr'] / occlu_param['epochs'])
         model.compile(loss="binary_crossentropy", optimizer=opt,
                       metrics=["accuracy"])
