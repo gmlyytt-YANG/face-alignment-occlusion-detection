@@ -76,8 +76,10 @@ class OcclusionDetection(object):
 
         # train model
         logger("training")
-        checkpoint = ModelCheckpoint(filepath=os.path.join(occlu_param['model_dir'], 'best_model_epochs={}_bs={}_lr={}.h5'.format(occlu_param['epochs'], occlu_param['bs'], occlu_param['init_lr']), 
-            monitor='val_acc', mode='auto', save_best_only='True')
+        checkpoint = ModelCheckpoint(filepath=os.path.join(occlu_param['model_dir'],
+                                                           'best_model_epochs={}_bs={}_lr={}.h5'.format(
+                                                               occlu_param['epochs'], occlu_param['bs'],
+                                                               occlu_param['init_lr'])))
         callback_list = [checkpoint]
         H = model.fit_generator(
             train_data_feed(occlu_param['bs'], train_dir),
@@ -89,9 +91,10 @@ class OcclusionDetection(object):
         logger("saving model")
         if not os.path.exists(occlu_param['model_dir']):
             os.mkdir(occlu_param['model_dir'])
-        model.save(os.path.join(occlu_param['model_dir'], occlu_param['model_name']))
+        model.save(os.path.join(occlu_param['model_dir'], occlu_param['model_name'])) \
+ \
+        @staticmethod
 
-    @staticmethod
     def classify(img, need_to_normalize=False):
         img = cv2.resize(img, (occlu_param['img_size'], occlu_param['img_size']))
         if need_to_normalize:
