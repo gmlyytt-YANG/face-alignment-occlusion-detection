@@ -18,8 +18,11 @@ import numpy as np
 import os
 
 from keras.models import load_model
+from keras.models import Model
 from keras.optimizers import Adam
 from keras.preprocessing.image import img_to_array
+from keras.applications.resnet50 import ResNet50
+from keras.layers import Dense
 
 from config.init_param import occlu_param
 from model_structure.occlu_model import SmallerVGGNet
@@ -62,10 +65,13 @@ class OcclusionDetection(object):
 
         # build model
         logger("building model")
-        model = SmallerVGGNet.build(
-            width=occlu_param['img_size'], height=occlu_param['img_size'],
-            depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
-            final_act="sigmoid")
+        # model = SmallerVGGNet.build(
+        #     width=occlu_param['img_size'], height=occlu_param['img_size'],
+        #     depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
+        #     final_act="sigmoid")
+        base_model = ResNet50(weights='imagenet', include_top=False, pooling='avg')
+        predictions = Dense(3, activation='softmax')(base_model.output)
+        model = Model(inputs=base_model.input, outputs=predictions)
         opt = Adam(lr=occlu_param['init_lr'], decay=occlu_param['init_lr'] / occlu_param['epochs'])
         model.compile(loss="binary_crossentropy", optimizer=opt,
                       metrics=["accuracy"])
