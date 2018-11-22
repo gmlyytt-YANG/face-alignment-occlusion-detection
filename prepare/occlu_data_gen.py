@@ -33,7 +33,9 @@ def train_data_feed(batch_size, data_dir):
             batch_offset = batch_size
         end = batch_offset
         chosen_indices = indices[start: end]
-        # print(chosen_indices)
+        print("\n")
+        logger(format(" ".join([str(_) for _ in chosen_indices])))
+        # logger("chosed indices are {}".format(" ".join(chosen_indices)))
         data = []
         labels = []
         for index in chosen_indices:
