@@ -23,5 +23,5 @@ from prepare.utils import load_imgs
 # OcclusionDetection.train()
 
 mat_file = os.path.join(occlu_param['img_root_dir'], 'raw_300W_release.mat')
-img, bbox = load_imgs(mat_file, chosed=[0, 1])
+img, bbox = load_imgs(occlu_param['img_root_dir'], mat_file, chosed=[0, 1])
 OcclusionDetection.classify(mat_file)
