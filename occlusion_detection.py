@@ -90,4 +90,5 @@ class OcclusionDetection(object):
         img = np.expand_dims(img, axis=0)
         model = load_model(os.path.join(occlu_param['model_dir'], occlu_param['model_name']))
         prob = model.predict(img)[0]
-        print(prob)
+        for index, elem in enumerate(prob):
+            print("{} : {}".format(index + 1, elem))

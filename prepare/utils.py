@@ -358,11 +358,18 @@ def load_imgs(img_root, mat_file_name, total=True, chosed="random"):
     bboxes = data['bbox']
     if not total:
         if isinstance(chosed, list):
-            return img_paths[chosed], bboxes[chosed]
+            faces = []
+            for index in chosed:
+                print(img_paths[index])
+                img = cv2.imread(img_paths[index])
+                faces.append(get_face(img, bboxes[index], need_to_convert_to_int=True))
+            return faces
         elif chosed == "random":
             length = len(img_paths)
             index = np.random.randint(0, length)
-            chosed_img_paths = img_paths[index]
-            chosed_bboxes = bboxes[index]
-            return chosed_img_paths, chosed_bboxes
-    return img_paths, bboxes
+            img = img_paths[index]
+            face = get_face(img, bboxes[index], need_to_convert_to_int=True)
+            return face
+
+    return (get_face(cv2.imread(img_paths[index]), bboxes[index], need_to_convert_to_int=True)
+            for index in range(len(img_paths)))
