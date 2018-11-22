@@ -1,0 +1,1 @@
+nohup python bootstrap.py > logs/epochs=$1_bs=$2_initlr=$3.log 2>&1 &

@@ -12,11 +12,25 @@ Author: Yang Li
 Date: 2018/11/21 09:41:31
 Description: Program Main Entry
 """
-import os
+import argparse
 
 from config.init_param import occlu_param
 from occlusion_detection import OcclusionDetection
 from prepare.utils import load_imgs
+
+# load parameter
+ap = argparse.ArgumentParser()
+ap.add_argument("-e", "--epoch", type=int, default=75,
+                help="epochs of training")
+ap.add_argument("-bs", "--batch_size", type=int, default=32,
+                help="batch size of training")
+ap.add_argument("-lr", "--init_lr", type=float, default=1e-3,
+                help="learning rate")
+args = vars(ap.parse_args())
+
+occlu_param['epochs'] = args['epoch']
+occlu_param['bs'] = args['batch_size']
+occlu_param['init_lr'] = args['init_lr']
 
 # occlusion detection
 # OcclusionDetection.data_pre()
