@@ -76,7 +76,8 @@ class OcclusionDetection(object):
 
         # train model
         logger("training")
-        checkpoint = ModelCheckpoint(filepath='record', monitor='acc', mode='auto', save_best_only='True')
+        checkpoint = ModelCheckpoint(filepath=os.path.join(occlu_param['model_dir'], 'best_model_epochs={}_bs={}_lr={}.h5'.format(occlu_param['epochs'], occlu_param['bs'], occlu_param['init_lr']), 
+            monitor='val_acc', mode='auto', save_best_only='True')
         callback_list = [checkpoint]
         H = model.fit_generator(
             train_data_feed(occlu_param['bs'], train_dir),
