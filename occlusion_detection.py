@@ -63,6 +63,9 @@ class OcclusionDetection(object):
 
         # build model
         logger("building model")
+        # print("epochs:{}".format(occlu_param['epochs']))
+        # print("init_lr:{}".format(occlu_param['init_lr']))
+        # print("bs:{}".format(occlu_param['bs']))
         model = SmallerVGGNet.build(
             width=occlu_param['img_size'], height=occlu_param['img_size'],
             depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
