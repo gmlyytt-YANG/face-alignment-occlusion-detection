@@ -60,6 +60,6 @@ def validation_data_feed(data_dir, print_debug=False):
             if (count + 1) % 500 == 0:
                 logger("loaded {} data in phase validation".format(count + 1))
         count = count + 1
-        # if count > 1000:
-        #     break
+        if count > 1000:
+            break
     return np.array(data_list), np.array(labels_list)
