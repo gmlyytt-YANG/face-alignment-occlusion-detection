@@ -15,6 +15,8 @@ Date: 2018/11/11 09:47:31
 import cv2
 import logging
 import numpy as np
+import os
+import scipy.io as scio
 from sklearn.model_selection import train_test_split
 
 
@@ -340,3 +342,27 @@ def heat_map_compute(param):
     heat_map = np.multiply(face, heat_map_mask)
     # show(heat_map)
     return heat_map
+
+
+def get_face(img, bbox, need_to_convert_to_int=False):
+    if need_to_convert_to_int:
+        bbox = [int(_) for _ in bbox]
+    face = img[bbox[2]:bbox[3], bbox[0]: bbox[1]]
+    return face
+
+
+def load_imgs(img_root, mat_file_name, total=True, chosed="random"):
+    data = scio.loadmat(os.path.join(img_root, mat_file_name))
+    img_paths = data['nameList']
+    img_paths = [os.path.join(img_root, i[0][0]) for i in img_paths]
+    bboxes = data['bbox']
+    if not total:
+        if isinstance(chosed, list):
+            return img_paths[chosed], bboxes[chosed]
+        elif chosed == "random":
+            length = len(img_paths)
+            index = np.random.randint(0, length)
+            chosed_img_paths = img_paths[index]
+            chosed_bboxes = bboxes[index]
+            return chosed_img_paths, chosed_bboxes
+    return img_paths, bboxes

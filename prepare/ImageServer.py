@@ -21,7 +21,7 @@ from multiprocessing import Pool
 import time
 
 from prepare.utils import read_pts, logger, \
-    data_aug, dataset_split, heat_map_compute, show
+    data_aug, dataset_split, heat_map_compute, show, get_face
 
 
 def heat_map_dist(point, matrix):
@@ -48,7 +48,6 @@ class ImageServer(object):
         # self.heat_maps = []
         self.aug_landmarks = []
         self.occlusions = []
-        self.img_paths = []
         self.bounding_boxes = []
         self.train_data = None
         self.validation_data = None
@@ -57,10 +56,10 @@ class ImageServer(object):
         self.color = color
         self.img_size = img_size if img_size is not None else [512, 512]
 
-    def process(self, img_root, img_paths, bounding_boxes, print_debug=False):
+    def process(self, img_paths, bounding_boxes, print_debug=False):
         """Whole process"""
         logger("preparing data")
-        self._prepare_data(img_root=img_root, img_paths=img_paths,
+        self._prepare_data(img_paths=img_paths,
                            bounding_boxes=bounding_boxes, print_debug=print_debug)
 
         logger("loading imgs")
@@ -75,11 +74,10 @@ class ImageServer(object):
         # logger("heat_map generating")
         # self._heat_map_gen()
 
-    def _prepare_data(self, img_root, img_paths, bounding_boxes, print_debug=False):
+    def _prepare_data(self, img_paths, bounding_boxes, print_debug=False):
         """Getting data
         :param print_debug:
         :param bounding_boxes:
-        :param img_root:
         :param img_paths:
         :return:
         """
@@ -88,8 +86,6 @@ class ImageServer(object):
             img_path = img_paths[index]
             prefix = img_path.split('.')[0]
             pts_path = prefix + '.pts_occlu'
-            pts_path = os.path.join(img_root, pts_path)
-            img_path = os.path.join(img_root, img_path)
             self.landmarks.append(read_pts(pts_path))
             self.img_paths.append(img_path)
             if print_debug:
@@ -117,8 +113,7 @@ class ImageServer(object):
             del x_normalized, y_normalized
 
             # data augment
-            bbox = [int(i) for i in bbox]
-            face = img[bbox[2]:bbox[3], bbox[0]: bbox[1]]
+            face = get_face(img, bbox)
             face_dups, landmark_dups, occlusion_dups = data_aug(face=face,
                                                                 pts_data=landmark_normalized,
                                                                 img_size=self.img_size,
