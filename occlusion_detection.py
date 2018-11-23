@@ -88,13 +88,12 @@ class OcclusionDetection(object):
             epochs=occlu_param['epochs'], verbose=1, callbacks=callback_list)
 
         # save model
-        logger("saving model")
-        if not os.path.exists(occlu_param['model_dir']):
-            os.mkdir(occlu_param['model_dir'])
-        model.save(os.path.join(occlu_param['model_dir'], occlu_param['model_name'])) \
- \
-        @staticmethod
-
+        # logger("saving model")
+        # if not os.path.exists(occlu_param['model_dir']):
+        #     os.mkdir(occlu_param['model_dir'])
+        # model.save(os.path.join(occlu_param['model_dir'], occlu_param['model_name'])) 
+        
+    @staticmethod
     def classify(img, need_to_normalize=False):
         img = cv2.resize(img, (occlu_param['img_size'], occlu_param['img_size']))
         if need_to_normalize:
