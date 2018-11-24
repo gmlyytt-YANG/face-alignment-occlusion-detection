@@ -9,122 +9,99 @@
 """
 File: occlusion_detection.py
 Author: Yang Li
-Date: 2018/11/14 14:49:31
-Description: Occlusion Detection
+Date: 2018/11/10 17:43:31
+Description: Data Augment
 """
 
-from collections import defaultdict
+import cv2
 import numpy as np
-import pickle
-import pandas as pd
-from sklearn import svm
-from sklearn.metrics import zero_one_loss
 import os
 
-from prepare.utils import dataset_split
-from prepare.utils import logger, str_or_float
+from keras.models import load_model
+from keras.optimizers import Adam
+from keras.preprocessing.image import img_to_array
+from keras.callbacks import ModelCheckpoint
 
-# init data
-landmark_size = 68
-dataset_path = './data/patches_occlusion.pickle'
-model_base_path = './data'
-record_path = './record'
-svm_config_path = './config/svm.conf'
-test_size = 0.2
-random_state = 0
-classifiers = [svm.SVC() for _ in range(landmark_size)]
-training_data = [defaultdict() for _ in range(landmark_size)]
-losses = np.zeros((landmark_size,))
+from config.init_param import occlu_param
+from model_structure.occlu_model import SmallerVGGNet
+from prepare.utils import logger, load_imgs, load_basic_info
+from prepare.occlu_data_gen import train_data_feed, validation_data_feed
+from prepare.ImageServer import ImageServer
 
-# load data
-logger("loading data")
-if os.path.exists(dataset_path):
-    with open(dataset_path, 'rb') as f_pickle:
-        data = pickle.load(f_pickle)
-    patches = data['patches']
-    labels = data['occlusion']
-    assert len(patches) == landmark_size
-    assert len(labels) == landmark_size
-else:
-    logger("missing dataset")
 
-# data splitting for each classifier
-logger("data splitting")
-for index in range(landmark_size):
-    training_data[index] = dataset_split(patches[index], labels[index],
-                                         test_size, random_state)
+class OcclusionDetection(object):
+    @staticmethod
+    def data_pre():
+        # load data(img, bbox, pts)
+        mat_file = os.path.join(occlu_param['img_root_dir'], 'raw_300W_release.mat')
+        img_paths, bboxes = load_basic_info(mat_file, img_root=occlu_param['img_root_dir'])
 
-# training - load config
-logger("loading config")
-f_svm = open(svm_config_path, 'r')
-count = 0
-for line in f_svm.readlines():
-    count += 1
-    if count > landmark_size:
-        break
-    if count == 1:  # first row is introduction
-        continue
-    config = line.split(' ')
-    C = float(config[0])
-    kernel = config[1]
-    gamma = str_or_float(config[2])
-    coef0 = float(config[3])
-    tol = float(config[4])
-    max_iter = int(config[5].strip())
-    classifiers[count - 1] = svm.SVC(C=C,
-                                     kernel=kernel,
-                                     gamma=gamma,
-                                     coef0=coef0,
-                                     tol=tol,
-                                     max_iter=max_iter,
-                                     verbose=True)
-f_svm.close()
+        # data prepare
+        img_server = ImageServer(data_size=len(img_paths),
+                                 img_size=occlu_param['img_size'], color=True, save_heatmap=True)
+        img_server.process(img_paths=img_paths, bounding_boxes=bboxes,
+                           print_debug=occlu_param['print_debug'])
 
-# training - fitting
-logger("model fitting")
-for index in range(landmark_size):
-    # dataset prepare
-    instances = training_data[index]['x_train']
-    instances = np.reshape(instances, (len(instances), len(instances[0][0])))  # 3d -> 2d
-    labels = training_data[index]['y_train']
-    labels = [i * 2 - 1 for i in labels]
+        # splitting
+        logger("train validation splitting")
+        img_server.train_validation_split(test_size=occlu_param['test_size'],
+                                          random_state=occlu_param['random_state'])
 
-    # fitting
-    logger("training {} models".format(index + 1))
-    model_path = os.path.join(model_base_path, 'model_{}.pickle'.format(index + 1))
-    if os.path.exists(model_path):
-        f_pickle = open(model_path, 'rb')
-        classifiers[index] = pickle.load(f_pickle)
-        f_pickle.close()
-    else:
-        classifiers[index].fit(instances, labels)
+        # saving
+        logger("saving data")
+        img_server.save(occlu_param['data_save_dir'], print_debug=occlu_param['print_debug'])
 
-    # validation
-    instances_validation = training_data[index]['x_test']
-    labels_validation = training_data[index]['y_test']
-    labels_validation = [i * 2 - 1 for i in labels_validation]
-    instances_validation = np.reshape(instances_validation,
-                                      (len(instances_validation), len(instances_validation[0][0])))
-    labels_validation_predict = classifiers[index].predict(instances_validation)
-    logger('saving prediction result')
-    df = pd.DataFrame({'labels': labels_validation, 'predict': labels_validation_predict})
-    df.to_csv(os.path.join(record_path, '{}_labels_compare.csv'.format(index + 1)))
+    @staticmethod
+    def train():
+        # loading data
+        logger("loading data")
+        train_dir = os.path.join(occlu_param['data_save_dir'], "train")
+        validation_dir = os.path.join(occlu_param['data_save_dir'], "validation")
+        validation_data, validation_labels = validation_data_feed(validation_dir,
+                                                                  print_debug=occlu_param['print_debug'])
+        logger("the occlusion ratio is {}"
+               .format(float(np.sum(validation_labels)) / (validation_labels.shape[0] * validation_labels.shape[1])))
 
-    # compute loss
-    zo_loss = zero_one_loss(labels_validation, labels_validation_predict)
-    losses[index] = zo_loss
-    logger("the validation loss of {} models is {}".format(index + 1, zo_loss))
+        # build model
+        logger("building model")
+        # print("epochs:{}".format(occlu_param['epochs']))
+        # print("init_lr:{}".format(occlu_param['init_lr']))
+        # print("bs:{}".format(occlu_param['bs']))
+        model = SmallerVGGNet.build(
+            width=occlu_param['img_size'], height=occlu_param['img_size'],
+            depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
+            final_act="sigmoid")
+        opt = Adam(lr=occlu_param['init_lr'], decay=occlu_param['init_lr'] / occlu_param['epochs'])
+        model.compile(loss="binary_crossentropy", optimizer=opt,
+                      metrics=["accuracy"])
 
-    logger("-------------------------------------------")
+        # train model
+        logger("training")
+        checkpoint = ModelCheckpoint(filepath=os.path.join(occlu_param['model_dir'],
+                                                           'best_model_epochs={}_bs={}_lr={}.h5'.format(
+                                                               occlu_param['epochs'], occlu_param['bs'],
+                                                               occlu_param['init_lr'])))
+        callback_list = [checkpoint]
+        H = model.fit_generator(
+            train_data_feed(occlu_param['bs'], train_dir),
+            validation_data=(validation_data, validation_labels),
+            steps_per_epoch=len(os.listdir(train_dir)) // occlu_param['bs'],
+            epochs=occlu_param['epochs'], verbose=1, callbacks=callback_list)
 
-    # save model
-    if os.path.exists(model_path):
-        continue
-    f_pickle = open(model_path, 'wb')
-    pickle.dump(classifiers[index], f_pickle)
-    f_pickle.close()
+        # save model
+        # logger("saving model")
+        # if not os.path.exists(occlu_param['model_dir']):
+        #     os.mkdir(occlu_param['model_dir'])
+        # model.save(os.path.join(occlu_param['model_dir'], occlu_param['model_name'])) 
 
-# save loss
-logger('saving loss result')
-df = pd.DataFrame({'loss': losses})
-df.to_csv(os.path.join(record_path, 'loss.csv'))
+    @staticmethod
+    def classify(img, need_to_normalize=False):
+        img = cv2.resize(img, (occlu_param['img_size'], occlu_param['img_size']))
+        if need_to_normalize:
+            img = img.astype("float") / 255.0
+        img = img_to_array(img)
+        img = np.expand_dims(img, axis=0)
+        model = load_model(os.path.join(occlu_param['model_dir'], occlu_param['model_name']))
+        prob = model.predict(img)[0]
+        for index, elem in enumerate(prob):
+            print("{} : {}".format(index + 1, elem))

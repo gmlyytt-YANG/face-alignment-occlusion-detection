@@ -20,8 +20,9 @@ import pickle
 from multiprocessing import Pool
 import time
 
+from config.init_param import occlu_param
 from prepare.utils import read_pts, logger, \
-    data_aug, dataset_split, heat_map_compute, show
+    data_aug, dataset_split, heat_map_compute, show, get_face, draw_landmark, gaussian_noise
 
 
 def heat_map_dist(point, matrix):
@@ -42,44 +43,45 @@ class ImageServer(object):
         img_size: default size is [512, 512]
     """
 
-    def __init__(self, data_size, img_size=None, landmark_size=68, color=False):
+    def __init__(self, data_size, img_size=None, landmark_size=68, color=False, save_heatmap=False):
         self.landmarks = []
         self.faces = []
-        # self.heat_maps = []
+        self.heat_maps = []
+        self.img_paths = []
         self.aug_landmarks = []
         self.occlusions = []
-        self.img_paths = []
         self.bounding_boxes = []
         self.train_data = None
         self.validation_data = None
         self.data_size = data_size
         self.landmark_size = landmark_size
         self.color = color
+        self.save_heatmap = save_heatmap
         self.img_size = img_size if img_size is not None else [512, 512]
 
-    def process(self, img_root, img_paths, bounding_boxes, print_debug=False):
+    def process(self, img_paths, bounding_boxes, print_debug=False):
         """Whole process"""
         logger("preparing data")
-        self._prepare_data(img_root=img_root, img_paths=img_paths,
+        self._prepare_data(img_paths=img_paths,
                            bounding_boxes=bounding_boxes, print_debug=print_debug)
 
         logger("loading imgs")
         self._load_imgs(print_debug=print_debug)
 
-        # logger("occlusion stating")
-        # self._balance()
-
         logger("normalizing")
         self._normalize_imgs()
 
-        # logger("heat_map generating")
-        # self._heat_map_gen()
+        if self.save_heatmap:
+            logger("heat_map generating")
+            self._heat_map_gen()
 
-    def _prepare_data(self, img_root, img_paths, bounding_boxes, print_debug=False):
+        logger("occlusion stating")
+        self._balance()
+
+    def _prepare_data(self, img_paths, bounding_boxes, print_debug=False):
         """Getting data
         :param print_debug:
         :param bounding_boxes:
-        :param img_root:
         :param img_paths:
         :return:
         """
@@ -88,9 +90,10 @@ class ImageServer(object):
             img_path = img_paths[index]
             prefix = img_path.split('.')[0]
             pts_path = prefix + '.pts_occlu'
-            pts_path = os.path.join(img_root, pts_path)
-            img_path = os.path.join(img_root, img_path)
-            self.landmarks.append(read_pts(pts_path))
+            landmark = read_pts(pts_path)
+            # img = cv2.imread(img_path)
+            # draw_landmark(img, landmark)
+            self.landmarks.append(landmark)
             self.img_paths.append(img_path)
             if print_debug:
                 if (index + 1) % 100 == 0:
@@ -117,8 +120,7 @@ class ImageServer(object):
             del x_normalized, y_normalized
 
             # data augment
-            bbox = [int(i) for i in bbox]
-            face = img[bbox[2]:bbox[3], bbox[0]: bbox[1]]
+            face = get_face(img, bbox)
             face_dups, landmark_dups, occlusion_dups = data_aug(face=face,
                                                                 pts_data=landmark_normalized,
                                                                 img_size=self.img_size,
@@ -129,21 +131,26 @@ class ImageServer(object):
             if print_debug:
                 if (index + 1) % 100 == 0:
                     logger("processed {} images".format(index + 1))
-            # if index > 10:
-            #     break
+            if index > 10:
+                break
 
-    def _balance(self):
-        occlu_indices = []
+    def _balance(self, balanced_num=None):
         occlu_count = 0
-        occlu_ratio = 0.0
         data_size = len(self.occlusions)
         for index, occlusion in enumerate(self.occlusions):
             if np.sum(occlusion) > 0:
                 occlu_count += 1
-                occlu_indices.append(index)
-
         occlu_ratio = float(occlu_count) / data_size
-        logger("occlu ratio is {}".format(occlu_ratio))
+        balanced_num = int(float(1) / occlu_ratio) if balanced_num is None else balanced_num
+        for index, occlusion in enumerate(self.occlusions):
+            if np.sum(occlusion) > 0:
+                if self.save_heatmap:
+                    for num in range(balanced_num):
+                        self.heat_maps.append(gaussian_noise(self.heat_maps[index]))
+                else:
+                    for num in range(balanced_num):
+                        self.faces.append(gaussian_noise(self.faces[index]))
+                self.occlusions.append(self.occlusions[index])
 
     def _normalize_imgs(self):
         # self.faces = self.faces.astype(np.float)
@@ -151,20 +158,27 @@ class ImageServer(object):
         self.faces = self.faces - mean_face
         std_face = np.std(self.faces, axis=0)
         self.faces = self.faces / std_face
+        self.faces = np.multiply(self.faces, 255).astype(int)
 
-    # def _heat_map_gen(self):
-    #     pool = Pool(20)
-    #     candidates = [{'face': face, 'landmark': landmark, 'landmark_01': True} for [face, landmark] in
-    #                   zip(self.faces, self.aug_landmarks)]
-    #     self.heat_maps = pool.map(heat_map_compute, candidates)
-    #     self.heat_maps = [heat_map_compute({'face': face, 'landmark': landmark, 'landmark_01': True})
-    #                       for [face, landmark] in zip(self.faces, self.aug_landmarks)]
+    def _heat_map_gen(self):
+        # pool = Pool(3)
+        # candidates = [{'face': face, 'landmark': landmark, 'landmark_01': True, 'radius': 16} for [face, landmark] in
+        #               zip(self.faces, self.aug_landmarks)]
+        # self.heat_maps = pool.map(heat_map_compute, candidates)
+        self.heat_maps = [
+            heat_map_compute({'face': face, 'landmark': landmark, 'landmark_01': True, 'radius': occlu_param['radius']})
+            for [face, landmark] in zip(self.faces, self.aug_landmarks)]
 
     def train_validation_split(self, test_size, random_state):
         """Train validation data split"""
-        self.train_data, self.validation_data = \
-            dataset_split(self.faces, self.occlusions,
-                          test_size=test_size, random_state=random_state)
+        if self.save_heatmap:
+            self.train_data, self.validation_data = \
+                dataset_split(self.heat_maps, self.occlusions,
+                              test_size=test_size, random_state=random_state)
+        else:
+            self.train_data, self.validation_data = \
+                dataset_split(self.faces, self.occlusions,
+                              test_size=test_size, random_state=random_state)
 
     def _save_core(self, data_base, dataset_path, mode, print_debug):
         dataset = data_base['data']
@@ -172,7 +186,7 @@ class ImageServer(object):
 
         data_path = os.path.join(dataset_path, mode)
         if not os.path.exists(data_path):
-            os.mkdir(data_path)
+            os.makedirs(data_path)
 
         for index in range(len(dataset)):
             data_name = "{}.pkl".format(index)
