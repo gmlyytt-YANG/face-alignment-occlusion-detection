@@ -24,7 +24,7 @@ from keras.callbacks import ModelCheckpoint
 
 from config.init_param import occlu_param
 from model_structure.occlu_model import SmallerVGGNet
-from prepare.utils import logger, load_imgs
+from prepare.utils import logger, load_imgs, load_basic_info
 from prepare.occlu_data_gen import train_data_feed, validation_data_feed
 from prepare.ImageServer import ImageServer
 
@@ -34,12 +34,13 @@ class OcclusionDetection(object):
     def data_pre():
         # load data(img, bbox, pts)
         mat_file = os.path.join(occlu_param['img_root_dir'], 'raw_300W_release.mat')
-        img_paths, bboxes = load_imgs(mat_file)
+        img_paths, bboxes = load_basic_info(mat_file, img_root=occlu_param['img_root_dir'])
+
         # data prepare
         img_server = ImageServer(data_size=len(img_paths),
-                                 img_size=occlu_param['img_size'], color=True)
-        img_server.process(img_root=occlu_param['img_root_dir'], img_paths=img_paths,
-                           bounding_boxes=bboxes, print_debug=occlu_param['print_debug'])
+                                 img_size=occlu_param['img_size'], color=True, save_heatmap=True)
+        img_server.process(img_paths=img_paths, bounding_boxes=bboxes,
+                           print_debug=occlu_param['print_debug'])
 
         # splitting
         logger("train validation splitting")
@@ -92,7 +93,7 @@ class OcclusionDetection(object):
         # if not os.path.exists(occlu_param['model_dir']):
         #     os.mkdir(occlu_param['model_dir'])
         # model.save(os.path.join(occlu_param['model_dir'], occlu_param['model_name'])) 
-        
+
     @staticmethod
     def classify(img, need_to_normalize=False):
         img = cv2.resize(img, (occlu_param['img_size'], occlu_param['img_size']))

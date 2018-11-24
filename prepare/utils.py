@@ -18,6 +18,7 @@ import numpy as np
 import os
 import scipy.io as scio
 from sklearn.model_selection import train_test_split
+from skimage.util import random_noise
 
 
 def logger(msg):
@@ -246,25 +247,29 @@ def show(img):
     cv2.waitKey(0)
 
 
-def range_search(x, y, patch_size, face_size):
+def range_search(x, y, patch_size, face_size, maintain_radius=True):
     left = x - patch_size / 2 if x - patch_size / 2 >= 0 else 0
     top = y - patch_size / 2 if y - patch_size / 2 >= 0 else 0
 
-    # right out of bound
-    if left + patch_size >= face_size:
-        left = face_size - patch_size
-        # right bottom out of bound
-        if top + patch_size >= face_size:
+    if maintain_radius:
+        # right out of bound
+        if left + patch_size >= face_size:
+            left = face_size - patch_size
+            # right bottom out of bound
+            if top + patch_size >= face_size:
+                top = face_size - patch_size
+
+        # left bottom out of bound
+        elif top + patch_size >= face_size:
             top = face_size - patch_size
 
-    # left bottom out of bound
-    elif top + patch_size >= face_size:
-        top = face_size - patch_size
+        right = left + patch_size
+        bottom = top + patch_size
+    else:
+        right = x + patch_size / 2 if x + patch_size / 2 <= face_size else face_size
+        bottom = y + patch_size / 2 if y + patch_size / 2 <= face_size else face_size
 
-    right = left + patch_size
-    bottom = top + patch_size
-
-    return left, right, top, bottom
+    return int(left), int(right), int(top), int(bottom)
 
 
 def get_patch(imgs, landmarks, occlusions, patch_size, patches, labels, landmark_num):
@@ -314,9 +319,20 @@ def dataset_split(x, y, test_size=0.3, random_state=0):
 
 def heat_map_dist(point, matrix):
     sigma = 0.05
-    D = np.min(np.sqrt(np.sum((point - matrix) ** 2, axis=1)))
+    D = np.sqrt(np.sum((point - matrix) ** 2))
     M = np.exp(np.multiply(D ** 2, - 2 * sigma ** 2))
     return M
+
+
+def color(landmark_elem, face_size, heat_map_mask, radius):
+    x = landmark_elem[0]
+    y = landmark_elem[1]
+    left, right, top, bottom = range_search(x, y, radius * 2, face_size, maintain_radius=False)
+    for x_elem in range(left, right):
+        for y_elem in range(top, bottom):
+            heat = heat_map_dist([x_elem, y_elem], landmark_elem)
+            if heat > heat_map_mask[y_elem][x_elem]:
+                heat_map_mask[y_elem][x_elem] = heat
 
 
 def heat_map_compute(param):
@@ -326,20 +342,24 @@ def heat_map_compute(param):
     face: face image
     landmark: landmark points set
     landmark_01: whether landmark is normalized
+    radius:
     """
     face = param['face']
     landmark = param['landmark']
     landmark_is_01 = param['landmark_01']
+    radius = param['radius']
     face_size = face.shape[:2]
     heat_map_mask = np.zeros_like(face[:, :, 0], dtype=np.float)
     if landmark_is_01:
         landmark = np.multiply(landmark, np.array([face_size[1], face_size[0]]))
-    for x in range(face_size[1]):
-        for y in range(face_size[0]):
-            heat_map_mask[y][x] = heat_map_dist([x, y], landmark)
+    landmark = landmark.astype(int)
+    # draw_landmark(face, landmark)
+    for landmark_elem in landmark:
+        color(landmark_elem, face_size[0], heat_map_mask, radius)
     heat_map_mask = heat_map_mask[:, :, np.newaxis]
     heat_map_mask = heat_map_mask.repeat([3], axis=2)
     heat_map = np.multiply(face, heat_map_mask)
+    # show(heat_map_mask)
     # show(heat_map)
     return heat_map
 
@@ -351,11 +371,16 @@ def get_face(img, bbox, need_to_convert_to_int=False):
     return face
 
 
-def load_imgs(img_root, mat_file_name, total=True, chosed="random"):
-    data = scio.loadmat(os.path.join(img_root, mat_file_name))
+def load_basic_info(mat_file, img_root=None):
+    data = scio.loadmat(os.path.join(img_root, mat_file))
     img_paths = data['nameList']
     img_paths = [os.path.join(img_root, i[0][0]) for i in img_paths]
     bboxes = data['bbox']
+    return img_paths, bboxes
+
+
+def load_imgs(img_root, mat_file_name, total=True, chosed="random"):
+    img_paths, bboxes = load_basic_info(mat_file_name, img_root)
     if not total:
         if isinstance(chosed, list):
             faces = []
@@ -373,3 +398,24 @@ def load_imgs(img_root, mat_file_name, total=True, chosed="random"):
 
     return (get_face(cv2.imread(img_paths[index]), bboxes[index], need_to_convert_to_int=True)
             for index in range(len(img_paths)))
+
+
+def draw_landmark(img, landmarks):
+    for i in range(len(landmarks)):
+        for idx, point in enumerate(landmarks):
+            pos = (int(point[0]), int(point[1]))
+            cv2.circle(img, pos, 5, color=(0, 255, 0))
+    cv2.namedWindow("img", 2)
+    cv2.imshow("img", img)
+    cv2.waitKey(0)
+
+
+def gaussian_noise(img, mode='gaussian'):
+    # show(img)
+    # for index in range(noise_num):
+    #     x = np.random.randint(0, img.shape[1])
+    #     y = np.random.randint(0, img.shape[0])
+    #     noised_img[y][x] = 255
+    noised_img = random_noise(img, mode=mode, clip=True)
+    # show(noised_img)
+    return noised_img
