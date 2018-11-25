@@ -306,6 +306,7 @@ def dataset_split(x, y, test_size=0.3, random_state=0):
     :param random_state:
     :return:
     """
+    logger("len x is {}, len y is {}".format(len(x), len(y)))
     assert len(x) == len(y)
 
     # data splitting

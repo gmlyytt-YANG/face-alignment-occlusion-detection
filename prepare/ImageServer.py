@@ -43,7 +43,8 @@ class ImageServer(object):
         img_size: default size is [512, 512]
     """
 
-    def __init__(self, data_size, img_size=None, landmark_size=68, color=False, save_heatmap=False):
+    def __init__(self, data_size, img_size=None, landmark_size=68, 
+                 color=False, save_heatmap=False, print_debug=True):
         self.landmarks = []
         self.faces = []
         self.heat_maps = []
@@ -58,15 +59,16 @@ class ImageServer(object):
         self.color = color
         self.save_heatmap = save_heatmap
         self.img_size = img_size if img_size is not None else [512, 512]
+        self.print_debug = print_debug
 
-    def process(self, img_paths, bounding_boxes, print_debug=False):
+    def process(self, img_paths, bounding_boxes):
         """Whole process"""
         logger("preparing data")
         self._prepare_data(img_paths=img_paths,
-                           bounding_boxes=bounding_boxes, print_debug=print_debug)
+                           bounding_boxes=bounding_boxes)
 
         logger("loading imgs")
-        self._load_imgs(print_debug=print_debug)
+        self._load_imgs()
 
         logger("normalizing")
         self._normalize_imgs()
@@ -75,12 +77,11 @@ class ImageServer(object):
             logger("heat_map generating")
             self._heat_map_gen()
 
-        logger("occlusion stating")
+        logger("balancing")
         self._balance()
 
-    def _prepare_data(self, img_paths, bounding_boxes, print_debug=False):
+    def _prepare_data(self, img_paths, bounding_boxes):
         """Getting data
-        :param print_debug:
         :param bounding_boxes:
         :param img_paths:
         :return:
@@ -95,11 +96,11 @@ class ImageServer(object):
             # draw_landmark(img, landmark)
             self.landmarks.append(landmark)
             self.img_paths.append(img_path)
-            if print_debug:
+            if self.print_debug:
                 if (index + 1) % 100 == 0:
                     logger("processed {} basic infos".format(index + 1))
 
-    def _load_imgs(self, print_debug):
+    def _load_imgs(self):
         """Load imgs"""
         for index in range(self.data_size):
             # load img
@@ -128,11 +129,11 @@ class ImageServer(object):
             self.faces.extend(face_dups)
             self.aug_landmarks.extend(landmark_dups)
             self.occlusions.extend(occlusion_dups)
-            if print_debug:
+            if self.print_debug:
                 if (index + 1) % 100 == 0:
                     logger("processed {} images".format(index + 1))
-            if index > 10:
-                break
+            if index > 50:
+               break
 
     def _balance(self, balanced_num=None):
         occlu_count = 0
@@ -141,17 +142,32 @@ class ImageServer(object):
             if np.sum(occlusion) > 0:
                 occlu_count += 1
         occlu_ratio = float(occlu_count) / data_size
+        logger("occlu_ratio is {}".format(occlu_ratio))
         balanced_num = int(float(1) / occlu_ratio) if balanced_num is None else balanced_num
-        for index, occlusion in enumerate(self.occlusions):
-            if np.sum(occlusion) > 0:
+        occlusions_add = []
+        imgs_add = []
+        for index in range(len(self.occlusions)):
+            if np.sum(self.occlusions[index]) > 0:
                 if self.save_heatmap:
                     for num in range(balanced_num):
-                        self.heat_maps.append(gaussian_noise(self.heat_maps[index]))
+                        imgs_add.append(gaussian_noise(self.heat_maps[index]))
+                        occlusions_add.append(self.occlusions[index])
                 else:
                     for num in range(balanced_num):
-                        self.faces.append(gaussian_noise(self.faces[index]))
-                self.occlusions.append(self.occlusions[index])
-
+                        imgs_add.append(gaussian_noise(self.faces[index]))
+                        occlusions_add.append(self.occlusions[index])
+            if self.print_debug and (index + 1) % 100 == 0:
+                logger("processed {} images".format(index + 1))
+        self.occlusions.extend(occlusions_add)
+        if self.save_heatmap:
+            self.heat_maps.extend(imgs_add)
+            logger("len heat_map is {}, len occlusion is {}"
+                .format(len(self.heat_maps), len(self.occlusions)))
+        else:
+            self.faces.extend(imgs_add)
+            logger("len heat_map is {}, len occlusion is {}"
+                .format(len(self.faces), len(self.occlusions)))
+    
     def _normalize_imgs(self):
         # self.faces = self.faces.astype(np.float)
         mean_face = np.mean(self.faces, axis=0)
@@ -162,12 +178,21 @@ class ImageServer(object):
 
     def _heat_map_gen(self):
         # pool = Pool(3)
-        # candidates = [{'face': face, 'landmark': landmark, 'landmark_01': True, 'radius': 16} for [face, landmark] in
-        #               zip(self.faces, self.aug_landmarks)]
+        # candidates = [{'face': face, 
+        #                'landmark': landmark, 
+        #                'landmark_01': True, 
+        #                'radius': 16} 
+        #               for [face, landmark] in zip(self.faces, self.aug_landmarks)]
         # self.heat_maps = pool.map(heat_map_compute, candidates)
-        self.heat_maps = [
-            heat_map_compute({'face': face, 'landmark': landmark, 'landmark_01': True, 'radius': occlu_param['radius']})
-            for [face, landmark] in zip(self.faces, self.aug_landmarks)]
+        for index in range(len(self.faces)):
+            face = self.faces[index]
+            landmark = self.aug_landmarks[index]
+            self.heat_maps.append(heat_map_compute({'face': face, 
+						    'landmark': landmark, 
+						    'landmark_01': True, 
+						    'radius': occlu_param['radius']}))
+            if self.print_debug and (index + 1) % 100 == 0:
+                logger("generated {} heatmaps".format(index + 1))
 
     def train_validation_split(self, test_size, random_state):
         """Train validation data split"""
@@ -197,11 +222,10 @@ class ImageServer(object):
             f_data = open(os.path.join(data_path, data_name), 'wb')
             pickle.dump(data, f_data)
             f_data.close()
-            if print_debug:
-                if (index + 1) % 500 == 0:
-                    logger("saved {} data".format(index + 1))
+            if print_debug and (index + 1) % 500 == 0:
+                logger("saved {} data".format(index + 1))
 
-    def save(self, dataset_path, print_debug=False):
+    def save(self, dataset_path):
         """Save data"""
-        self._save_core(self.train_data, dataset_path, "train", print_debug)
-        self._save_core(self.validation_data, dataset_path, "validation", print_debug)
+        self._save_core(self.train_data, dataset_path, "train", self.print_debug)
+        self._save_core(self.validation_data, dataset_path, "validation", self.print_debug)
