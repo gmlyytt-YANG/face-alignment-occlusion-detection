@@ -38,9 +38,11 @@ class OcclusionDetection(object):
 
         # data prepare
         img_server = ImageServer(data_size=len(img_paths),
-                                 img_size=occlu_param['img_size'], color=True, save_heatmap=True)
-        img_server.process(img_paths=img_paths, bounding_boxes=bboxes,
-                           print_debug=occlu_param['print_debug'])
+                                 img_size=occlu_param['img_size'], 
+                                 color=True, 
+                                 save_heatmap=True,
+                                 print_debug=occlu_param['print_debug'])
+        img_server.process(img_paths=img_paths, bounding_boxes=bboxes)
 
         # splitting
         logger("train validation splitting")
@@ -49,7 +51,7 @@ class OcclusionDetection(object):
 
         # saving
         logger("saving data")
-        img_server.save(occlu_param['data_save_dir'], print_debug=occlu_param['print_debug'])
+        img_server.save(occlu_param['data_save_dir'])
 
     # @staticmethod
     # def train():
