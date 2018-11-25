@@ -35,7 +35,7 @@ occlu_param['init_lr'] = args['init_lr']
 
 # occlusion detection
 OcclusionDetection.data_pre()
-# OcclusionDetection.train()
+OcclusionDetection.train()
 
 mat_file = os.path.join(occlu_param['img_root_dir'], 'raw_300W_release.mat')
 for face in load_imgs(occlu_param['img_root_dir'],

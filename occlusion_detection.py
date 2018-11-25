@@ -55,11 +55,11 @@ class OcclusionDetection(object):
         logger("loading data")
         train_dir = os.path.join(occlu_param['data_save_dir'], "train")
         validation_dir = os.path.join(occlu_param['data_save_dir'], "validation")
-        validation_data, validation_labels, validation_names = validation_data_feed(validation_dir,
-                                                                                    print_debug=occlu_param[
-                                                                                        'print_debug'])
+        validation_data, validation_labels, validation_names = 
+            validation_data_feed(validation_dir,print_debug=occlu_param['print_debug'])
         logger("the occlusion ratio is {}"
-               .format(float(np.sum(validation_labels)) / (validation_labels.shape[0] * validation_labels.shape[1])))
+               .format(float(np.sum(validation_labels)) 
+                   / (validation_labels.shape[0] * validation_labels.shape[1])))
 
         # build model
         logger("building model")
