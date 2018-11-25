@@ -75,7 +75,7 @@ class ImageServer(object):
             logger("heat_map generating")
             self._heat_map_gen()
 
-        logger("occlusion stating")
+        logger("balancing")
         self._balance()
 
     def _prepare_data(self, img_paths, bounding_boxes, print_debug=False):
@@ -131,8 +131,8 @@ class ImageServer(object):
             if print_debug:
                 if (index + 1) % 100 == 0:
                     logger("processed {} images".format(index + 1))
-            if index > 10:
-                break
+            # if index > 10:
+            #    break
 
     def _balance(self, balanced_num=None):
         occlu_count = 0
@@ -141,17 +141,27 @@ class ImageServer(object):
             if np.sum(occlusion) > 0:
                 occlu_count += 1
         occlu_ratio = float(occlu_count) / data_size
+        logger("occlu_ratio is {}".format(occlu_ratio))
         balanced_num = int(float(1) / occlu_ratio) if balanced_num is None else balanced_num
-        for index, occlusion in enumerate(self.occlusions):
-            if np.sum(occlusion) > 0:
+        occlusions_add = []
+        imgs_add = []
+        for index in range(len(self.occlusions)):
+            if np.sum(self.occlusions[index]) > 0:
                 if self.save_heatmap:
                     for num in range(balanced_num):
-                        self.heat_maps.append(gaussian_noise(self.heat_maps[index]))
+                        imgs_add.append(gaussian_noise(self.heat_maps[index]))
                 else:
                     for num in range(balanced_num):
-                        self.faces.append(gaussian_noise(self.faces[index]))
-                self.occlusions.append(self.occlusions[index])
-
+                        imgs_add.append(gaussian_noise(self.faces[index]))
+                occlusions_add.append(self.occlusions[index])
+            if (index + 1) % 100 == 0:
+                logger("processed {} images".format(index + 1))
+        if self.save_heatmap:
+            self.heat_maps.extend(imgs_add)
+        else:
+            self.faces.extend(imgs_add)
+        self.occlusions.extend(occlusions_add)
+    
     def _normalize_imgs(self):
         # self.faces = self.faces.astype(np.float)
         mean_face = np.mean(self.faces, axis=0)
@@ -165,9 +175,15 @@ class ImageServer(object):
         # candidates = [{'face': face, 'landmark': landmark, 'landmark_01': True, 'radius': 16} for [face, landmark] in
         #               zip(self.faces, self.aug_landmarks)]
         # self.heat_maps = pool.map(heat_map_compute, candidates)
-        self.heat_maps = [
-            heat_map_compute({'face': face, 'landmark': landmark, 'landmark_01': True, 'radius': occlu_param['radius']})
-            for [face, landmark] in zip(self.faces, self.aug_landmarks)]
+        for index in range(len(self.faces)):
+            face = self.faces[index]
+            landmark = self.aug_landmarks[index]
+            self.heat_maps.append(heat_map_compute({'face': face, 
+						    'landmark': landmark, 
+						    'landmark_01': True, 
+						    'radius': occlu_param['radius']}))
+            if (index + 1) % 100 == 0:
+                logger("generated {} heatmaps".format(index + 1))
 
     def train_validation_split(self, test_size, random_state):
         """Train validation data split"""
