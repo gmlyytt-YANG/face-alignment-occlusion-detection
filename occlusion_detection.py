@@ -26,8 +26,10 @@ from prepare.ImageServer import ImageServer
 
 
 class OcclusionDetection(object):
-    @staticmethod
-    def data_pre():
+    def __init__(self):
+        self.print_debug = occlu_param['print_debug']
+
+    def data_pre(self):
         # load data(img, bbox, pts)
         mat_file = os.path.join(occlu_param['img_root_dir'], 'raw_300W_release.mat')
         img_paths, bboxes = load_basic_info(mat_file, img_root=occlu_param['img_root_dir'])
@@ -37,7 +39,7 @@ class OcclusionDetection(object):
                                  img_size=occlu_param['img_size'],
                                  color=True,
                                  save_heatmap=True,
-                                 print_debug=occlu_param['print_debug'])
+                                 print_debug=self.print_debug)
         img_server.process(img_paths=img_paths, bounding_boxes=bboxes)
 
         # splitting
@@ -49,17 +51,13 @@ class OcclusionDetection(object):
         logger("saving data")
         img_server.save(occlu_param['data_save_dir'])
 
-    @staticmethod
-    def train():
+    def train(self):
         # loading data
         logger("loading data")
         train_dir = os.path.join(occlu_param['data_save_dir'], "train")
         validation_dir = os.path.join(occlu_param['data_save_dir'], "validation")
-        validation_data, validation_labels, validation_names = 
-            validation_data_feed(validation_dir,print_debug=occlu_param['print_debug'])
-        logger("the occlusion ratio is {}"
-               .format(float(np.sum(validation_labels)) 
-                   / (validation_labels.shape[0] * validation_labels.shape[1])))
+        validation_data, validation_labels, validation_names = \
+            validation_data_feed(validation_dir, print_debug=self.print_debug)
 
         # build model
         logger("building model")
@@ -73,10 +71,11 @@ class OcclusionDetection(object):
 
         # train model
         logger("training")
-        checkpoint = ModelCheckpoint(filepath=os.path.join(occlu_param['model_dir'],
-                                                           'best_model_epochs={}_bs={}_lr={}.h5'.format(
-                                                               occlu_param['epochs'], occlu_param['bs'],
-                                                               occlu_param['init_lr'])))
+        checkpoint = ModelCheckpoint(
+            filepath=os.path.join(occlu_param['model_dir'],
+                                  'best_model_epochs={}_bs={}_lr={}.h5'.format(
+                                      occlu_param['epochs'], occlu_param['bs'],
+                                      occlu_param['init_lr'])))
         callback_list = [checkpoint]
         model.fit_generator(
             train_data_feed(occlu_param['bs'], train_dir),
@@ -93,5 +92,21 @@ class OcclusionDetection(object):
         img = np.expand_dims(img, axis=0)
         model = load_model(os.path.join(occlu_param['model_dir'], occlu_param['model_name']))
         prob = model.predict(img)[0]
-        for index, elem in enumerate(prob):
-            print("{} : {}".format(index + 1, elem))
+        return prob
+
+    def validation(self, metric='accuracy'):
+        validation_dir = os.path.join(occlu_param['data_save_dir'], "validation")
+        validation_data, validation_labels, validation_names = \
+            validation_data_feed(validation_dir, print_debug=occlu_param['print_debug'])
+        predict_labels = []
+        for img in validation_data:
+            predict_labels.append([binary(_, threshold=0.5) for _ in self.classify(img)])
+
+        result = 0.0
+        if metric is 'accuracy':
+            count = 0
+            for index in range(len(validation_labels)):
+                if (predict_labels[index] == validation_labels[index]).all():
+                    count += 1
+            result = float(count) / len(validation_labels)
+        return result

@@ -462,3 +462,7 @@ def gaussian_noise(img, mode='gaussian'):
     noised_img = random_noise(img, mode=mode, clip=True)
     # show(noised_img)
     return noised_img
+
+
+def binary(num, threshold):
+    num = 1 if num > threshold else 0
