@@ -373,6 +373,14 @@ def get_face(img, bbox, need_to_convert_to_int=False):
 
 
 def load_basic_info(mat_file, img_root=None):
+    """Load basic info
+
+    :param mat_file: mat file name including nameList, bbox
+    :param img_root: img_root dir
+
+    :return img_paths: abs paths of images
+    :return bboxes:
+    """
     data = scio.loadmat(os.path.join(img_root, mat_file))
     img_paths = data['nameList']
     img_paths = [os.path.join(img_root, i[0][0]) for i in img_paths]
@@ -381,6 +389,15 @@ def load_basic_info(mat_file, img_root=None):
 
 
 def load_imgs(img_root, mat_file_name, total=True, chosed="random"):
+    """Load images
+
+    :param img_root: img root dir
+    :param mat_file_name:
+    :param total: bool obj, control to return whole dataset or just part
+    :param chosed: whether to choose specific indices of dataset or just random
+
+    :return chosed objs
+    """
     img_paths, bboxes = load_basic_info(mat_file_name, img_root)
     if not total:
         if isinstance(chosed, list):
@@ -412,6 +429,7 @@ def draw_landmark(img, landmarks):
 
 
 def gaussian_noise(img, mode='gaussian'):
+    """Add gaussian noise to images """
     # show(img)
     # for index in range(noise_num):
     #     x = np.random.randint(0, img.shape[1])

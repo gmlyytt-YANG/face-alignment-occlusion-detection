@@ -17,19 +17,10 @@ import cv2
 import numpy as np
 import os
 import pickle
-from multiprocessing import Pool
-import time
 
 from config.init_param import occlu_param
 from prepare.utils import read_pts, logger, \
     data_aug, dataset_split, heat_map_compute, show, get_face, draw_landmark, gaussian_noise
-
-
-def heat_map_dist(point, matrix):
-    sigma = 0.05
-    D = np.min(np.sqrt(np.sum((point - matrix) ** 2, axis=1)))
-    M = np.exp(np.multiply(D ** 2, - 2 * sigma ** 2))
-    return M
 
 
 class ImageServer(object):
@@ -37,13 +28,23 @@ class ImageServer(object):
 
     Attributes:
         landmarks: annotations
+        faces:
+        heat_maps:
+        img_paths: img src path
+        aug_landmarks:
+        occlusions: total landmarks
         bounding_boxes: bbox list
+        train_data: list obj, [dict{"data", "label"}]
+        validation_data: list obj, [dict{"data", "label"}]
         data_size:
+        landmark_size: landmark num
         color:
         img_size: default size is [512, 512]
+        save_heatmap: whether to save heat_map or face
+        print_debug:
     """
 
-    def __init__(self, data_size, img_size=None, landmark_size=68, 
+    def __init__(self, data_size, img_size=None, landmark_size=68,
                  color=False, save_heatmap=False, print_debug=True):
         self.landmarks = []
         self.faces = []
@@ -57,8 +58,8 @@ class ImageServer(object):
         self.data_size = data_size
         self.landmark_size = landmark_size
         self.color = color
-        self.save_heatmap = save_heatmap
         self.img_size = img_size if img_size is not None else [512, 512]
+        self.save_heatmap = save_heatmap
         self.print_debug = print_debug
 
     def process(self, img_paths, bounding_boxes):
@@ -133,9 +134,14 @@ class ImageServer(object):
                 if (index + 1) % 100 == 0:
                     logger("processed {} images".format(index + 1))
             if index > 50:
-               break
+                break
 
     def _balance(self, balanced_num=None):
+        """Balance dataset
+        Increase occlusion objs by (balanced_num + 1) times
+
+        :param balanced_num: required balanced_num to increase nums of occlusion objs
+        """
         occlu_count = 0
         data_size = len(self.occlusions)
         for index, occlusion in enumerate(self.occlusions):
@@ -162,13 +168,14 @@ class ImageServer(object):
         if self.save_heatmap:
             self.heat_maps.extend(imgs_add)
             logger("len heat_map is {}, len occlusion is {}"
-                .format(len(self.heat_maps), len(self.occlusions)))
+                   .format(len(self.heat_maps), len(self.occlusions)))
         else:
             self.faces.extend(imgs_add)
             logger("len heat_map is {}, len occlusion is {}"
-                .format(len(self.faces), len(self.occlusions)))
-    
+                   .format(len(self.faces), len(self.occlusions)))
+
     def _normalize_imgs(self):
+        """Whiten dataset"""
         # self.faces = self.faces.astype(np.float)
         mean_face = np.mean(self.faces, axis=0)
         self.faces = self.faces - mean_face
@@ -177,6 +184,8 @@ class ImageServer(object):
         self.faces = np.multiply(self.faces, 255).astype(int)
 
     def _heat_map_gen(self):
+        """Generate heat map of each of faces"""
+        # multi-thread
         # pool = Pool(3)
         # candidates = [{'face': face, 
         #                'landmark': landmark, 
@@ -187,10 +196,10 @@ class ImageServer(object):
         for index in range(len(self.faces)):
             face = self.faces[index]
             landmark = self.aug_landmarks[index]
-            self.heat_maps.append(heat_map_compute({'face': face, 
-						    'landmark': landmark, 
-						    'landmark_01': True, 
-						    'radius': occlu_param['radius']}))
+            self.heat_maps.append(heat_map_compute({'face': face,
+                                                    'landmark': landmark,
+                                                    'landmark_01': True,
+                                                    'radius': occlu_param['radius']}))
             if self.print_debug and (index + 1) % 100 == 0:
                 logger("generated {} heatmaps".format(index + 1))
 
@@ -205,7 +214,8 @@ class ImageServer(object):
                 dataset_split(self.faces, self.occlusions,
                               test_size=test_size, random_state=random_state)
 
-    def _save_core(self, data_base, dataset_path, mode, print_debug):
+    @staticmethod
+    def _save_core(data_base, dataset_path, mode, print_debug):
         dataset = data_base['data']
         labels = data_base['label']
 
