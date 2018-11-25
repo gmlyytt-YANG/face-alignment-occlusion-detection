@@ -10,6 +10,13 @@ if [ "$1" = "install" ]; then
     # necessary softwares
     sudo apt-get install vim git cmake 
     
+    # pip 
+    # mkdir -p ~/.pip
+    # vim ~/.pip/pip/conf
+    # add the content:
+    # [global]
+    # index-url = https://pypi.tuna.tsinghua.edu.cn/simple/
+    
     # anaconda 
     wget https://repo.anaconda.com/archive/Anaconda3-5.3.1-Linux-x86_64.sh
     bash Anaconda3-5.3.1-Linux-x86_64.sh
