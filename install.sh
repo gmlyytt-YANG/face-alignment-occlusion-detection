@@ -9,7 +9,10 @@ if [ "$1" = "install" ]; then
 
     # necessary softwares
     sudo apt-get install vim git cmake 
-    
+  
+    # chinese input 
+    wget http://cdn2.ime.sogou.com/dl/index/1524572264/sogoupinyin_2.2.0.0108_amd64.deb?st=eN7IKw-whY5bYeUQ5xLlxg&e=1543115719&fn=sogoupinyin_2.2.0.0108_amd64.deb
+
     # pip 
     # mkdir -p ~/.pip
     # vim ~/.pip/pip/conf
