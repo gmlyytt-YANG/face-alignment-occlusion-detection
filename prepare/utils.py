@@ -165,70 +165,94 @@ def rotate(face, landmark, alpha):
     return face_rotated_by_alpha, landmark_01
 
 
-def data_aug(face, pts_data, img_size, color):
+def add_postfix(name, plus_str):
+    """Add postfix
+
+    :param name: name[0] + '.' + name[1]
+    :param plus_str: str to add
+
+    :return name[0] + plus_str + '.' + name[1]
+    """
+    str_list = name.split('.')
+    if len(str_list) != 2:
+        logger("invalid name")
+        return -1
+    prefix_plus_name = str_list[0] + plus_str
+    return prefix_plus_name + str_list[1]
+
+
+def data_append(faces, landmarks, occlusions, names,
+                face, landmark, occlusion, name):
+    faces.append(face)
+    landmarks.append(landmark)
+    occlusions.append(occlusion)
+    names.append(name)
+
+
+def data_aug(face, pts_data, img_size, color, name):
     """Data augment
     :param face:
     :param pts_data:
-    :param bbox:
     :param img_size:
     :param color:
-    :return: faces, landmarks
+    :param name: name of the face
+    :return: faces, landmarks, names
     """
     assert face is not None
     faces = []
     landmarks = []
     occlusions = []
+    names = []
     alpha = 5  # rotate degree
 
     # flip1
     face_flipped, landmark_flipped = flip(face, pts_data)
     occlusion_flipped = landmark_flipped[:, 2]
     face_flipped = cv2.resize(face_flipped, (img_size, img_size))
-    faces.append(face_flipped)
-    landmarks.append(np.clip(landmark_flipped[:, :-1], 0, 1))
-    occlusions.append(occlusion_flipped)
+    data_append(faces, landmarks, occlusions, names,
+                face_flipped, np.clip(landmark_flipped[:, :-1], 0, 1),
+                occlusion_flipped, add_postfix(name, "_flip"))
 
     # rotation1
     face_rotated_by_alpha, landmark_rotated = rotate(face, pts_data, alpha)
     landmark_rotated[:, :2] = np.clip(landmark_rotated[:, :2], 0, 1)  # exception dealing
     occlusion_rotated = landmark_rotated[:, 2]
     face_rotated_by_alpha = cv2.resize(face_rotated_by_alpha, (img_size, img_size))
-    faces.append(face_rotated_by_alpha)
-    landmarks.append(landmark_rotated[:, :-1])
-    occlusions.append(occlusion_rotated)
+    data_append(faces, landmarks, occlusions, names,
+                face_rotated_by_alpha, landmark_rotated[:, :-1],
+                occlusion_rotated, add_postfix(name, "_rotation_{}".format(alpha)))
 
     # flip with rotation1
     face_flipped, landmark_flipped = flip(face_rotated_by_alpha, landmark_rotated)
     occlusion_flipped = landmark_flipped[:, 2]
     face_flipped = cv2.resize(face_flipped, (img_size, img_size))
-    faces.append(face_flipped)
-    landmarks.append(landmark_flipped[:, :-1])
-    occlusions.append(occlusion_flipped)
+    data_append(faces, landmarks, occlusions, names,
+                face_flipped, landmark_flipped[:, :-1],
+                occlusion_flipped, add_postfix(name, "_rotation_{}_flip".format(alpha)))
 
     # rotation2
     face_rotated_by_alpha, landmark_rotated = rotate(face, pts_data, -alpha)
     landmark_rotated[:, :2] = np.clip(landmark_rotated[:, :2], 0, 1)
     occlusion_rotated = landmark_rotated[:, 2]
     face_rotated_by_alpha = cv2.resize(face_rotated_by_alpha, (img_size, img_size))
-    faces.append(face_rotated_by_alpha)
-    landmarks.append(landmark_rotated[:, :-1])
-    occlusions.append(occlusion_rotated)
+    data_append(faces, landmarks, occlusions, names,
+                face_rotated_by_alpha, landmark_rotated[:, :-1],
+                occlusion_rotated, add_postfix(name, "_rotation_-{}".format(alpha)))
 
     # flip with rotation2
     face_flipped, landmark_flipped = flip(face_rotated_by_alpha, landmark_rotated)
     occlusion_flipped = landmark_flipped[:, 2]
     face_flipped = cv2.resize(face_flipped, (img_size, img_size))
-    faces.append(face_flipped)
-    landmarks.append(landmark_flipped[:, :-1])
-    occlusions.append(occlusion_flipped)
+    data_append(faces, landmarks, occlusions, names,
+                face_flipped, landmark_rotated[:, :-1],
+                occlusion_flipped, add_postfix(name, "_rotation_-{}_flip".format(alpha)))
 
     # origin
     face = cv2.resize(face, (img_size, img_size))
-    faces.append(face)
-    landmarks.append(pts_data[:, :2])
-    occlusions.append(pts_data[:, 2])
+    data_append(faces, landmarks, occlusions, names,
+                face, pts_data[:, :2], pts_data[:, 2], name)
 
-    return faces, landmarks, occlusions
+    return faces, landmarks, occlusions, names
 
 
 def point_in_bbox(pt, bbox):

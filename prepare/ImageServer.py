@@ -13,14 +13,10 @@ Date: 2018/11/17 19:05:31
 Description: Data Preparation
 """
 
-import cv2
-import numpy as np
-import os
 import pickle
 
 from config.init_param import occlu_param
-from prepare.utils import read_pts, logger, \
-    data_aug, dataset_split, heat_map_compute, show, get_face, draw_landmark, gaussian_noise
+from prepare.utils import *
 
 
 class ImageServer(object):
@@ -32,8 +28,9 @@ class ImageServer(object):
         heat_maps:
         img_paths: img src path
         aug_landmarks:
-        occlusions: total landmarks
+        occlusions: occlusion of landmarks
         bounding_boxes: bbox list
+        names:
         train_data: list obj, [dict{"data", "label"}]
         validation_data: list obj, [dict{"data", "label"}]
         data_size:
@@ -53,6 +50,7 @@ class ImageServer(object):
         self.aug_landmarks = []
         self.occlusions = []
         self.bounding_boxes = []
+        self.names = []
         self.train_data = None
         self.validation_data = None
         self.data_size = data_size
@@ -123,56 +121,20 @@ class ImageServer(object):
 
             # data augment
             face = get_face(img, bbox)
-            face_dups, landmark_dups, occlusion_dups = data_aug(face=face,
-                                                                pts_data=landmark_normalized,
-                                                                img_size=self.img_size,
-                                                                color=self.color)
+            face_dups, landmark_dups, occlusion_dups, name_dups = data_aug(face=face,
+                                                                           pts_data=landmark_normalized,
+                                                                           img_size=self.img_size,
+                                                                           color=self.color,
+                                                                           name=self.img_paths[index])
             self.faces.extend(face_dups)
             self.aug_landmarks.extend(landmark_dups)
             self.occlusions.extend(occlusion_dups)
+            self.names.extend(name_dups)
             if self.print_debug:
                 if (index + 1) % 100 == 0:
                     logger("processed {} images".format(index + 1))
             if index > 50:
                 break
-
-    def _balance(self, balanced_num=None):
-        """Balance dataset
-        Increase occlusion objs by (balanced_num + 1) times
-
-        :param balanced_num: required balanced_num to increase nums of occlusion objs
-        """
-        occlu_count = 0
-        data_size = len(self.occlusions)
-        for index, occlusion in enumerate(self.occlusions):
-            if np.sum(occlusion) > 0:
-                occlu_count += 1
-        occlu_ratio = float(occlu_count) / data_size
-        logger("occlu_ratio is {}".format(occlu_ratio))
-        balanced_num = int(float(1) / occlu_ratio) if balanced_num is None else balanced_num
-        occlusions_add = []
-        imgs_add = []
-        for index in range(len(self.occlusions)):
-            if np.sum(self.occlusions[index]) > 0:
-                if self.save_heatmap:
-                    for num in range(balanced_num):
-                        imgs_add.append(gaussian_noise(self.heat_maps[index]))
-                        occlusions_add.append(self.occlusions[index])
-                else:
-                    for num in range(balanced_num):
-                        imgs_add.append(gaussian_noise(self.faces[index]))
-                        occlusions_add.append(self.occlusions[index])
-            if self.print_debug and (index + 1) % 100 == 0:
-                logger("processed {} images".format(index + 1))
-        self.occlusions.extend(occlusions_add)
-        if self.save_heatmap:
-            self.heat_maps.extend(imgs_add)
-            logger("len heat_map is {}, len occlusion is {}"
-                   .format(len(self.heat_maps), len(self.occlusions)))
-        else:
-            self.faces.extend(imgs_add)
-            logger("len heat_map is {}, len occlusion is {}"
-                   .format(len(self.faces), len(self.occlusions)))
 
     def _normalize_imgs(self):
         """Whiten dataset"""
@@ -187,10 +149,10 @@ class ImageServer(object):
         """Generate heat map of each of faces"""
         # multi-thread
         # pool = Pool(3)
-        # candidates = [{'face': face, 
-        #                'landmark': landmark, 
-        #                'landmark_01': True, 
-        #                'radius': 16} 
+        # candidates = [{'face': face,
+        #                'landmark': landmark,
+        #                'landmark_01': True,
+        #                'radius': 16}
         #               for [face, landmark] in zip(self.faces, self.aug_landmarks)]
         # self.heat_maps = pool.map(heat_map_compute, candidates)
         for index in range(len(self.faces)):
@@ -203,16 +165,51 @@ class ImageServer(object):
             if self.print_debug and (index + 1) % 100 == 0:
                 logger("generated {} heatmaps".format(index + 1))
 
+    def _balance(self, balanced_num=None):
+        """Balance dataset
+        Increase occlusion objs by (balanced_num + 1) times
+
+        :param balanced_num: required balanced_num to increase nums of occlusion objs
+        """
+        occlu_count = 0
+        data_size = len(self.occlusions)
+        for index, occlusion in enumerate(self.occlusions):
+            if np.sum(occlusion) > 0:
+                occlu_count += 1
+        occlu_ratio = float(occlu_count) / data_size
+        balanced_num = int(float(1) / occlu_ratio) if balanced_num is None else balanced_num
+        occlusions_add = []
+        imgs_add = []
+        names_add = []
+        for index in range(len(self.occlusions)):
+            if np.sum(self.occlusions[index]) > 0:
+                for num in range(balanced_num):
+                    if self.save_heatmap:
+                        imgs_add.append(gaussian_noise(self.heat_maps[index]))
+                    else:
+                        imgs_add.append(gaussian_noise(self.faces[index]))
+                    occlusions_add.append(self.occlusions[index])
+                    names_add.append(add_postfix(self.names[index], "_occlu_aug_{}".format(num)))
+            if self.print_debug and (index + 1) % 100 == 0:
+                logger("data aug phase 2 processed {} images".format(index + 1))
+        self.occlusions.extend(occlusions_add)
+        if self.save_heatmap:
+            self.heat_maps.extend(imgs_add)
+        else:
+            self.faces.extend(imgs_add)
+        self.names.extend(names_add)
+        logger("length of imgs and occlusions is {}".format(len(self.occlusions)))
+
     def train_validation_split(self, test_size, random_state):
         """Train validation data split"""
         if self.save_heatmap:
-            self.train_data, self.validation_data = \
-                dataset_split(self.heat_maps, self.occlusions,
-                              test_size=test_size, random_state=random_state)
+            data_base = self.heat_maps
         else:
-            self.train_data, self.validation_data = \
-                dataset_split(self.faces, self.occlusions,
-                              test_size=test_size, random_state=random_state)
+            data_base = self.faces
+        data_base = [(data, name) for (data, name) in zip(data_base, self.names)]
+        self.train_data, self.validation_data = \
+            dataset_split(data_base, self.occlusions,
+                          test_size=test_size, random_state=random_state)
 
     @staticmethod
     def _save_core(data_base, dataset_path, mode, print_debug):
@@ -226,7 +223,7 @@ class ImageServer(object):
         for index in range(len(dataset)):
             data_name = "{}.pkl".format(index)
             data = {
-                'image': dataset[index],
+                'image_name': dataset[index],
                 'label': [int(i) for i in labels[index]]
             }
             f_data = open(os.path.join(data_path, data_name), 'wb')
