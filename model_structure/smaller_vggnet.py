@@ -7,7 +7,7 @@
 ########################################################################
 
 """
-File: occlu_model.py
+File: smaller_vggnet.py
 Author: Yang Li
 Date: 2018/11/19 11:25:31
 Description: Model Structure
