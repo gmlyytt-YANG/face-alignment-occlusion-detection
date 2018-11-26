@@ -32,6 +32,10 @@ args = vars(ap.parse_args())
 occlu_param['epochs'] = args['epoch']
 occlu_param['bs'] = args['batch_size']
 occlu_param['init_lr'] = args['init_lr']
+occlu_param['model_name'] = "best_model_epochs={}_bs={}_lr={}.h5".format(
+    occlu_param['epochs'],
+    occlu_param['bs'],
+    occlu_param['init_lr'])
 
 # occlusion detection
 occlu_clf = OcclusionDetection()
