@@ -13,6 +13,8 @@ Date: 2018/11/26 10:22:31
 Description: self-define VGG16NET
 """
 
+import os
+
 from keras.layers import Flatten
 from keras.layers import Dense
 from keras.models import Sequential
@@ -68,6 +70,8 @@ class Vgg16Net(object):
         model.add(Dense(4096, activation='relu', name='fc2'))
         model.add(Dense(classes, activation=final_act, name='predictions'))
 
-        model.load_weights(occlu_param['weights'])
+        if not os.path.exists(occlu_param['weight_path']):
+            os.makedirs(occlu_param['weight_path'])
+        model.load_weights(os.path.join(occlu_param['weight_path'], occlu_param['weight_name']))
 
         return model

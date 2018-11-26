@@ -39,5 +39,6 @@ occlu_param = {
     'epochs': 100,
     'init_lr': 1e-3,
     'bs': 64,
-    'weights': os.path.join(os.getcwd(), "weights/vgg16_weights_tf_dim_ordering_tf_kernels.h5")
+    'weight_path': os.path.join(os.getcwd(), "weights"),
+    'weight_name': "vgg16_weights_tf_dim_ordering_tf_kernels.h5"
 }
