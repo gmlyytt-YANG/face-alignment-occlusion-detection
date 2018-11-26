@@ -17,7 +17,7 @@ import os
 
 from config.init_param import occlu_param
 from occlusion_detection import OcclusionDetection
-from prepare.utils import load_imgs
+from prepare.utils import load_imgs, logger
 
 # load parameter
 ap = argparse.ArgumentParser()
@@ -27,6 +27,8 @@ ap.add_argument("-bs", "--batch_size", type=int, default=32,
                 help="batch size of training")
 ap.add_argument("-lr", "--init_lr", type=float, default=1e-3,
                 help="learning rate")
+ap.add_argument("-m", "--mode", type=str, default="train",
+                help="mode of ML")
 args = vars(ap.parse_args())
 
 occlu_param['epochs'] = args['epoch']
@@ -39,9 +41,12 @@ occlu_param['model_name'] = "best_model_epochs={}_bs={}_lr={}.h5".format(
 
 # occlusion detection
 occlu_clf = OcclusionDetection()
-# occlu_clf.data_pre()
-occlu_clf.train()
-accuary = occlu_clf.validation(metric="accuracy")
+if args["mode"] == "train":
+    # occlu_clf.data_pre()
+    # occlu_clf.train()
+    pass
+elif args["mode"] == "val_compute":
+    occlu_clf.validation_benchmark()
 
 # mat_file = os.path.join(occlu_param['img_root_dir'], 'raw_300W_release.mat')
 # for face in load_imgs(occlu_param['img_root_dir'],

@@ -17,6 +17,7 @@ from keras.models import load_model
 from keras.optimizers import Adam
 from keras.preprocessing.image import img_to_array
 from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras import backend as K
 
 from config.init_param import occlu_param
 from config.gpu_usage import set_gpu
@@ -71,11 +72,14 @@ class OcclusionDetection(object):
         opt = Adam(lr=occlu_param['init_lr'], 
                    decay=occlu_param['init_lr'] / occlu_param['epochs'])
         model_structure = Vgg16Net if model_type == "vgg16" else SmallerVGGNet
-        model = model_structure.build(width=occlu_param['img_size'], height=occlu_param['img_size'],
-                                      depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
+        model = model_structure.build(width=occlu_param['img_size'], 
+                                      height=occlu_param['img_size'],
+                                      depth=occlu_param['channel'], 
+                                      classes=occlu_param['landmark_num'],
                                       final_act="sigmoid")
 
-        model.compile(loss="binary_crossentropy", optimizer=opt,
+        model.compile(loss="binary_crossentropy", 
+                      optimizer=opt,
                       metrics=["accuracy"])
 
         # train model
@@ -96,33 +100,48 @@ class OcclusionDetection(object):
             validation_data=(validation_data, validation_labels),
             steps_per_epoch=len(os.listdir(train_dir)) // occlu_param['bs'],
             epochs=occlu_param['epochs'], verbose=1, callbacks=callback_list)
+        
+        K.clear_session()
 
     @staticmethod
-    def classify(img, need_to_normalize=False):
+    def classify(model, img, need_to_normalize=False):
         img = cv2.resize(img, (occlu_param['img_size'], occlu_param['img_size']))
         if need_to_normalize:
             img = img.astype("float") / 255.0
         img = img_to_array(img)
         img = np.expand_dims(img, axis=0)
-        model = load_model(
-            os.path.join(occlu_param['model_dir'], occlu_param['model_name']))
         prob = model.predict(img)[0]
         return prob
 
-    def validation(self, metric='accuracy'):
+    def validation_benchmark(self):
+        # set gpu usage
+        set_gpu(ratio=0.5)
+        
+        # load model
+        model = load_model(
+            os.path.join(occlu_param['model_dir'], occlu_param['model_name']))
+        
+        # load data
         validation_dir = os.path.join(occlu_param['data_save_dir'], "validation")
         validation_data, validation_labels, validation_names = \
             validation_data_feed(validation_dir, print_debug=occlu_param['print_debug'])
+        
+        # forward
         predict_labels = []
-        for img in validation_data:
-            predict_labels.append([binary(_, threshold=0.5) 
-                for _ in self.classify(img)])
-
-        result = 0.0
-        if metric is 'accuracy':
-            count = 0
-            for index in range(len(validation_labels)):
-                if (predict_labels[index] == validation_labels[index]).all():
-                    count += 1
-            result = float(count) / len(validation_labels)
-        return result
+        length = len(validation_data)
+        for index in range(length):
+            prediction = [binary(_, threshold=0.5) 
+                for _ in self.classify(model, validation_data[index])]
+            predict_labels.append(prediction) 
+            if (index + 1) % 500 == 0:
+                logger("predicted {} imgs".format(index + 1))
+        K.clear_session()
+        
+        # compute 
+        logger("the result of prediction of validation is as follow:")
+        occlu_ratio = occlu_ratio_compute(validation_labels)
+        accuracy = accuracy_compute(validation_labels, predict_labels)
+        occlu_recall = occlu_recall_compute(validation_labels, predict_labels)
+        print("occlu_ratio is {}".format(occlu_ratio))
+        print("accuracy is {}".format(accuracy))
+        print("occlu_recall is {}".format(occlu_recall))

@@ -466,3 +466,35 @@ def gaussian_noise(img, mode='gaussian'):
 
 def binary(num, threshold):
     num = 1 if num > threshold else 0
+    return num
+
+
+def occlu_ratio_compute(labels):
+    count = 0
+    for index in range(len(labels)):
+        if np.sum(labels[index]) > 0:
+            count += 1
+    return float(count) / len(labels)
+
+
+def accuracy_compute(labels, predictions):
+    count = 0 
+    for index in range(len(labels)):
+        if (labels[index] == predictions[index]).all():
+            count += 1
+    result = float(count) / len(labels)
+    return result
+
+
+def occlu_recall_compute(labels, predictions):
+    count = 0
+    good_count = 0
+    for index in range(len(labels)):
+        for index_inner in range(len(labels[index])):
+            if labels[index][index_inner] + \
+                predictions[index][index_inner] == 2:
+                good_count += 1
+            if labels[index][index_inner] == 1:
+                count += 1
+    return float(good_count) / count
+
