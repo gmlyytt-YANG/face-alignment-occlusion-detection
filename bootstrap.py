@@ -39,7 +39,7 @@ occlu_param['model_name'] = "best_model_epochs={}_bs={}_lr={}.h5".format(
 
 # occlusion detection
 occlu_clf = OcclusionDetection()
-occlu_clf.data_pre()
+# occlu_clf.data_pre()
 occlu_clf.train()
 accuary = occlu_clf.validation(metric="accuracy")
 

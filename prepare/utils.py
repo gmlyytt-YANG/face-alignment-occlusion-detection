@@ -178,7 +178,7 @@ def add_postfix(name, plus_str):
         logger("invalid name")
         return -1
     prefix_plus_name = str_list[0] + plus_str
-    return prefix_plus_name + str_list[1]
+    return prefix_plus_name + '.' + str_list[1]
 
 
 def data_append(faces, landmarks, occlusions, names,

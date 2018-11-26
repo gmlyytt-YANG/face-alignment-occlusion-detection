@@ -68,10 +68,10 @@ class Vgg16Net(object):
         model.add(Flatten(name='flatten'))
         model.add(Dense(4096, activation='relu', name='fc1_self'))
         # model.add(Dense(4096, activation='relu', name='fc2'))
-        model.add(Dense(classes, activation=final_act, name='multi_label_predictions'))
+        model.add(Dense(classes, activation=final_act, name='predictions_self'))
 
         if not os.path.exists(occlu_param['weight_path']):
             os.makedirs(occlu_param['weight_path'])
-        model.load_weights(os.path.join(occlu_param['weight_path'], occlu_param['weight_name']))
+        model.load_weights(os.path.join(occlu_param['weight_path'], occlu_param['weight_name']), by_name=True)
 
         return model

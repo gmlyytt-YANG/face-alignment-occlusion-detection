@@ -133,8 +133,8 @@ class ImageServer(object):
             if self.print_debug:
                 if (index + 1) % 100 == 0:
                     logger("processed {} images".format(index + 1))
-            if index > 50:
-                break
+            # if index > 50:
+            #     break
 
     def _normalize_imgs(self):
         """Whiten dataset"""
