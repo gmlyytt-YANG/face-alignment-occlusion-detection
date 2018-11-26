@@ -32,7 +32,8 @@ class OcclusionDetection(object):
     def data_pre(self):
         # load data(img, bbox, pts)
         mat_file = os.path.join(occlu_param['img_root_dir'], 'raw_300W_release.mat')
-        img_paths, bboxes = load_basic_info(mat_file, img_root=occlu_param['img_root_dir'])
+        img_paths, bboxes = \
+            load_basic_info(mat_file, img_root=occlu_param['img_root_dir'])
 
         # data prepare
         img_server = ImageServer(data_size=len(img_paths),
@@ -65,12 +66,16 @@ class OcclusionDetection(object):
             width=occlu_param['img_size'], height=occlu_param['img_size'],
             depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
             final_act="sigmoid")
-        opt = Adam(lr=occlu_param['init_lr'], decay=occlu_param['init_lr'] / occlu_param['epochs'])
+        opt = Adam(lr=occlu_param['init_lr'], 
+                   decay=occlu_param['init_lr'] / occlu_param['epochs'])
         model.compile(loss="binary_crossentropy", optimizer=opt,
                       metrics=["accuracy"])
 
         # train model
         logger("training")
+        if not os.path.exists(occlu_param['model_dir']):
+            os.makedirs(occlu_param['model_dir'])
+        os.environ["TF_CPP_MIN_LOG_LEVEL"]='3'
         checkpoint = ModelCheckpoint(
             filepath=os.path.join(occlu_param['model_dir'],
                                   'best_model_epochs={}_bs={}_lr={}.h5'.format(
@@ -90,7 +95,8 @@ class OcclusionDetection(object):
             img = img.astype("float") / 255.0
         img = img_to_array(img)
         img = np.expand_dims(img, axis=0)
-        model = load_model(os.path.join(occlu_param['model_dir'], occlu_param['model_name']))
+        model = load_model(
+            os.path.join(occlu_param['model_dir'], occlu_param['model_name']))
         prob = model.predict(img)[0]
         return prob
 
@@ -100,7 +106,8 @@ class OcclusionDetection(object):
             validation_data_feed(validation_dir, print_debug=occlu_param['print_debug'])
         predict_labels = []
         for img in validation_data:
-            predict_labels.append([binary(_, threshold=0.5) for _ in self.classify(img)])
+            predict_labels.append([binary(_, threshold=0.5) 
+                for _ in self.classify(img)])
 
         result = 0.0
         if metric is 'accuracy':

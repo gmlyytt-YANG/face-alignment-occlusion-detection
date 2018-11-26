@@ -35,7 +35,7 @@ occlu_param['init_lr'] = args['init_lr']
 
 # occlusion detection
 occlu_clf = OcclusionDetection()
-occlu_clf.data_pre()
+# occlu_clf.data_pre()
 occlu_clf.train()
 accuary = occlu_clf.validation(metric="accuracy")
 
