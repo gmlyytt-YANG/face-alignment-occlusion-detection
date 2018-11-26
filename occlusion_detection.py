@@ -19,11 +19,13 @@ from keras.preprocessing.image import img_to_array
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 from config.init_param import occlu_param
+from config.gpu_usage import set_gpu
 from model_structure.smaller_vggnet import SmallerVGGNet
 from model_structure.new_vgg16net import Vgg16Net
 from prepare.utils import *
 from prepare.occlu_data_gen import train_data_feed, validation_data_feed
 from prepare.ImageServer import ImageServer
+
 
 
 class OcclusionDetection(object):
@@ -53,7 +55,7 @@ class OcclusionDetection(object):
         logger("saving data")
         img_server.save(occlu_param['data_save_dir'])
 
-    def train(self, model_type="vgg16"):
+    def train(self, model_type="vgg16", gpu_ratio=0.5):
         # loading data
         logger("loading data")
         train_dir = os.path.join(occlu_param['data_save_dir'], "train")
@@ -61,6 +63,9 @@ class OcclusionDetection(object):
         validation_data, validation_labels, validation_names = \
             validation_data_feed(validation_dir, print_debug=self.print_debug)
 
+        # set gpu usage
+        set_gpu(ratio=gpu_ratio)
+        
         # build model
         logger("building model")
         opt = Adam(lr=occlu_param['init_lr'], 
