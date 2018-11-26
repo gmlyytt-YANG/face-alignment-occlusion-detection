@@ -19,7 +19,8 @@ from keras.preprocessing.image import img_to_array
 from keras.callbacks import ModelCheckpoint
 
 from config.init_param import occlu_param
-from model_structure.occlu_model import SmallerVGGNet
+from model_structure.smaller_vggnet import SmallerVGGNet
+from model_structure.new_vgg16net import Vgg16Net
 from prepare.utils import *
 from prepare.occlu_data_gen import train_data_feed, validation_data_feed
 from prepare.ImageServer import ImageServer
@@ -51,7 +52,7 @@ class OcclusionDetection(object):
         logger("saving data")
         img_server.save(occlu_param['data_save_dir'])
 
-    def train(self):
+    def train(self, model_type="vgg16"):
         # loading data
         logger("loading data")
         train_dir = os.path.join(occlu_param['data_save_dir'], "train")
@@ -61,11 +62,17 @@ class OcclusionDetection(object):
 
         # build model
         logger("building model")
-        model = SmallerVGGNet.build(
-            width=occlu_param['img_size'], height=occlu_param['img_size'],
-            depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
-            final_act="sigmoid")
         opt = Adam(lr=occlu_param['init_lr'], decay=occlu_param['init_lr'] / occlu_param['epochs'])
+        if model_type == "vgg16":
+            model = Vgg16Net.build(width=occlu_param['img_size'], height=occlu_param['img_size'],
+                                   depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
+                                   final_act="sigmoid")
+        else:
+            model = SmallerVGGNet.build(
+                width=occlu_param['img_size'], height=occlu_param['img_size'],
+                depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
+                final_act="sigmoid")
+
         model.compile(loss="binary_crossentropy", optimizer=opt,
                       metrics=["accuracy"])
 
