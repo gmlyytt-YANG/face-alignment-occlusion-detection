@@ -65,15 +65,10 @@ class OcclusionDetection(object):
         logger("building model")
         opt = Adam(lr=occlu_param['init_lr'], 
                    decay=occlu_param['init_lr'] / occlu_param['epochs'])
-        if model_type == "vgg16":
-            model = Vgg16Net.build(width=occlu_param['img_size'], height=occlu_param['img_size'],
-                                   depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
-                                   final_act="sigmoid")
-        else:
-            model = SmallerVGGNet.build(
-                width=occlu_param['img_size'], height=occlu_param['img_size'],
-                depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
-                final_act="sigmoid")
+        model_structure = Vgg16Net if model_type == "vgg16" else SmallerVGGNet
+        model = model_structure.build(width=occlu_param['img_size'], height=occlu_param['img_size'],
+                                      depth=occlu_param['channel'], classes=occlu_param['landmark_num'],
+                                      final_act="sigmoid")
 
         model.compile(loss="binary_crossentropy", optimizer=opt,
                       metrics=["accuracy"])
