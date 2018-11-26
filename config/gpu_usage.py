@@ -22,16 +22,10 @@ def set_gpu(ratio=0, target='memory'):
     memory = list(map(int, os.popen(command1).readlines()))
     gpu = list(map(int, os.popen(command2).readlines()))
     if memory and gpu:  # 如果没有显卡，memory，gpu均为[]
-        if target == 'memory':
-            num = (1, 0)[memory[0] > memory[1]]
-        else:
-            num = (0, 1)[gpu[0] > gpu[1]]
-        print('>>> Free Memory       : GPU0 %6d MiB | GPU1 %6d MiB' % (memory[0], memory[1]))
-        print('>>> Volatile GPU-Util : GPU0 %6d %%   | GPU1 %6d %% ' % (gpu[0], gpu[1]))
-        print('>>> Using GPU%d' % num)
+        print('>>> Free Memory       : GPU0 %6d MiB' % (memory[0]))
+        print('>>> Volatile GPU-Util : GPU0 %6d %%' % (gpu[0]))
         import tensorflow as tf
         config = tf.ConfigProto()
-        config.gpu_options.visible_device_list = str(num)  # 选择GPU
         if ratio == 0:
             config.gpu_options.allow_growth = True
         else:
