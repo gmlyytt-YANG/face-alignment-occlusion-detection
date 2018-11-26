@@ -38,7 +38,7 @@ def train_data_feed(batch_size, data_dir):
         for index in chosen_indices:
             f_dataset = open(os.path.join(data_dir, "{}.pkl".format(index)), 'rb')
             base = pickle.load(f_dataset)
-            data.append(np.multiply(base['image_name'][0], 255).astype(int))
+            data.append(base['image_name'][0].astype(int))
             labels.append(base['label'])
             f_dataset.close()
         yield np.array(data), np.array(labels)
@@ -53,7 +53,7 @@ def validation_data_feed(data_dir, print_debug=False):
         data_path = os.path.join(data_dir, path)
         f_data = open(data_path, 'rb')
         data = pickle.load(f_data)
-        data_list.append(np.multiply(data['image_name'][0], 255).astype(int))
+        data_list.append(data['image_name'][0].astype(int))
         name_list.append(data['image_name'][1])
         labels_list.append(data['label'])
         f_data.close()
