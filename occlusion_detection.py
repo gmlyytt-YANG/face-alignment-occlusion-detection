@@ -16,7 +16,7 @@ Description: Data Augment
 from keras.models import load_model
 from keras.optimizers import Adam
 from keras.preprocessing.image import img_to_array
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 from config.init_param import occlu_param
 from model_structure.smaller_vggnet import SmallerVGGNet
@@ -83,7 +83,9 @@ class OcclusionDetection(object):
                                   'best_model_epochs={}_bs={}_lr={}.h5'.format(
                                       occlu_param['epochs'], occlu_param['bs'],
                                       occlu_param['init_lr'])))
-        callback_list = [checkpoint]
+        
+        early_stopping = EarlyStopping(monitor='val_acc', patience=10, verbose=2)
+        callback_list = [checkpoint, early_stopping]
         model.fit_generator(
             train_data_feed(occlu_param['bs'], train_dir),
             validation_data=(validation_data, validation_labels),
