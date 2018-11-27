@@ -96,7 +96,7 @@ class ImageServer(object):
             self.landmarks.append(landmark)
             self.img_paths.append(img_path)
             if self.print_debug:
-                if (index + 1) % 100 == 0:
+                if (index + 1) % 500 == 0:
                     logger("processed {} basic infos".format(index + 1))
 
     def _load_imgs(self):
@@ -131,7 +131,7 @@ class ImageServer(object):
             self.occlusions.extend(occlusion_dups)
             self.names.extend(name_dups)
             if self.print_debug:
-                if (index + 1) % 100 == 0:
+                if (index + 1) % 500 == 0:
                     logger("processed {} images".format(index + 1))
             # if index > 50:
             #     break
@@ -162,7 +162,7 @@ class ImageServer(object):
                                                     'landmark': landmark,
                                                     'landmark_01': True,
                                                     'radius': occlu_param['radius']}))
-            if self.print_debug and (index + 1) % 100 == 0:
+            if self.print_debug and (index + 1) % 500 == 0:
                 logger("generated {} heatmaps".format(index + 1))
 
     def _balance(self, balanced_num=None):
@@ -190,7 +190,7 @@ class ImageServer(object):
                         imgs_add.append(gaussian_noise(self.faces[index]))
                     occlusions_add.append(self.occlusions[index])
                     names_add.append(add_postfix(self.names[index], "_occlu_aug_{}".format(num)))
-            if self.print_debug and (index + 1) % 100 == 0:
+            if self.print_debug and (index + 1) % 500 == 0:
                 logger("data aug phase 2 processed {} images".format(index + 1))
         self.occlusions.extend(occlusions_add)
         if self.save_heatmap:

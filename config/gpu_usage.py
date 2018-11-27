@@ -22,8 +22,6 @@ def set_gpu(ratio=0, target='memory'):
     memory = list(map(int, os.popen(command1).readlines()))
     gpu = list(map(int, os.popen(command2).readlines()))
     if memory and gpu:  # 如果没有显卡，memory，gpu均为[]
-        print('>>> Free Memory       : GPU0 %6d MiB' % (memory[0]))
-        print('>>> Volatile GPU-Util : GPU0 %6d %%' % (gpu[0]))
         import tensorflow as tf
         config = tf.ConfigProto()
         if ratio == 0:
