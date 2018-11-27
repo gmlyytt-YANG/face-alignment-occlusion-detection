@@ -37,11 +37,11 @@ class OcclusionDetection(object):
         mat_file = os.path.join(occlu_param['img_root_dir'], 'raw_300W_release.mat')
         img_paths, bboxes = \
             load_basic_info(mat_file, img_root=occlu_param['img_root_dir'])
-
-        # training data
+        
+	# training data 
         img_paths = img_paths[:3148]
         bboxes = bboxes[:3148, :]
-
+        
         # data prepare
         img_server = ImageServer(data_size=len(img_paths),
                                  img_size=occlu_param['img_size'],
