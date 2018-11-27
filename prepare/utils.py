@@ -486,15 +486,19 @@ def accuracy_compute(labels, predictions):
     return result
 
 
-def occlu_recall_compute(labels, predictions):
+def recall_compute(labels, predictions, mode="occlu"):
     count = 0
     good_count = 0
+    if mode == "occlu":
+        flag = 2
+    else:
+        flag = 0
     for index in range(len(labels)):
         for index_inner in range(len(labels[index])):
             if labels[index][index_inner] + \
-                predictions[index][index_inner] == 2:
+                predictions[index][index_inner] == flag:
                 good_count += 1
-            if labels[index][index_inner] == 1:
+            if labels[index][index_inner] == int(flag / 2):
                 count += 1
     return float(good_count) / count
 
