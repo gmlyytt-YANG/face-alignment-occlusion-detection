@@ -27,7 +27,6 @@ from prepare.occlu_data_gen import train_data_feed, validation_data_feed
 from prepare.ImageServer import ImageServer
 
 
-
 class OcclusionDetection(object):
     def __init__(self):
         self.print_debug = occlu_param['print_debug']
@@ -65,10 +64,10 @@ class OcclusionDetection(object):
 
         # set gpu usage
         set_gpu(ratio=gpu_ratio)
-        
+
         # build model
         logger("building model")
-        opt = Adam(lr=occlu_param['init_lr'], 
+        opt = Adam(lr=occlu_param['init_lr'],
                    decay=occlu_param['init_lr'] / occlu_param['epochs'])
         model_structure = Vgg16Net if model_type == "vgg16" else SmallerVGGNet
         model = model_structure.build(width=occlu_param['img_size'], height=occlu_param['img_size'],
@@ -82,13 +81,13 @@ class OcclusionDetection(object):
         logger("training")
         if not os.path.exists(occlu_param['model_dir']):
             os.makedirs(occlu_param['model_dir'])
-        os.environ["TF_CPP_MIN_LOG_LEVEL"]='3'
+        os.environ["TF_CPP_MIN_LOG_LEVEL"] = '3'
         checkpoint = ModelCheckpoint(
             filepath=os.path.join(occlu_param['model_dir'],
                                   'best_model_epochs={}_bs={}_lr={}.h5'.format(
                                       occlu_param['epochs'], occlu_param['bs'],
                                       occlu_param['init_lr'])))
-        
+
         early_stopping = EarlyStopping(monitor='val_acc', patience=10, verbose=2)
         callback_list = [checkpoint, early_stopping]
         model.fit_generator(
@@ -115,8 +114,8 @@ class OcclusionDetection(object):
             validation_data_feed(validation_dir, print_debug=occlu_param['print_debug'])
         predict_labels = []
         for img in validation_data:
-            predict_labels.append([binary(_, threshold=0.5) 
-                for _ in self.classify(img)])
+            predict_labels.append([binary(_, threshold=0.5)
+                                   for _ in self.classify(img)])
 
         result = 0.0
         if metric is 'accuracy':
