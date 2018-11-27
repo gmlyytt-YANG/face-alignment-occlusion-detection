@@ -37,11 +37,11 @@ class OcclusionDetection(object):
         mat_file = os.path.join(occlu_param['img_root_dir'], 'raw_300W_release.mat')
         img_paths, bboxes = \
             load_basic_info(mat_file, img_root=occlu_param['img_root_dir'])
-        
-	# training data 
+
+        # training data
         img_paths = img_paths[:3148]
         bboxes = bboxes[:3148, :]
-        
+
         # data prepare
         img_server = ImageServer(data_size=len(img_paths),
                                  img_size=occlu_param['img_size'],
@@ -75,13 +75,13 @@ class OcclusionDetection(object):
         opt = Adam(lr=occlu_param['init_lr'],
                    decay=occlu_param['init_lr'] / occlu_param['epochs'])
         model_structure = Vgg16Net if model_type == "vgg16" else SmallerVGGNet
-        model = model_structure.build(width=occlu_param['img_size'], 
+        model = model_structure.build(width=occlu_param['img_size'],
                                       height=occlu_param['img_size'],
-                                      depth=occlu_param['channel'], 
+                                      depth=occlu_param['channel'],
                                       classes=occlu_param['landmark_num'],
                                       final_act="sigmoid")
 
-        model.compile(loss="binary_crossentropy", 
+        model.compile(loss="binary_crossentropy",
                       optimizer=opt,
                       metrics=["accuracy"])
 
@@ -103,7 +103,7 @@ class OcclusionDetection(object):
             validation_data=(validation_data, validation_labels),
             steps_per_epoch=len(os.listdir(train_dir)) // occlu_param['bs'],
             epochs=occlu_param['epochs'], verbose=1, callbacks=callback_list)
-        
+
         K.clear_session()
 
     @staticmethod
@@ -119,27 +119,27 @@ class OcclusionDetection(object):
     def validation_benchmark(self):
         # set gpu usage
         set_gpu(ratio=0.5)
-        
+
         # load model
         model = load_model(
             os.path.join(occlu_param['model_dir'], occlu_param['model_name']))
-        
+
         # load data
         validation_dir = os.path.join(occlu_param['data_save_dir'], "validation")
         validation_data, validation_labels, validation_names = \
             validation_data_feed(validation_dir, print_debug=occlu_param['print_debug'])
-        
+
         # forward
         predict_labels = []
         length = len(validation_data)
         for index in range(length):
-            prediction = [binary(_, threshold=0.5) 
-                for _ in self.classify(model, validation_data[index])]
-            predict_labels.append(prediction) 
+            prediction = [binary(_, threshold=0.5)
+                          for _ in self.classify(model, validation_data[index])]
+            predict_labels.append(prediction)
             if (index + 1) % 500 == 0:
                 logger("predicted {} imgs".format(index + 1))
         K.clear_session()
-        
+
         # compute 
         logger("the result of prediction of validation is as follow:")
         occlu_ratio = occlu_ratio_compute(validation_labels)
