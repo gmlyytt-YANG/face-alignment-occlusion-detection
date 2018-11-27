@@ -189,12 +189,11 @@ def data_append(faces, landmarks, occlusions, names,
     names.append(name)
 
 
-def data_aug(face, pts_data, img_size, color, name):
+def data_aug(face, pts_data, img_size, name):
     """Data augment
     :param face:
     :param pts_data:
     :param img_size:
-    :param color:
     :param name: name of the face
     :return: faces, landmarks, names
     """
@@ -205,7 +204,7 @@ def data_aug(face, pts_data, img_size, color, name):
     names = []
     alpha = 5  # rotate degree
 
-    # flip1
+    # flip
     face_flipped, landmark_flipped = flip(face, pts_data)
     occlusion_flipped = landmark_flipped[:, 2]
     face_flipped = cv2.resize(face_flipped, (img_size, img_size))
@@ -222,7 +221,16 @@ def data_aug(face, pts_data, img_size, color, name):
                 face_rotated_by_alpha, landmark_rotated[:, :-1],
                 occlusion_rotated, add_postfix(name, "_rotation_{}".format(alpha)))
 
-    # flip with rotation1
+    # rotation1.1
+    face_rotated_by_alpha, landmark_rotated = rotate(face, pts_data, 2 * alpha)
+    landmark_rotated[:, :2] = np.clip(landmark_rotated[:, :2], 0, 1)  # exception dealing
+    occlusion_rotated = landmark_rotated[:, 2]
+    face_rotated_by_alpha = cv2.resize(face_rotated_by_alpha, (img_size, img_size))
+    data_append(faces, landmarks, occlusions, names,
+                face_rotated_by_alpha, landmark_rotated[:, :-1],
+                occlusion_rotated, add_postfix(name, "_rotation_{}".format(2 * alpha)))
+
+    # rotation1 with flip
     face_flipped, landmark_flipped = flip(face_rotated_by_alpha, landmark_rotated)
     occlusion_flipped = landmark_flipped[:, 2]
     face_flipped = cv2.resize(face_flipped, (img_size, img_size))
@@ -239,7 +247,16 @@ def data_aug(face, pts_data, img_size, color, name):
                 face_rotated_by_alpha, landmark_rotated[:, :-1],
                 occlusion_rotated, add_postfix(name, "_rotation_-{}".format(alpha)))
 
-    # flip with rotation2
+    # rotation2.1
+    face_rotated_by_alpha, landmark_rotated = rotate(face, pts_data, -2 * alpha)
+    landmark_rotated[:, :2] = np.clip(landmark_rotated[:, :2], 0, 1)
+    occlusion_rotated = landmark_rotated[:, 2]
+    face_rotated_by_alpha = cv2.resize(face_rotated_by_alpha, (img_size, img_size))
+    data_append(faces, landmarks, occlusions, names,
+                face_rotated_by_alpha, landmark_rotated[:, :-1],
+                occlusion_rotated, add_postfix(name, "_rotation_-{}".format(2 * alpha)))
+
+    # rotation2 with flip
     face_flipped, landmark_flipped = flip(face_rotated_by_alpha, landmark_rotated)
     occlusion_flipped = landmark_flipped[:, 2]
     face_flipped = cv2.resize(face_flipped, (img_size, img_size))

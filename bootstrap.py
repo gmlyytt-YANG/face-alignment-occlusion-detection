@@ -42,7 +42,7 @@ occlu_param['model_name'] = "best_model_epochs={}_bs={}_lr={}.h5".format(
 # occlusion detection
 occlu_clf = OcclusionDetection()
 if args["mode"] == "train":
-    # occlu_clf.data_pre()
+    occlu_clf.data_pre()
     # occlu_clf.train()
     pass
 elif args["mode"] == "val_compute":
