@@ -124,7 +124,6 @@ class ImageServer(object):
             face_dups, landmark_dups, occlusion_dups, name_dups = data_aug(face=face,
                                                                            pts_data=landmark_normalized,
                                                                            img_size=self.img_size,
-                                                                           color=self.color,
                                                                            name=self.img_paths[index])
             self.faces.extend(face_dups)
             self.aug_landmarks.extend(landmark_dups)
