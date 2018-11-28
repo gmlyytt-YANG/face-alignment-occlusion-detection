@@ -7,22 +7,45 @@
 ########################################################################
 
 """
-File: occlusion_detection.py
+File: occlu_detection.py
 Author: Yang Li
 Date: 2018/11/14 14:49:31
 Description: Occlusion Detection
 """
 
 from collections import defaultdict
-import numpy as np
 import pickle
 import pandas as pd
 from sklearn import svm
 from sklearn.metrics import zero_one_loss
-import os
 
-from prepare.utils import dataset_split
-from prepare.utils import logger, str_or_float
+from utils import *
+
+
+def get_patch(imgs, landmarks, occlusions, patch_size, patches, labels, landmark_num):
+    """Get patch of each landmark
+    :param imgs:
+    :param landmarks:
+    :param occlusions:
+    :param patch_size:
+    :param patches: patch container
+    :param labels: label container
+    :return:
+    """
+    data_size = len(imgs)
+    for i in range(data_size):
+        face = imgs[i]
+        face_size = face.shape[0]
+        landmark = landmarks[i]
+        occlusion = occlusions[i]
+        landmark = reproject_landmark(face_size, face_size, landmark, occlusion=False)
+        for landmark_index in range(landmark_num):
+            [x_center, y_center] = landmark[landmark_index]
+            left, right, top, bottom = range_search(x_center, y_center, patch_size, face_size)
+            face_part = face[int(top): int(bottom), int(left): int(right)]
+            patches[landmark_index].append(face_part)
+            labels[landmark_index].append(occlusion[landmark_index])
+
 
 # init data
 landmark_size = 68
