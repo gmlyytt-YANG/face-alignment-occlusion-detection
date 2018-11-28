@@ -14,11 +14,10 @@ Date: 2018/11/11 09:47:31
 
 import cv2
 import logging
+import glob
 import numpy as np
 import os
 import scipy.io as scio
-from sklearn.model_selection import train_test_split
-from skimage.util import random_noise
 
 
 def logger(msg):
@@ -26,6 +25,30 @@ def logger(msg):
     logging.basicConfig(level=logging.DEBUG,
                         format='[%(asctime)s] - %(levelname)s: %(message)s')
     logging.info(msg)
+
+
+def create_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
+def set_gpu(ratio=0, target='memory'):
+    command1 = "nvidia-smi -q -d Memory | grep -A4 GPU | grep Free | awk '{print $3}'"
+    command2 = "nvidia-smi -q | grep Gpu | awk '{print $3}'"
+    memory = list(map(int, os.popen(command1).readlines()))
+    gpu = list(map(int, os.popen(command2).readlines()))
+    if memory and gpu:
+        import tensorflow as tf
+        config = tf.ConfigProto()
+        if ratio == 0:
+            config.gpu_options.allow_growth = True
+        else:
+            config.gpu_options.per_process_gpu_memory_fraction = ratio
+        sess = tf.Session(config=config)
+        from keras import backend as K
+        K.set_session(sess)
+    else:
+        print('>>> Could not find the GPU')
 
 
 def str_or_float(obj):
@@ -36,22 +59,6 @@ def str_or_float(obj):
     except ValueError:
         obj_convert = obj
     return obj_convert
-
-
-def read_pts(pts_path, landmark_num=68):
-    """Read pts file and convert to matrix"""
-    data = np.zeros(shape=(landmark_num, 3), dtype=np.float)
-    index = 0
-    for line in open(pts_path, 'r'):
-        if index > 68:
-            return -1
-        content = line.split('\t')
-        if len(content) != 4:  # \n is the end of each line
-            return -1
-        data[index] = [float(i) for i in content[:-1]]
-        index += 1
-
-    return data
 
 
 def flip(face, pts_data):
@@ -189,11 +196,10 @@ def data_append(faces, landmarks, occlusions, names,
     names.append(name)
 
 
-def data_aug(face, pts_data, img_size, name):
+def data_aug(face, landmark, name):
     """Data augment
     :param face:
-    :param pts_data:
-    :param img_size:
+    :param landmark:
     :param name: name of the face
     :return: faces, landmarks, names
     """
@@ -204,70 +210,62 @@ def data_aug(face, pts_data, img_size, name):
     names = []
     alpha = 5  # rotate degree
 
-    # flip
-    face_flipped, landmark_flipped = flip(face, pts_data)
-    occlusion_flipped = landmark_flipped[:, 2]
-    face_flipped = cv2.resize(face_flipped, (img_size, img_size))
+    # 1. flip
+    face_flipped, landmark_flipped = flip(face, landmark)
+    occlusion_flipped = landmark_flipped[:, 2].astype(int)
     data_append(faces, landmarks, occlusions, names,
-                face_flipped, np.clip(landmark_flipped[:, :-1], 0, 1),
-                occlusion_flipped, add_postfix(name, "_flip"))
+                face_flipped, np.clip(landmark_flipped[:, :-1], 0, 1), occlusion_flipped,
+                add_postfix(name, "_flip").replace("/", "_"))
 
-    # rotation1
-    face_rotated_by_alpha, landmark_rotated = rotate(face, pts_data, alpha)
+    # 2. rotation_5
+    face_rotated_by_alpha, landmark_rotated = rotate(face, landmark, alpha)
     landmark_rotated[:, :2] = np.clip(landmark_rotated[:, :2], 0, 1)  # exception dealing
-    occlusion_rotated = landmark_rotated[:, 2]
-    face_rotated_by_alpha = cv2.resize(face_rotated_by_alpha, (img_size, img_size))
+    occlusion_rotated = landmark_rotated[:, 2].astype(int)
     data_append(faces, landmarks, occlusions, names,
-                face_rotated_by_alpha, landmark_rotated[:, :-1],
-                occlusion_rotated, add_postfix(name, "_rotation_{}".format(alpha)))
+                face_rotated_by_alpha, landmark_rotated[:, :-1], occlusion_rotated,
+                add_postfix(name, "_rotation_{}".format(alpha)))
 
-    # rotation1.1
-    face_rotated_by_alpha, landmark_rotated = rotate(face, pts_data, 2 * alpha)
+    # 3. rotation_5_flip
+    face_flipped, landmark_flipped = flip(face_rotated_by_alpha, landmark_rotated)
+    occlusion_flipped = landmark_flipped[:, 2].astype(int)
+    data_append(faces, landmarks, occlusions, names,
+                face_flipped, landmark_flipped[:, :-1], occlusion_flipped,
+                add_postfix(name, "_rotation_{}_flip".format(alpha)))
+
+    # 4. rotation_10
+    face_rotated_by_alpha, landmark_rotated = rotate(face, landmark, 2 * alpha)
     landmark_rotated[:, :2] = np.clip(landmark_rotated[:, :2], 0, 1)  # exception dealing
-    occlusion_rotated = landmark_rotated[:, 2]
-    face_rotated_by_alpha = cv2.resize(face_rotated_by_alpha, (img_size, img_size))
+    occlusion_rotated = landmark_rotated[:, 2].astype(int)
     data_append(faces, landmarks, occlusions, names,
-                face_rotated_by_alpha, landmark_rotated[:, :-1],
-                occlusion_rotated, add_postfix(name, "_rotation_{}".format(2 * alpha)))
+                face_rotated_by_alpha, landmark_rotated[:, :-1], occlusion_rotated,
+                add_postfix(name, "_rotation_{}".format(2 * alpha)))
 
-    # rotation1 with flip
-    face_flipped, landmark_flipped = flip(face_rotated_by_alpha, landmark_rotated)
-    occlusion_flipped = landmark_flipped[:, 2]
-    face_flipped = cv2.resize(face_flipped, (img_size, img_size))
-    data_append(faces, landmarks, occlusions, names,
-                face_flipped, landmark_flipped[:, :-1],
-                occlusion_flipped, add_postfix(name, "_rotation_{}_flip".format(alpha)))
-
-    # rotation2
-    face_rotated_by_alpha, landmark_rotated = rotate(face, pts_data, -alpha)
+    # 5. rotation_-5
+    face_rotated_by_alpha, landmark_rotated = rotate(face, landmark, -alpha)
     landmark_rotated[:, :2] = np.clip(landmark_rotated[:, :2], 0, 1)
-    occlusion_rotated = landmark_rotated[:, 2]
-    face_rotated_by_alpha = cv2.resize(face_rotated_by_alpha, (img_size, img_size))
+    occlusion_rotated = landmark_rotated[:, 2].astype(int)
     data_append(faces, landmarks, occlusions, names,
-                face_rotated_by_alpha, landmark_rotated[:, :-1],
-                occlusion_rotated, add_postfix(name, "_rotation_-{}".format(alpha)))
+                face_rotated_by_alpha, landmark_rotated[:, :-1], occlusion_rotated,
+                add_postfix(name, "_rotation_-{}".format(alpha)))
 
-    # rotation2.1
-    face_rotated_by_alpha, landmark_rotated = rotate(face, pts_data, -2 * alpha)
-    landmark_rotated[:, :2] = np.clip(landmark_rotated[:, :2], 0, 1)
-    occlusion_rotated = landmark_rotated[:, 2]
-    face_rotated_by_alpha = cv2.resize(face_rotated_by_alpha, (img_size, img_size))
-    data_append(faces, landmarks, occlusions, names,
-                face_rotated_by_alpha, landmark_rotated[:, :-1],
-                occlusion_rotated, add_postfix(name, "_rotation_-{}".format(2 * alpha)))
-
-    # rotation2 with flip
+    # 6. rotation_-5_flip
     face_flipped, landmark_flipped = flip(face_rotated_by_alpha, landmark_rotated)
-    occlusion_flipped = landmark_flipped[:, 2]
-    face_flipped = cv2.resize(face_flipped, (img_size, img_size))
+    occlusion_flipped = landmark_flipped[:, 2].astype(int)
     data_append(faces, landmarks, occlusions, names,
-                face_flipped, landmark_rotated[:, :-1],
-                occlusion_flipped, add_postfix(name, "_rotation_-{}_flip".format(alpha)))
+                face_flipped, landmark_flipped[:, :-1], occlusion_flipped,
+                add_postfix(name, "_rotation_-{}_flip".format(alpha)))
 
-    # origin
-    face = cv2.resize(face, (img_size, img_size))
+    # 7. rotation_-10
+    face_rotated_by_alpha, landmark_rotated = rotate(face, landmark, -2 * alpha)
+    landmark_rotated[:, :2] = np.clip(landmark_rotated[:, :2], 0, 1)
+    occlusion_rotated = landmark_rotated[:, 2].astype(int)
     data_append(faces, landmarks, occlusions, names,
-                face, pts_data[:, :2], pts_data[:, 2], name)
+                face_rotated_by_alpha, landmark_rotated[:, :-1], occlusion_rotated,
+                add_postfix(name, "_rotation_-{}".format(2 * alpha)))
+
+    # 8. origin
+    data_append(faces, landmarks, occlusions, names,
+                face, landmark[:, :2], landmark[:, 2].astype(int), name)
 
     return faces, landmarks, occlusions, names
 
@@ -313,52 +311,6 @@ def range_search(x, y, patch_size, face_size, maintain_radius=True):
     return int(left), int(right), int(top), int(bottom)
 
 
-def get_patch(imgs, landmarks, occlusions, patch_size, patches, labels, landmark_num):
-    """Get patch of each landmark
-    :param imgs:
-    :param landmarks:
-    :param occlusions:
-    :param patch_size:
-    :param patches: patch container
-    :param labels: label container
-    :return:
-    """
-    data_size = len(imgs)
-    for index in range(data_size):
-        face = imgs[index]
-        face_size = face.shape[0]
-        landmark = landmarks[index]
-        occlusion = occlusions[index]
-        landmark = reproject_landmark(face_size, face_size, landmark, occlusion=False)
-        for landmark_index in range(landmark_num):
-            [x_center, y_center] = landmark[landmark_index]
-            left, right, top, bottom = range_search(x_center, y_center, patch_size, face_size)
-            face_part = face[int(top): int(bottom), int(left): int(right)]
-            patches[landmark_index].append(face_part)
-            labels[landmark_index].append(occlusion[landmark_index])
-
-
-def dataset_split(x, y, test_size=0.3, random_state=0):
-    """Dataset Splitting using sklearn
-
-    :param x: image dataset
-    :param y: label
-    :param test_size:
-    :param random_state:
-    :return:
-    """
-    logger("len x is {}, len y is {}".format(len(x), len(y)))
-    assert len(x) == len(y)
-
-    # data splitting
-    x_train, x_test, y_train, y_test = train_test_split(x, y, shuffle=True,
-                                                        test_size=test_size,
-                                                        random_state=random_state)
-    train_data = {'data': x_train, 'label': y_train}
-    validation_data = {'data': x_test, 'label': y_test}
-    return train_data, validation_data
-
-
 def heat_map_dist(point, matrix):
     sigma = 0.05
     D = np.sqrt(np.sum((point - matrix) ** 2))
@@ -377,19 +329,29 @@ def color(landmark_elem, face_size, heat_map_mask, radius):
                 heat_map_mask[y_elem][x_elem] = heat
 
 
-def heat_map_compute(param):
+def normalize_data(landmark, bbox=None):
+    if bbox is None:
+        left = np.min(landmark[:, 0])
+        right = np.max(landmark[:, 0])
+        top = np.min(landmark[:, 1])
+        bottom = np.max(landmark[:, 1])
+    else:
+        left, right, top, bottom = bbox
+
+    x_normalized = (landmark[:, 0] - left) / (right - left)
+    y_normalized = (landmark[:, 1] - top) / (bottom - top)
+
+    return np.stack((x_normalized, y_normalized, landmark[:, 2]), axis=1)
+
+
+def heat_map_compute(face, landmark, landmark_is_01, radius):
     """Heat map compute
 
-    :param param: dict{"face", "landmark", "landmark_01"}
-    face: face image
-    landmark: landmark points set
-    landmark_01: whether landmark is normalized
-    radius:
+    :param face: face image
+    :param landmark: landmark points set
+    :param landmark_is_01: whether landmark is normalized
+    :param radius:
     """
-    face = param['face']
-    landmark = param['landmark']
-    landmark_is_01 = param['landmark_01']
-    radius = param['radius']
     face_size = face.shape[:2]
     heat_map_mask = np.zeros_like(face[:, :, 0], dtype=np.float)
     if landmark_is_01:
@@ -398,8 +360,7 @@ def heat_map_compute(param):
     # draw_landmark(face, landmark)
     for landmark_elem in landmark:
         color(landmark_elem, face_size[0], heat_map_mask, radius)
-    heat_map_mask = heat_map_mask[:, :, np.newaxis]
-    heat_map_mask = heat_map_mask.repeat([3], axis=2)
+    heat_map_mask = heat_map_mask[:, :, np.newaxis].repeat([3], axis=2)
     heat_map = np.multiply(face, heat_map_mask)
     # show(heat_map_mask)
     # show(heat_map)
@@ -469,52 +430,25 @@ def draw_landmark(img, landmarks):
     cv2.waitKey(0)
 
 
-def gaussian_noise(img, mode='gaussian'):
-    """Add gaussian noise to images """
-    # show(img)
-    # for index in range(noise_num):
-    #     x = np.random.randint(0, img.shape[1])
-    #     y = np.random.randint(0, img.shape[0])
-    #     noised_img[y][x] = 255
-    noised_img = random_noise(img, mode=mode, clip=True)
-    # show(noised_img)
-    return noised_img
-
-
 def binary(num, threshold):
     num = 1 if num > threshold else 0
     return num
 
 
-def occlu_ratio_compute(labels):
-    count = 0
-    for index in range(len(labels)):
-        if np.sum(labels[index]) > 0:
-            count += 1
-    return float(count) / len(labels)
+def extend(data_base, add_data):
+    data = [_ for _ in data_base]
+    data.extend(add_data)
+    return data
 
 
-def accuracy_compute(labels, predictions):
-    count = 0
-    for index in range(len(labels)):
-        if (labels[index] == predictions[index]).all():
-            count += 1
-    result = float(count) / len(labels)
-    return result
+def get_filenames(data_dir, listext):
+    img_list = []
+    occlusion_list = []
+    for ext in listext:
+        p = os.path.join(data_dir, ext)
+        img_list.extend(glob.glob(p))
 
+    for img in img_list:
+        occlusion_list.append(os.path.splitext(img)[0] + ".opts")
 
-def recall_compute(labels, predictions, mode="occlu"):
-    count = 0
-    good_count = 0
-    if mode == "occlu":
-        flag = 2
-    else:
-        flag = 0
-    for index in range(len(labels)):
-        for index_inner in range(len(labels[index])):
-            if labels[index][index_inner] + \
-                    predictions[index][index_inner] == flag:
-                good_count += 1
-            if labels[index][index_inner] == int(flag / 2):
-                count += 1
-    return float(good_count) / count
+    return img_list, occlusion_list

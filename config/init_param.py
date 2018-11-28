@@ -15,15 +15,15 @@ Description: param config
 
 import os
 
-occlu_param = {
+data_param = {
     'print_debug': True,
 
-    # path-related
+    # path related
     'root_dir': '../',
     'img_root_dir': os.path.join(os.path.abspath('..'), "0_DATASET/origin_img"),
-    'data_save_dir': os.path.join(os.getcwd(), "data/occlusion_detection_heatmap"),
     'model_dir': './model',
-    'model_name': 'occlu_detection.h5',
+    'data_save_dir': './data',
+    'normalizer_dir': './model',
 
     # dataset related
     'landmark_num': 68,
@@ -31,9 +31,18 @@ occlu_param = {
     'channel': 3,
     'test_size': 0.3,  # split test size
     'random_state': 0,  # split random state
-    'radius': 10,
+
+    # data augment
     'balance_num': 2,
     'mode': 'gaussian',
+}
+
+occlu_param = {
+    # path-related
+    'model_name': 'occlu_detection.h5',
+
+    # dataset related
+    'radius': 5,
 
     # dl-related
     'epochs': 100,

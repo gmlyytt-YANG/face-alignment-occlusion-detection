@@ -12,16 +12,33 @@ Author: Yang Li
 Date: 2018/11/20 14:58:31
 Description: Data Generator
 """
+import cv2
 
-import numpy as np
-import os
-import pickle
+from utils import *
 
-from prepare.utils import logger
+
+def load_img_occlusion(img_name_list, occlusion_name_list,
+                       chosen_indices, print_debug=False):
+    global count
+    img_list = []
+    occlusion_list = []
+    if print_debug:
+        count = 0
+    for index in chosen_indices:
+        img = cv2.imread(img_name_list[index])
+        occlusion = np.genfromtxt(occlusion_name_list[index], dtype=int)
+        img_list.append(img)
+        occlusion_list.append(occlusion)
+        if print_debug and (count + 1) % 500 == 0:
+            logger("loaded {} data in phase validation".format(count + 1))
+            count += 1
+    return img_list, occlusion_list
 
 
 def train_data_feed(batch_size, data_dir):
-    data_size = len(os.listdir(data_dir))
+    img_name_list, occlusion_name_list, name_list = \
+        get_filenames(data_dir, ["*.jpg", "*.png"])
+    data_size = len(img_name_list)
     batch_offset = 0
     indices = [_ for _ in range(data_size)]
     while True:
@@ -33,34 +50,21 @@ def train_data_feed(batch_size, data_dir):
             batch_offset = batch_size
         end = batch_offset
         chosen_indices = indices[start: end]
-        data = []
-        labels = []
-        for index in chosen_indices:
-            f_dataset = open(os.path.join(data_dir, "{}.pkl".format(index)), 'rb')
-            base = pickle.load(f_dataset)
-            data.append(base['image_name'][0].astype(int))
-            labels.append(base['label'])
-            f_dataset.close()
-        yield np.array(data), np.array(labels)
+        img_list, occlusion_list = \
+            load_img_occlusion(img_name_list,
+                               occlusion_name_list,
+                               chosen_indices, print_debug=False)
+        yield np.array(img_list), np.array(occlusion_list)
 
 
 def validation_data_feed(data_dir, print_debug=False):
-    data_list = []
-    labels_list = []
-    name_list = []
-    count = 0
-    for path in os.listdir(data_dir):
-        data_path = os.path.join(data_dir, path)
-        f_data = open(data_path, 'rb')
-        data = pickle.load(f_data)
-        data_list.append(data['image_name'][0].astype(int))
-        name_list.append(data['image_name'][1])
-        labels_list.append(data['label'])
-        f_data.close()
-        if print_debug:
-            if (count + 1) % 500 == 0:
-                logger("loaded {} data in phase validation".format(count + 1))
-        count = count + 1
-        # if count > 500:
-        #     break
-    return np.array(data_list), np.array(labels_list), name_list
+    img_name_list, occlusion_name_list = \
+        get_filenames(data_dir, ["*.jpg", "*.png"])
+
+    data_size = len(img_name_list)
+    img_list, occlusion_list = \
+        load_img_occlusion(img_name_list,
+                           occlusion_name_list,
+                           range(data_size), print_debug=print_debug)
+
+    return np.array(img_list), np.array(occlusion_list)
