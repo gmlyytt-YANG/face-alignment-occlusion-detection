@@ -27,12 +27,22 @@ def logger(msg):
     logging.info(msg)
 
 
+def remove_content(path):
+    if os.path.isfile(path):
+        os.remove(path)
+    else:
+        for file_name in os.listdir(path):
+            file_path = os.path.join(path, file_name)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+
+
 def create_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
 
-def set_gpu(ratio=0, target='memory'):
+def set_gpu(ratio=0):
     command1 = "nvidia-smi -q -d Memory | grep -A4 GPU | grep Free | awk '{print $3}'"
     command2 = "nvidia-smi -q | grep Gpu | awk '{print $3}'"
     memory = list(map(int, os.popen(command1).readlines()))
@@ -47,8 +57,6 @@ def set_gpu(ratio=0, target='memory'):
         sess = tf.Session(config=config)
         from keras import backend as K
         K.set_session(sess)
-    else:
-        print('>>> Could not find the GPU')
 
 
 def str_or_float(obj):

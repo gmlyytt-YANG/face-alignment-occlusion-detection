@@ -74,8 +74,8 @@ class ImageServer(object):
         logger("heat_map generating")
         self._heat_map_gen()
 
-        # logger("balancing")
-        # self._balance()
+        logger("balancing")
+        self._balance()
 
         # splitting
         logger("train validation splitting")
@@ -175,8 +175,10 @@ class ImageServer(object):
         for index in range(len(self.occlusions)):
             if np.sum(self.occlusions[index]) > 0:
                 for num in range(balanced_num):
-                    heatmaps_add.append(gaussian_noise(self.heat_maps[index]))
-                    faces_add.append(gaussian_noise(self.faces[index]))
+                    heatmap = gaussian_noise(self.heat_maps[index])
+                    heatmaps_add.append(heatmap)
+                    face = gaussian_noise(self.faces[index])
+                    faces_add.append(face)
                     occlusions_add.append(self.occlusions[index])
                     landmarks_add.append(self.aug_landmarks[index])
                     names_add.append(add_postfix(self.names[index], "_gaussian_{}".format(num)))
@@ -192,10 +194,7 @@ class ImageServer(object):
 
     @staticmethod
     def _split_core(x, y, mode, phase):
-        # create dir
         data_dir = os.path.join(data_param['data_save_dir'], mode)
-        create_dir(data_dir)
-
         for index in range(len(x)):
             img = x[index][0]
             name = x[index][1]
@@ -222,5 +221,14 @@ class ImageServer(object):
 
     def _train_val_split(self):
         """Train validation data split"""
+        # init
+        data_dir = os.path.join(data_param['data_save_dir'], "train")
+        create_dir(data_dir)
+        remove_content(data_dir)
+        data_dir = os.path.join(data_param['data_save_dir'], "val")
+        create_dir(data_dir)
+        remove_content(data_dir)
+
+        # save data
         self._img_split(phase="face")
         self._img_split(phase="heatmap")
