@@ -12,8 +12,6 @@ Author: Yang Li
 Date: 2018/11/28 15:20:31
 Description: Machine Learning Method
 """
-from skimage.util import random_noise
-
 from utils import *
 
 

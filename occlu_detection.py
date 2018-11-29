@@ -73,7 +73,7 @@ class OcclusionDetection(object):
         model.fit_generator(
             train_data_feed(bs, train_dir),
             validation_data=(validation_data, validation_labels),
-            steps_per_epoch=len(os.listdir(train_dir)) // bs,
+            steps_per_epoch=len(os.listdir(train_dir)) // (bs * 6),
             epochs=epochs, verbose=1, callbacks=callback_list)
 
         K.clear_session()

@@ -116,7 +116,7 @@ class ImageServer(object):
 
             # normalize landmark
             landmark = self.landmarks[index]
-            landmark_normalized = normalize_data(landmark, bbox=bbox)
+            landmark_normalized = normalize_data(landmark)
 
             # data augment
             face = cv2.resize(get_face(img, bbox), (self.img_size, self.img_size))
