@@ -34,7 +34,7 @@ def load_img_occlusion(img_name_list, occlusion_name_list,
 
 
 def train_data_feed(batch_size, data_dir):
-    img_name_list, occlusion_name_list, name_list = \
+    img_name_list, occlusion_name_list = \
         get_filenames(data_dir, ["*.jpg", "*.png"])
     data_size = len(img_name_list)
     batch_offset = 0
