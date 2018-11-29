@@ -14,7 +14,6 @@ Description: Data Preparation
 """
 
 from sklearn.model_selection import train_test_split
-import cv2
 
 from config.init_param import *
 from ml import *

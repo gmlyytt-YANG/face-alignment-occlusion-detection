@@ -12,8 +12,6 @@ Author: Yang Li
 Date: 2018/11/20 14:58:31
 Description: Data Generator
 """
-import cv2
-
 from utils import *
 
 
