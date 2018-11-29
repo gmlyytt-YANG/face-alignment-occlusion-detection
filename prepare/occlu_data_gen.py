@@ -35,7 +35,7 @@ def load_img_occlusion(img_name_list, occlusion_name_list,
 
 def train_data_feed(batch_size, data_dir):
     img_name_list, occlusion_name_list, name_list = \
-        get_filenames(data_dir, ["*.jpg", "*.png"])
+        get_filenames(data_dir, ["*_heatmap.jpg", "*_heatmap.png"])
     data_size = len(img_name_list)
     batch_offset = 0
     indices = [_ for _ in range(data_size)]
@@ -57,7 +57,7 @@ def train_data_feed(batch_size, data_dir):
 
 def validation_data_feed(data_dir, print_debug=False):
     img_name_list, occlusion_name_list = \
-        get_filenames(data_dir, ["*.jpg", "*.png"])
+        get_filenames(data_dir, ["*_heatmap.jpg", "*_heatmap.png"])
 
     data_size = len(img_name_list)
     img_list, occlusion_list = \

@@ -18,6 +18,7 @@ import glob
 import numpy as np
 import os
 import scipy.io as scio
+import copy
 
 
 def logger(msg):
@@ -338,18 +339,27 @@ def color(landmark_elem, face_size, heat_map_mask, radius):
 
 
 def normalize_data(landmark, bbox=None):
+    # if bbox is None:
+    #     left = np.min(landmark[:, 0])
+    #     right = np.max(landmark[:, 0])
+    #     top = np.min(landmark[:, 1])
+    #     bottom = np.max(landmark[:, 1])
+    # else:
+    #     left, right, top, bottom = bbox
+    #
+    # x_normalized = (landmark[:, 0] - left) / (right - left)
+    # y_normalized = (landmark[:, 1] - top) / (bottom - top)
     if bbox is None:
-        left = np.min(landmark[:, 0])
-        right = np.max(landmark[:, 0])
-        top = np.min(landmark[:, 1])
-        bottom = np.max(landmark[:, 1])
+        min_x, min_y = np.min(landmark[:, :2], axis=0)
+        w, h = np.ptp(landmark[:, :2], axis=0)
     else:
-        left, right, top, bottom = bbox
-
-    x_normalized = (landmark[:, 0] - left) / (right - left)
-    y_normalized = (landmark[:, 1] - top) / (bottom - top)
-
-    return np.stack((x_normalized, y_normalized, landmark[:, 2]), axis=1)
+        min_x, min_y = bbox[0], bbox[2]
+        w, h = bbox[1] - bbox[0], bbox[3] - bbox[2]
+    normalized_landmark = (landmark[:, :2] - [min_x, min_y]) / [w, h]
+    xx = landmark[:, 2]
+    print(xx.shape)
+    print(normalized_landmark.shape)
+    return np.stack((normalized_landmark, xx), axis=0)
 
 
 def heat_map_compute(face, landmark, landmark_is_01, radius):
