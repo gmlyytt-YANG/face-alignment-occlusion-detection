@@ -356,10 +356,7 @@ def normalize_data(landmark, bbox=None):
         min_x, min_y = bbox[0], bbox[2]
         w, h = bbox[1] - bbox[0], bbox[3] - bbox[2]
     normalized_landmark = (landmark[:, :2] - [min_x, min_y]) / [w, h]
-    xx = landmark[:, 2]
-    print(xx.shape)
-    print(normalized_landmark.shape)
-    return np.stack((normalized_landmark, xx), axis=0)
+    return np.hstack((normalized_landmark, np.expand_dims(landmark[:, 2], axis=1)))
 
 
 def heat_map_compute(face, landmark, landmark_is_01, radius):
