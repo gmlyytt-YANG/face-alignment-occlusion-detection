@@ -80,7 +80,7 @@ class OcclusionDetection(object):
 
     @staticmethod
     def classify(model, img, need_to_normalize=False):
-        img = cv2.resize(img, (occlu_param['img_size'], occlu_param['img_size']))
+        img = cv2.resize(img, (data_param['img_size'], data_param['img_size']))
         if need_to_normalize:
             img = img.astype("float") / 255.0
         img = img_to_array(img)
@@ -97,7 +97,7 @@ class OcclusionDetection(object):
             os.path.join(data_param['model_dir'], occlu_param['model_name']))
 
         # load data
-        validation_dir = os.path.join(data_param['data_save_dir'], "validation")
+        validation_dir = os.path.join(data_param['data_save_dir'], "val")
         validation_data, validation_labels = \
             validation_data_feed(validation_dir, self.print_debug)
 
