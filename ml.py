@@ -20,16 +20,23 @@ def scale(data):
                        255).astype(int)
 
 
-def gaussian_noise(img, mode='gaussian'):
+def gaussian_noise(img, mode='gaussian', color=False):
     """Add gaussian noise to images """
     noised_img = None
     if mode == "gaussian":
-        row, col, channel = img.shape
+        if color:
+            row, col, channel = img.shape
+        else:
+            row, col = img.shape
         mean = 0
         var = 5
         sigma = var ** 0.5
-        gauss = np.random.normal(mean, sigma, (row, col, channel))
-        gauss = gauss.reshape(row, col, channel)
+        if color:
+            gauss = np.random.normal(mean, sigma, (row, col, channel))
+            gauss = gauss.reshape(row, col, channel)
+        else:
+            gauss = np.random.normal(mean, sigma, (row, col))
+            gauss = gauss.reshape(row, col)
         noised_img = img + gauss
     noised_img = scale(noised_img)
     # show(noised_img)

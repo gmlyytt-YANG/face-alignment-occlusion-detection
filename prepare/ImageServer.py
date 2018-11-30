@@ -98,8 +98,8 @@ class ImageServer(object):
             self.img_paths.append(img_path)
             if self.print_debug and (index + 1) % 500 == 0:
                 logger("processed {} basic infos".format(index + 1))
-            # if (index + 1) >= 10:
-            #     break
+            if (index + 1) >= 10:
+                break
 
     def _load_imgs(self):
         """Load imgs"""
@@ -150,6 +150,7 @@ class ImageServer(object):
             landmark = self.aug_landmarks[index]
             self.heat_maps.append(heat_map_compute(face, landmark,
                                                    landmark_is_01=True,
+                                                   img_color=self.color,
                                                    radius=occlu_param['radius']))
             if self.print_debug and (index + 1) % 500 == 0:
                 logger("generated {} heatmaps".format(index + 1))
@@ -174,9 +175,9 @@ class ImageServer(object):
         for index in range(len(self.occlusions)):
             if np.sum(self.occlusions[index]) > 0:
                 for num in range(balanced_num):
-                    heatmap = gaussian_noise(self.heat_maps[index])
+                    heatmap = gaussian_noise(self.heat_maps[index], color=self.color)
                     heatmaps_add.append(heatmap)
-                    face = gaussian_noise(self.faces[index])
+                    face = gaussian_noise(self.faces[index], color=self.color)
                     faces_add.append(face)
                     occlusions_add.append(self.occlusions[index])
                     landmarks_add.append(self.aug_landmarks[index])

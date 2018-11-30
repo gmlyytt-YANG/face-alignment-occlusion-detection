@@ -21,5 +21,6 @@ from utils import *
 mat_file = os.path.join(data_param['img_root_dir'], 'raw_300W_release.mat')
 img_paths, bboxes = load_basic_info(mat_file, img_root=data_param['img_root_dir'])
 img_server = ImageServer(img_size=data_param['img_size'],
-                         color=True, print_debug=True)
+                         color=True if data_param['channel'] == 3 else False,
+                         print_debug=True)
 img_server.process(img_paths, bboxes)

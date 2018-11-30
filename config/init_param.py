@@ -27,8 +27,8 @@ data_param = {
 
     # dataset related
     'landmark_num': 68,
-    'img_size': 128,
-    'channel': 3,
+    'img_size': 112,
+    'channel': 1,
     'test_size': 0.3,  # split test size
     'random_state': 0,  # split random state
 
@@ -42,7 +42,7 @@ occlu_param = {
     'model_name': 'occlu_detection.h5',
 
     # dataset related
-    'radius': 5,
+    'radius': 10,
 
     # dl-related
     'epochs': 100,
