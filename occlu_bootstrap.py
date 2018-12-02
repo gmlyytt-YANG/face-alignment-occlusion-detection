@@ -16,6 +16,7 @@ import argparse
 
 from config.init_param import occlu_param
 from occlu_detection import OcclusionDetection
+from preprocess import preprocess 
 
 # load parameter
 ap = argparse.ArgumentParser()
@@ -38,6 +39,10 @@ occlu_param['model_name'] = "best_model_epochs={}_bs={}_lr={}.h5".format(
     occlu_param['bs'],
     occlu_param['init_lr'])
 
+# preprocess
+preprocess()
+
+# learning
 occlu_clf = OcclusionDetection()
 if args["mode"] == "train":
     occlu_clf.train()
