@@ -98,8 +98,8 @@ class ImageServer(object):
             self.img_paths.append(img_path)
             if self.print_debug and (index + 1) % 500 == 0:
                 logger("processed {} basic infos".format(index + 1))
-            if (index + 1) >= 10:
-                break
+            # if (index + 1) >= 10:
+            #     break
 
     def _load_imgs(self):
         """Load imgs"""

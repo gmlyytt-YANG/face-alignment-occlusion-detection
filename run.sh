@@ -9,12 +9,12 @@ show=""
 phase=""
 
 # param analyse
-while [[ -n "$1" ]]
+while [ -n "$1" ]
 do
     case "$1" in
     "-p")
 	phase="$2"
-	if [[ ${phase} = "pre" ]];then
+	if [ ${phase} = "pre" ];then
 	    break
 	fi
 	;;
@@ -39,16 +39,18 @@ do
 done
 
 # run cmd
-
-if [[ ${show} = "nohup" ]];then
-    if [[ ${phase} = "pre" ]];then
+if [ ${show} = "nohup" ];then
+    if [ ${phase} = "pre" ];then
         nohup python preprocess.py > \
-        logs/epochs=${epochs}_bs=${bs}_initlr=${lr}_mode=${mode}_pre.log 2>&1 &
-    else if [[ ${phase} = "occlu" ]];then
+        logs/preprocess.log 2>&1 &
+    else 
         nohup python bootstrap.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} \
-        > logs/epochs=${epochs}_bs=${bs}_initlr=${lr}_mode=${mode}_occlu.log 2>&1 &
-    else
-
+        > logs/epochs=${epochs}_bs=${bs}_initlr=${lr}_mode=${mode}_phase=${phase}.log 2>&1 &
+    fi
 else
-    python occlu_bootstrap.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode}
+    if [ ${phase} = "pre" ];then
+	python preprocess.py
+    else
+        python bootstrap.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode}
+    fi
 fi
