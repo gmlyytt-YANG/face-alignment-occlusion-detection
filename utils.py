@@ -18,7 +18,6 @@ import glob
 import numpy as np
 import os
 import scipy.io as scio
-import copy
 
 
 def logger(msg):
