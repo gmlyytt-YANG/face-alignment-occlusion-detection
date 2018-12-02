@@ -7,7 +7,7 @@
 ########################################################################
 
 """
-File: occlu_detection.py
+File: model_run.py
 Author: Yang Li
 Date: 2018/11/10 17:43:31
 Description: Data Augment
@@ -24,6 +24,14 @@ from model_structure.smaller_vggnet import SmallerVGGNet
 from model_structure.new_vgg16net import Vgg16Net
 from ml import *
 from prepare.occlu_data_gen import train_data_feed, validation_data_feed
+
+
+class Model(object):
+    def __init__(self):
+        self.print_debug = data_param['print_debug']
+
+    def train(self, param):
+        pass
 
 
 class OcclusionDetection(object):

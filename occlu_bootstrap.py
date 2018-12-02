@@ -15,8 +15,8 @@ Description: Occlu Program Main Entry
 import argparse
 
 from config.init_param import occlu_param
-from occlu_detection import OcclusionDetection
 from preprocess import preprocess 
+from model_run import OcclusionDetection
 
 # load parameter
 ap = argparse.ArgumentParser()
