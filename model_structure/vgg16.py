@@ -7,7 +7,7 @@
 ########################################################################
 
 """
-File: new_vgg16net.py
+File: vgg16.py
 Author: Yang Li
 Date: 2018/11/26 10:22:31
 Description: self-define VGG16NET
@@ -24,7 +24,7 @@ from keras.layers import MaxPooling2D
 from config.init_param import occlu_param
 
 
-class Vgg16Net(object):
+class Vgg16Base(object):
     @staticmethod
     def build(width, height, depth, classes, final_act="softmax", weights='imagenet'):
         input_shape = (height, width, depth)
@@ -64,14 +64,53 @@ class Vgg16Net(object):
         model.add(Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv3'))
         model.add(MaxPooling2D((2, 2), strides=(2, 2), name='block5_pool'))
 
+        return model
+
+    @staticmethod
+    def load_weights(model):
+        if not os.path.exists(occlu_param['weight_path']):
+            raise ValueError("there is no vgg16 weights data!")
+
+        model.load_weights(os.path.join(occlu_param['weight_path'], occlu_param['weight_name']), by_name=True)
+
+        return model
+
+
+class Vgg16CutFC2(Vgg16Base, object):
+    def build(self, width, height, depth, classes, final_act="softmax", weights='imagenet'):
+        model = super(Vgg16CutFC2, self).build(
+            width=width,
+            height=height,
+            depth=depth,
+            classes=classes,
+            final_act=final_act,
+            weights=weights
+        )
+
         # Classification block
         model.add(Flatten(name='flatten'))
         model.add(Dense(4096, activation='relu', name='fc1_self'))
         # model.add(Dense(4096, activation='relu', name='fc2'))
         model.add(Dense(classes, activation=final_act, name='predictions_self'))
 
-        if not os.path.exists(occlu_param['weight_path']):
-            os.makedirs(occlu_param['weight_path'])
-        model.load_weights(os.path.join(occlu_param['weight_path'], occlu_param['weight_name']), by_name=True)
+        return self.load_weights(model)
 
-        return model
+
+class Vgg16Regress(Vgg16Base, object):
+    def build(self, width, height, depth, classes, final_act="tanh", weights='imagenet'):
+        model = super(Vgg16Regress, self).build(
+            width=width,
+            height=height,
+            depth=depth,
+            classes=classes,
+            final_act=final_act,
+            weights=weights
+        )
+
+        # Regression block
+        model.add(Flatten(name='flatten'))
+        model.add(Dense(4096, activation='relu', name='fc1_self'))
+        # model.add(Dense(4096, activation='relu', name='fc2'))
+        model.add(Dense(classes, activation=final_act, name='predictions_self'))
+
+        return self.load_weights(model)
