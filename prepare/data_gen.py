@@ -58,10 +58,10 @@ def train_data_feed(batch_size, data_dir, ext_lists, label_ext):
         load_label = load_occlu
         if label_ext == ".pts":
             load_label = load_landmark
-        img_list, occlusion_list = \
+        img_list, label_list = \
             load_img_label(img_name_list, label_name_list, load_label,
                            chosen_indices, print_debug=False)
-        yield np.array(img_list), np.array(occlusion_list)
+        yield np.array(img_list), np.array(label_list)
 
 
 def validation_data_feed(data_dir, ext_lists, label_ext, print_debug=False):
