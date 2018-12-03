@@ -17,6 +17,9 @@ from utils import *
 
 def load_landmark(label_name, mean_data=None):
     landmarks = np.genfromtxt(label_name)
+    print("-------------------")
+    print(landmarks)
+    print(mean_data)
     if mean_data is not None:
         return landmarks.flatten() - mean_data.flatten()
     return landmarks.flatten()
