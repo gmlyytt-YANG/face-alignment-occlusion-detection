@@ -51,7 +51,7 @@ class Model(object):
         return train_dir, validation_dir
 
     def train(self, model_structure, train_load, val_load,
-              ext_lists, label_ext, gpu_ratio=0.5):
+              ext_lists, label_ext, normalizer=None, gpu_ratio=0.5):
         # set gpu usage
         set_gpu(ratio=gpu_ratio)
 
@@ -60,6 +60,7 @@ class Model(object):
         val_data, val_labels = val_load(data_dir=self.val_dir,
                                         ext_lists=ext_lists,
                                         label_ext=label_ext,
+                                        normalizer=normalizer,
                                         print_debug=self.print_debug)
 
         # build model
@@ -78,7 +79,7 @@ class Model(object):
         callback_list = [checkpoint, early_stopping]
         model.fit_generator(
             train_load(batch_size=self.bs, data_dir=self.train_dir,
-                       ext_lists=ext_lists, label_ext=label_ext),
+                       ext_lists=ext_lists, label_ext=label_ext, normalizer=normalizer),
             validation_data=(val_data, val_labels),
             steps_per_epoch=self.steps_per_epoch,
             epochs=self.epochs, verbose=1, callbacks=callback_list)

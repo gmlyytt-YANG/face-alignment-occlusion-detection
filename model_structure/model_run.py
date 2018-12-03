@@ -33,7 +33,7 @@ class OcclusionDetection(Model, object):
             classmethod=data_param['landmark_num']
         )
 
-    def val_compute(self, val_load, ext_lists, label_ext, gpu_ratio=0.5):
+    def val_compute(self, val_load, ext_lists, label_ext, normalizer=None, gpu_ratio=0.5):
         # set gpu usage
         set_gpu(ratio=gpu_ratio)
 
@@ -45,6 +45,7 @@ class OcclusionDetection(Model, object):
         val_data, val_labels = val_load(data_dir=self.val_dir,
                                         ext_lists=ext_lists,
                                         label_ext=label_ext,
+                                        normalizer=normalizer,
                                         print_debug=self.print_debug)
 
         # forward
