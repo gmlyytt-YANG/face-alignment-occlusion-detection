@@ -34,7 +34,8 @@ ap.add_argument("-p", "--phase", type=str, default="rough",
 args = vars(ap.parse_args())
 
 # occlusion detection
-normalizer = np.load(os.path.join(data_param['normalizer_dir'], "normalizer.npz"))
+f_normalizer = open(os.path.join(data_param['normalizer_dir'], "normalizer.npz"), "rb")
+normalizer = pickle.load(f)
 if args["phase"] == "occlu":
     occlu_param['epochs'] = args['epoch']
     occlu_param['bs'] = args['batch_size']

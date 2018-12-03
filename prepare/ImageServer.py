@@ -13,6 +13,7 @@ Date: 2018/11/17 19:05:31
 Description: Data Preparation
 """
 
+import pickle
 from sklearn.model_selection import train_test_split
 
 from config.init_param import *
@@ -70,15 +71,15 @@ class ImageServer(object):
         logger("normalizing")
         self._normalize_imgs()
 
-        logger("heat_map generating")
-        self._heat_map_gen()
+        # logger("heat_map generating")
+        # self._heat_map_gen()
 
-        logger("balancing")
-        self._balance()
+        # logger("balancing")
+        # self._balance()
 
-        # splitting
-        logger("train validation splitting")
-        self._train_val_split()
+        # # splitting
+        # logger("train validation splitting")
+        # self._train_val_split()
 
     def _prepare(self, img_paths, bboxes, chosen_indices=range(1)):
         """Getting data
@@ -141,7 +142,10 @@ class ImageServer(object):
         # for face in self.faces:
         #     show(face)
         create_dir(data_param['normalizer_dir'])
-        np.savez(os.path.join(data_param['normalizer_dir'], "normalizer.npz"))
+        f_normalizer = open(os.path.join(data_param['normalizer_dir'],\
+                            "normalizer.pkl"), 'wb')
+        pickle.dump(normalizer, f_normalizer)
+        f_normalizer.close()
 
     def _heat_map_gen(self):
         """Generate heat map of each of faces"""
