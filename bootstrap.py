@@ -41,7 +41,7 @@ if args["phase"] == "occlu":
     occlu_param['model_name'] = "best_model_epochs={}_bs={}_lr={}_occlu.h5".format(
         occlu_param['epochs'],
         occlu_param['bs'],
-        occlu_param['init_lr']),
+        occlu_param['init_lr'])
 
     # learning
     occlu_clf = OcclusionDetection()
