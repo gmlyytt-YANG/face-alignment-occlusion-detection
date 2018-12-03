@@ -26,7 +26,7 @@ from config.init_param import occlu_param
 
 class Vgg16Base(object):
     @staticmethod
-    def build(width, height, depth, classes, final_act="softmax", weights='imagenet'):
+    def build(width, height, depth, classes, weights='imagenet'):
         input_shape = (height, width, depth)
         if weights not in {'imagenet', None}:
             raise ValueError('The `weights` argument should be either '
@@ -83,7 +83,6 @@ class Vgg16CutFC2(Vgg16Base, object):
             height=height,
             depth=depth,
             classes=classes,
-            final_act=final_act,
             weights=weights
         )
 
@@ -97,13 +96,12 @@ class Vgg16CutFC2(Vgg16Base, object):
 
 
 class Vgg16Regress(Vgg16Base, object):
-    def build(self, width, height, depth, classes, final_act="tanh", weights='imagenet'):
+    def build(self, width, height, depth, classes, final_act=None, weights='imagenet'):
         model = super(Vgg16Regress, self).build(
             width=width,
             height=height,
             depth=depth,
             classes=classes,
-            final_act=final_act,
             weights=weights
         )
 
@@ -111,6 +109,6 @@ class Vgg16Regress(Vgg16Base, object):
         model.add(Flatten(name='flatten'))
         model.add(Dense(4096, activation='relu', name='fc1_self'))
         # model.add(Dense(4096, activation='relu', name='fc2'))
-        model.add(Dense(classes, activation=final_act, name='predictions_self'))
+        model.add(Dense(classes, name='predictions_self'))
 
         return self.load_weights(model)
