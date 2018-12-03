@@ -44,13 +44,13 @@ if [ ${show} = "nohup" ];then
         nohup python preprocess.py > \
         logs/preprocess.log 2>&1 &
     else 
-        nohup python bootstrap.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} \
+        nohup python bootstrap.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} -p ${phase}\
         > logs/epochs=${epochs}_bs=${bs}_initlr=${lr}_mode=${mode}_phase=${phase}.log 2>&1 &
     fi
 else
     if [ ${phase} = "pre" ];then
-	python preprocess.py
+	    python preprocess.py
     else
-        python bootstrap.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode}
+        python bootstrap.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} -p ${phase}
     fi
 fi
