@@ -39,7 +39,7 @@ def load_img_label(img_name_list, label_name_list, load_label,
     for index in chosen_indices:
         img = cv2.imread(img_name_list[index])
         label = load_label(label_name_list[index], mean_data)
-        img_list.append(img)
+        img_list.append(img)    
         label_list.append(label)
         if print_debug and (count + 1) % 500 == 0:
             logger("loaded {} data".format(count + 1))

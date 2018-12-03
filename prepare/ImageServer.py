@@ -139,7 +139,7 @@ class ImageServer(object):
     def _normalize_imgs(self):
         normalizer = StdMinMaxScaler()
         self.faces = normalizer.fit_transform(self.faces)
-        mean_shape = np.mean(self.aug_landmarks, axis=0)
+        mean_shape = np.multiply(np.mean(self.aug_landmarks, axis=0), 255)
         create_dir(data_param['normalizer_dir'])
         f_normalizer = open(os.path.join(data_param['normalizer_dir'],
                                          "normalizer.pkl"), 'wb')
