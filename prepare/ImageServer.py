@@ -139,13 +139,16 @@ class ImageServer(object):
     def _normalize_imgs(self):
         normalizer = StdMinMaxScaler()
         self.faces = normalizer.fit_transform(self.faces)
-        # for face in self.faces:
-        #     show(face)
+        mean_shape = np.mean(self.aug_landmarks, axis=0)
         create_dir(data_param['normalizer_dir'])
-        f_normalizer = open(os.path.join(data_param['normalizer_dir'],\
-                            "normalizer.pkl"), 'wb')
+        f_normalizer = open(os.path.join(data_param['normalizer_dir'],
+                                         "normalizer.pkl"), 'wb')
         pickle.dump(normalizer, f_normalizer)
         f_normalizer.close()
+        f_mean_data = open(os.path.join(data_param['model_dir'],
+                                        'mean_shape.pkl'), 'wb')
+        pickle.dump(mean_shape, f_mean_data)
+        f_mean_data.close()
 
     def _heat_map_gen(self):
         """Generate heat map of each of faces"""

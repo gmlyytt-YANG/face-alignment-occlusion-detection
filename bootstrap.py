@@ -13,6 +13,7 @@ Date: 2018/11/21 09:41:31
 Description: Occlu Program Main Entry
 """
 import argparse
+import pickle
 
 from config.init_param import *
 from model_structure.model_run import OcclusionDetection, FaceAlignmentRough
@@ -34,8 +35,6 @@ ap.add_argument("-p", "--phase", type=str, default="rough",
 args = vars(ap.parse_args())
 
 # occlusion detection
-f_normalizer = open(os.path.join(data_param['normalizer_dir'], "normalizer.npz"), "rb")
-normalizer = pickle.load(f)
 if args["phase"] == "occlu":
     occlu_param['epochs'] = args['epoch']
     occlu_param['bs'] = args['batch_size']
@@ -61,6 +60,8 @@ if args["phase"] == "occlu":
                               gpu_ratio=0.5)
 
 # face alignment rough
+f_mean_data = open(os.path.join(data_param['model_dir'], "mean_shape.pkl"), "rb")
+mean_data = pickle.load(f_mean_data)
 if args["phase"] == "rough":
     face_alignment_rough_param['epochs'] = args['epoch']
     face_alignment_rough_param['bs'] = args['batch_size']
@@ -77,5 +78,5 @@ if args["phase"] == "rough":
                              val_load=validation_data_feed,
                              ext_lists=["*_face.png", "*_face.jpg"],
                              label_ext=".pts",
-                             normalizer=normalizer,
+                             mean_data=mean_data,
                              gpu_ratio=0.5)

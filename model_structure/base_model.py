@@ -51,7 +51,7 @@ class Model(object):
         return train_dir, validation_dir
 
     def train(self, model_structure, train_load, val_load,
-              ext_lists, label_ext, normalizer=None, gpu_ratio=0.5):
+              ext_lists, label_ext, mean_data=None, gpu_ratio=0.5):
         # set gpu usage
         set_gpu(ratio=gpu_ratio)
 
@@ -60,7 +60,7 @@ class Model(object):
         val_data, val_labels = val_load(data_dir=self.val_dir,
                                         ext_lists=ext_lists,
                                         label_ext=label_ext,
-                                        normalizer=normalizer,
+                                        mean_data=mean_data,
                                         print_debug=self.print_debug)
 
         # build model
@@ -79,7 +79,7 @@ class Model(object):
         callback_list = [checkpoint, early_stopping]
         model.fit_generator(
             train_load(batch_size=self.bs, data_dir=self.train_dir,
-                       ext_lists=ext_lists, label_ext=label_ext, normalizer=normalizer),
+                       ext_lists=ext_lists, label_ext=label_ext, mean_data=mean_data),
             validation_data=(val_data, val_labels),
             steps_per_epoch=self.steps_per_epoch,
             epochs=self.epochs, verbose=1, callbacks=callback_list)
@@ -87,9 +87,9 @@ class Model(object):
         K.clear_session()
 
     @staticmethod
-    def classify(model, img, normalizer=None):
-        if normalizer is not None:
-            img = normalizer.transform(img)
+    def classify(model, img, mean_data=None):
+        if mean_data is not None:
+            img = mean_data.transform(img)
         if img.shape[:2] != [data_param['img_height'], data_param['img_width']]:
             img = cv2.resize(img, (data_param['img_height'], data_param['img_width']))
         img = np.expand_dims(img_to_array(img), axis=0)

@@ -15,29 +15,27 @@ Description: Data Generator
 from utils import *
 
 
-def load_landmark(label_name, normalizer=None):
+def load_landmark(label_name, mean_data=None):
     landmarks = np.genfromtxt(label_name)
-    if normalizer is not None:
-        mean_data = normalizer.mean_data.flatten()
-        landmarks = landmarks - mean_data
+    if mean_data is not None:
+        landmarks = landmarks - mean_data.flatten()
     return landmarks.flatten()
 
 
-def load_occlu(label_name, normalizer=None):
-    if normalizer is None:
+def load_occlu(label_name, mean_data=None):
+    if mean_data is None:
         return np.genfromtxt(label_name)
-    mean_data = normalizer.mean_data.flatten()
-    return np.genfromtxt(label_name).flatten() - mean_data
+    return np.genfromtxt(label_name).flatten() - mean_data.flatten()
 
 
 def load_img_label(img_name_list, label_name_list, load_label,
-                   chosen_indices, normalizer=None, print_debug=False):
+                   chosen_indices, mean_data=None, print_debug=False):
     count = 0
     img_list = []
     label_list = []
     for index in chosen_indices:
         img = cv2.imread(img_name_list[index])
-        label = load_label(label_name_list[index], normalizer)
+        label = load_label(label_name_list[index], mean_data)
         img_list.append(img)
         label_list.append(label)
         if print_debug and (count + 1) % 500 == 0:
@@ -46,7 +44,7 @@ def load_img_label(img_name_list, label_name_list, load_label,
     return img_list, label_list
 
 
-def train_data_feed(batch_size, data_dir, ext_lists, label_ext, normalizer=None):
+def train_data_feed(batch_size, data_dir, ext_lists, label_ext, mean_data=None):
     img_name_list, label_name_list = \
         get_filenames(data_dir, ext_lists, label_ext)
     data_size = len(img_name_list)
@@ -66,11 +64,11 @@ def train_data_feed(batch_size, data_dir, ext_lists, label_ext, normalizer=None)
             load_label = load_landmark
         img_list, label_list = \
             load_img_label(img_name_list, label_name_list, load_label,
-                           chosen_indices, normalizer, print_debug=False)
+                           chosen_indices, mean_data, print_debug=False)
         yield np.array(img_list), np.array(label_list)
 
 
-def validation_data_feed(data_dir, ext_lists, label_ext, normalizer=None, print_debug=False):
+def validation_data_feed(data_dir, ext_lists, label_ext, mean_data=None, print_debug=False):
     img_name_list, label_name_list = \
         get_filenames(data_dir, ext_lists, label_ext)
 
@@ -80,6 +78,6 @@ def validation_data_feed(data_dir, ext_lists, label_ext, normalizer=None, print_
         load_label = load_landmark
     img_list, label_list = \
         load_img_label(img_name_list, label_name_list, load_label,
-                       range(data_size), normalizer, print_debug=print_debug)
+                       range(data_size), mean_data, print_debug=print_debug)
 
     return np.array(img_list), np.array(label_list)
