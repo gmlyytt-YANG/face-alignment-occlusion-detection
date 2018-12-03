@@ -105,7 +105,7 @@ class OcclusionDetection(Model, object):
             epochs=occlu_param['epochs'],
             bs=occlu_param['bs'],
             final_act="sigmoid",
-            loss="mean_absolute_percentage_error",
+            loss="binary_crossentropy",
             metrics=["accuracy"],
             steps_per_epochs=len(os.listdir(train_dir)) // (occlu_param['bs'] * 6),
             train_dir=train_dir,
