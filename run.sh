@@ -12,16 +12,15 @@ phase=""
 while [ -n "$1" ]
 do
     case "$1" in
+    "-s")
+	show="$2"
+	;;
     "-p")
 	phase="$2"
 	if [ ${phase} = "pre" ];then
 	    break
 	fi
 	;;
-    "-s")
-	show="$2"
-	;;
-
     "-e")                    
         epochs="$2"
 	;;   

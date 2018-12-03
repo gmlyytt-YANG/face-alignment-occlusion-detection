@@ -59,10 +59,10 @@ class ImageServer(object):
         self.img_size = img_size
         self.print_debug = print_debug
 
-    def process(self, img_paths, bboxes):
+    def process(self, img_paths, bboxes, chosen_indices):
         """Whole process"""
         logger("preparing data")
-        self._prepare(img_paths, bboxes)
+        self._prepare(img_paths, bboxes, chosen_indices)
 
         logger("loading imgs")
         self._load_imgs()
@@ -80,7 +80,7 @@ class ImageServer(object):
         logger("train validation splitting")
         self._train_val_split()
 
-    def _prepare(self, img_paths, bboxes):
+    def _prepare(self, img_paths, bboxes, chosen_indices=[0, 1]):
         """Getting data
         :param img_paths:
         :param bboxes:
@@ -88,7 +88,7 @@ class ImageServer(object):
         :return:
         """
         self.bboxes = bboxes
-        for index in range(len(img_paths)):
+        for index in chosen_indices:
             img_path = img_paths[index]
             landmark = np.genfromtxt(os.path.splitext(img_path)[0] + ".opts",
                                      delimiter=" ", max_rows=self.landmark_size)
@@ -100,6 +100,7 @@ class ImageServer(object):
                 logger("processed {} basic infos".format(index + 1))
             # if (index + 1) >= 10:
             #     break
+
 
     def _load_imgs(self):
         """Load imgs"""
