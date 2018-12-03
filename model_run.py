@@ -26,13 +26,13 @@ from prepare.data_gen import *
 
 class Model(object):
     def __init__(self, lr, epochs, bs, train_dir, val_dir,
-                 loss, metrics, steps_per_epochs, final_act=None):
+                 loss, metrics, steps_per_epochs, classes, final_act=None):
         self.print_debug = data_param['print_debug']
         self.data_save_dir = data_param['data_save_dir']
         self.model_dir = data_param['model_dir']
         self.width = data_param['img_width']
         self.height = data_param['img_height']
-        self.classes = data_param['landmark_num']
+        self.classes = classes
         self.channel = occlu_param['channel']
         self.model_name = occlu_param['model_name']
         self.train_dir = train_dir
@@ -109,7 +109,8 @@ class OcclusionDetection(Model, object):
             metrics=["accuracy"],
             steps_per_epochs=len(os.listdir(train_dir)) // (occlu_param['bs'] * 6),
             train_dir=train_dir,
-            val_dir=val_dir
+            val_dir=val_dir,
+            classmethod=data_param['landmark_num']
         )
 
     def val_compute(self, val_load, ext_lists, label_ext, gpu_ratio=0.5):
@@ -160,5 +161,6 @@ class FaceAlignmentRough(Model, object):
             metrics=["accuracy"],
             steps_per_epochs=len(os.listdir(train_dir)) // (occlu_param['bs'] * 6),
             train_dir=train_dir,
-            val_dir=val_dir
+            val_dir=val_dir,
+            classes=data_param['landmark_num'] * 2
         )
