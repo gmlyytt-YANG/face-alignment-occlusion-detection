@@ -3,7 +3,7 @@ data/
 logs/
 venv/
 model/
-tmp/
+tmp/occlusion_detection.py
 .idea/
 weights/
 

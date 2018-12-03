@@ -18,14 +18,14 @@ from utils import *
 def load_landmark(label_name, mean_data=None):
     landmarks = np.genfromtxt(label_name)
     if mean_data is not None:
-        landmarks = landmarks - mean_data.flatten()
+        return landmarks.flatten() - mean_data.flatten()
     return landmarks.flatten()
 
 
 def load_occlu(label_name, mean_data=None):
     if mean_data is None:
         return np.genfromtxt(label_name)
-    return np.genfromtxt(label_name).flatten() - mean_data.flatten()
+    return np.genfromtxt(label_name) - mean_data
 
 
 def load_img_label(img_name_list, label_name_list, load_label,
