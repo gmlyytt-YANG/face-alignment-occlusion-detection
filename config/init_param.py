@@ -27,7 +27,7 @@ data_param = {
 
     # dataset related
     'landmark_num': 68,
-    'img_size': 128,
+    'img_size': 112,
     'channel': 3,
     'test_size': 0.3,  # split test size
     'random_state': 0,  # split random state
