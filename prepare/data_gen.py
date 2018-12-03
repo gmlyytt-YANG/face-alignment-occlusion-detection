@@ -23,19 +23,18 @@ def load_occlu(label_name, dtype):
 
 def load_img_label(img_name_list, label_name_list, load_label,
                    chosen_indices, print_debug=False):
-    global count
+    count = 0
+    print(print_debug)
     img_list = []
     label_list = []
-    if print_debug:
-        count = 0
     for index in chosen_indices:
         img = cv2.imread(img_name_list[index])
         occlusion = load_label(label_name_list[index], dtype=int)
         img_list.append(img)
         label_list.append(occlusion)
-        if print_debug and (count + 1) % 500 == 0:
+        if print_debug and (count + 1) % 10 == 0:
             logger("loaded {} data".format(count + 1))
-            count += 1
+        count += 1
     return img_list, label_list
 
 
