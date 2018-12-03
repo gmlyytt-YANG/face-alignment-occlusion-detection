@@ -20,9 +20,9 @@ There are 3 steps for face alignment in the condition of occlusion.
 
 # Run Introduction 
 
-    The shell cmd should be as followed, 'show' means whether to show in terminal, and 'phase' means the phase of train, val and test. Please pay attention that 'show' should be front of 'phase'.
+The shell cmd should be as followed, 'show' means whether to show in terminal, and 'phase' means the phase of train, val and test. Please pay attention that 'show' should be front of 'phase'.
 
-    ```
-    sh run.sh -s ${show} -p ${phase} -e ${epochs} -bs ${batch_size} -lr ${init_lr} -m ${mode}
-    ```
+```
+sh run.sh -s ${show} -p ${phase} -e ${epochs} -bs ${batch_size} -lr ${init_lr} -m ${mode}
+```
 
