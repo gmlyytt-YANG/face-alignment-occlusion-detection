@@ -25,8 +25,8 @@ from prepare.data_gen import *
 
 
 class Model(object):
-    def __init__(self, lr, epochs, bs, final_act, train_dir, val_dir,
-                 loss, metrics, steps_per_epochs):
+    def __init__(self, lr, epochs, bs,  train_dir, val_dir,
+                 loss, metrics, steps_per_epochs, final_act=None):
         self.print_debug = data_param['print_debug']
         self.data_save_dir = data_param['data_save_dir']
         self.model_dir = data_param['model_dir']
@@ -121,7 +121,10 @@ class OcclusionDetection(Model, object):
             os.path.join(data_param['model_dir'], occlu_param['model_name']))
 
         # load data
-        val_data, val_labels = validation_data_feed(self.val_dir, self.print_debug)
+        val_data, val_labels = validation_data_feed(data_dir=self.val_dir,
+                                                    ext_lists=["*_heatmap.png", "*_heatmap.jpg"],
+                                                    label_ext=".opts",
+                                                    print_debug=self.print_debug)
 
         # forward
         predict_labels = []
@@ -153,8 +156,7 @@ class FaceAlignmentRough(Model, object):
             lr=face_alignment_rough_param['init_lr'],
             epochs=face_alignment_rough_param['epochs'],
             bs=face_alignment_rough_param['bs'],
-            final_act="sigmoid",
-            loss="binary_crossentropy",
+            loss="mean_squared_error",
             metrics=["accuracy"],
             steps_per_epochs=len(os.listdir(train_dir)) // (occlu_param['bs'] * 6),
             train_dir=train_dir,

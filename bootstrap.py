@@ -29,7 +29,7 @@ ap.add_argument("-lr", "--init_lr", type=float, default=1e-3,
                 help="learning rate")
 ap.add_argument("-m", "--mode", type=str, default="train",
                 help="mode of ML")
-ap.add_argument("-p", "--phase", type=str, default="occlu",
+ap.add_argument("-p", "--phase", type=str, default="rough",
                 help="phase of pipeline")
 args = vars(ap.parse_args())
 
