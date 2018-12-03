@@ -24,7 +24,6 @@ def load_occlu(label_name, dtype):
 def load_img_label(img_name_list, label_name_list, load_label,
                    chosen_indices, print_debug=False):
     count = 0
-    print(print_debug)
     img_list = []
     label_list = []
     for index in chosen_indices:
