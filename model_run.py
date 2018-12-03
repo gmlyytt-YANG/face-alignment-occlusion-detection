@@ -25,7 +25,7 @@ from prepare.data_gen import *
 
 
 class Model(object):
-    def __init__(self, lr, epochs, bs,  train_dir, val_dir,
+    def __init__(self, lr, epochs, bs, train_dir, val_dir,
                  loss, metrics, steps_per_epochs, final_act=None):
         self.print_debug = data_param['print_debug']
         self.data_save_dir = data_param['data_save_dir']
@@ -112,19 +112,19 @@ class OcclusionDetection(Model, object):
             val_dir=val_dir
         )
 
-    def validation_benchmark(self):
+    def val_compute(self, val_load, ext_lists, label_ext, gpu_ratio=0.5):
         # set gpu usage
-        set_gpu(ratio=0.5)
+        set_gpu(ratio=gpu_ratio)
 
         # load model
         model = load_model(
             os.path.join(data_param['model_dir'], occlu_param['model_name']))
 
         # load data
-        val_data, val_labels = validation_data_feed(data_dir=self.val_dir,
-                                                    ext_lists=["*_heatmap.png", "*_heatmap.jpg"],
-                                                    label_ext=".opts",
-                                                    print_debug=self.print_debug)
+        val_data, val_labels = val_load(data_dir=self.val_dir,
+                                        ext_lists=ext_lists,
+                                        label_ext=label_ext,
+                                        print_debug=self.print_debug)
 
         # forward
         predict_labels = []

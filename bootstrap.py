@@ -53,7 +53,10 @@ if args["phase"] == "occlu":
                         label_ext=".opts",
                         gpu_ratio=0.5)
     elif args["mode"] == "val_compute":
-        occlu_clf.validation_benchmark()
+        occlu_clf.val_compute(val_load=validation_data_feed,
+                              ext_lists=["*_heatmap.png", "*_heatmap.jpg"],
+                              label_ext=".opts",
+                              gpu_ratio=0.5)
 
 # face alignment rough
 if args["phase"] == "rough":
