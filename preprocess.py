@@ -23,4 +23,6 @@ img_paths, bboxes = load_basic_info(mat_file, img_root=data_param['img_root_dir'
 img_server = ImageServer(img_size=data_param['img_width'],
                          color=True if occlu_param['channel'] == 3 else False,
                          print_debug=True)
-img_server.process(img_paths, bboxes)
+# process 
+chosen_indices = range(3148)
+img_server.process(img_paths, bboxes, chosen_indices)
