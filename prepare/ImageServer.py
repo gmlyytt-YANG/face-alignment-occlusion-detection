@@ -203,7 +203,7 @@ class ImageServer(object):
             # save data
             img_path = os.path.join(data_dir, add_postfix(name, "_{}".format(phase)))
             cv2.imwrite(img_path, img)
-            np.savetxt(os.path.splitext(img_path)[0] + ".pts", landmark, fmt="%.4f")
+            np.savetxt(os.path.splitext(img_path)[0] + ".pts", landmark, fmt="%.10f")
             np.savetxt(os.path.splitext(img_path)[0] + ".opts", occlusion, fmt="%d")
 
     def _img_split(self, phase="face"):
