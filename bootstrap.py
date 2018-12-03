@@ -15,7 +15,7 @@ Description: Occlu Program Main Entry
 import argparse
 
 from config.init_param import *
-from model_run import OcclusionDetection, FaceAlignmentRough
+from model_structure.model_run import OcclusionDetection, FaceAlignmentRough
 from prepare.data_gen import *
 from model_structure.vgg16 import *
 
