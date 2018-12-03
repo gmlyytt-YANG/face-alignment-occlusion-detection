@@ -18,7 +18,6 @@ import glob
 import numpy as np
 import os
 import scipy.io as scio
-import copy
 
 
 def logger(msg):
@@ -359,7 +358,7 @@ def normalize_data(landmark, bbox=None):
     return np.hstack((normalized_landmark, np.expand_dims(landmark[:, 2], axis=1)))
 
 
-def heat_map_compute(face, landmark, landmark_is_01, radius):
+def heat_map_compute(face, landmark, landmark_is_01, img_color, radius):
     """Heat map compute
 
     :param face: face image
@@ -368,15 +367,21 @@ def heat_map_compute(face, landmark, landmark_is_01, radius):
     :param radius:
     """
     face_size = face.shape[:2]
-    heat_map_mask = np.zeros_like(face[:, :, 0], dtype=np.float)
+    # landmark_backup = landmark
+    if img_color:
+        heat_map_mask = np.zeros_like(face[:, :, 0], dtype=np.float)
+    else:
+        heat_map_mask = np.zeros_like(face, dtype=np.float)
     if landmark_is_01:
         landmark = np.multiply(landmark, np.array([face_size[1], face_size[0]]))
     landmark = landmark.astype(int)
     # draw_landmark(face, landmark)
     for landmark_elem in landmark:
         color(landmark_elem, face_size[0], heat_map_mask, radius)
-    heat_map_mask = heat_map_mask[:, :, np.newaxis].repeat([3], axis=2)
+    if img_color:
+        heat_map_mask = heat_map_mask[:, :, np.newaxis].repeat([3], axis=2)
     heat_map = np.multiply(face, heat_map_mask)
+    # landmark = landmark_backup
     # show(heat_map_mask)
     # show(heat_map)
     return heat_map
@@ -456,14 +461,14 @@ def extend(data_base, add_data):
     return data
 
 
-def get_filenames(data_dir, listext):
+def get_filenames(data_dir, listext, label_ext):
     img_list = []
-    occlusion_list = []
+    label_list = []
     for ext in listext:
         p = os.path.join(data_dir, ext)
         img_list.extend(glob.glob(p))
 
     for img in img_list:
-        occlusion_list.append(os.path.splitext(img)[0] + ".opts")
+        label_list.append(os.path.splitext(img)[0] + label_ext)
 
-    return img_list, occlusion_list
+    return img_list, label_list

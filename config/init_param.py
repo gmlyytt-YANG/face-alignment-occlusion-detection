@@ -27,8 +27,8 @@ data_param = {
 
     # dataset related
     'landmark_num': 68,
-    'img_size': 112,
-    'channel': 3,
+    'img_width': 112,
+    'img_height': 112,
     'test_size': 0.3,  # split test size
     'random_state': 0,  # split random state
 
@@ -42,7 +42,24 @@ occlu_param = {
     'model_name': 'occlu_detection.h5',
 
     # dataset related
-    'radius': 5,
+    'channel': 3,
+    'radius': 10,
+
+    # dl-related
+    'epochs': 100,
+    'init_lr': 1e-3,
+    'loss': 'binary_crossentropy',
+    'bs': 64,
+    'weight_path': os.path.join(os.getcwd(), "weights"),
+    'weight_name': "vgg16_weights_tf_dim_ordering_tf_kernels.h5"
+}
+
+face_alignment_rough_param = {
+    # path-related
+    'model_name': 'face_alignment_rough.h5',
+
+    # dataset related
+    'channel': 3,
 
     # dl-related
     'epochs': 100,

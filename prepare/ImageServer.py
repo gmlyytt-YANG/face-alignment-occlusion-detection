@@ -37,11 +37,11 @@ class ImageServer(object):
         data_size:
         landmark_size: landmark num
         color:
-        img_size: default size is [512, 512]
+        img_size: default size is 112
         print_debug:
     """
 
-    def __init__(self, img_size=None, landmark_size=68,
+    def __init__(self, img_size=112, landmark_size=68,
                  color=False, print_debug=True):
         self.data_size = 0
         self.landmarks = []
@@ -56,7 +56,7 @@ class ImageServer(object):
         self.validation_data = None
         self.landmark_size = landmark_size
         self.color = color
-        self.img_size = img_size if img_size is not None else 128
+        self.img_size = img_size
         self.print_debug = print_debug
 
     def process(self, img_paths, bboxes):
@@ -150,6 +150,7 @@ class ImageServer(object):
             landmark = self.aug_landmarks[index]
             self.heat_maps.append(heat_map_compute(face, landmark,
                                                    landmark_is_01=True,
+                                                   img_color=self.color,
                                                    radius=occlu_param['radius']))
             if self.print_debug and (index + 1) % 500 == 0:
                 logger("generated {} heatmaps".format(index + 1))
@@ -174,9 +175,9 @@ class ImageServer(object):
         for index in range(len(self.occlusions)):
             if np.sum(self.occlusions[index]) > 0:
                 for num in range(balanced_num):
-                    heatmap = gaussian_noise(self.heat_maps[index])
+                    heatmap = gaussian_noise(self.heat_maps[index], color=self.color)
                     heatmaps_add.append(heatmap)
-                    face = gaussian_noise(self.faces[index])
+                    face = gaussian_noise(self.faces[index], color=self.color)
                     faces_add.append(face)
                     occlusions_add.append(self.occlusions[index])
                     landmarks_add.append(self.aug_landmarks[index])
@@ -191,19 +192,18 @@ class ImageServer(object):
         self.data_size = len(self.occlusions)
         logger("length of imgs and occlusions is {}".format(self.data_size))
 
-    @staticmethod
-    def _split_core(x, y, mode, phase):
+    def _split_core(self, x, y, mode, phase):
         data_dir = os.path.join(data_param['data_save_dir'], mode)
         for index in range(len(x)):
             img = x[index][0]
             name = x[index][1]
-            landmark = y[index][0]
+            landmark = y[index][0] * self.img_size
             occlusion = y[index][1]
 
             # save data
             img_path = os.path.join(data_dir, add_postfix(name, "_{}".format(phase)))
             cv2.imwrite(img_path, img)
-            np.savetxt(os.path.splitext(img_path)[0] + ".pts", landmark, fmt="%4f")
+            np.savetxt(os.path.splitext(img_path)[0] + ".pts", landmark, fmt="%.10f")
             np.savetxt(os.path.splitext(img_path)[0] + ".opts", occlusion, fmt="%d")
 
     def _img_split(self, phase="face"):

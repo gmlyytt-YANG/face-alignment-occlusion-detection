@@ -1,6 +1,56 @@
-# python preprocess.py
-if [ "$1" = "nohup" ];then
-    nohup python occlu_bootstrap.py -e "$2" -bs "$3" -lr "$4" -m "$5" > logs/epochs=$2_bs=$3_initlr=$4_mode=$5.log 2>&1 &
+#!/bin/bash
+
+# param init
+epochs=""
+bs=""
+lr=""
+mode=""
+show=""
+phase=""
+
+# param analyse
+while [ -n "$1" ]
+do
+    case "$1" in
+    "-p")
+	phase="$2"
+	if [ ${phase} = "pre" ];then
+	    break
+	fi
+	;;
+    "-s")
+	show="$2"
+	;;
+
+    "-e")                    
+        epochs="$2"
+	;;   
+    "-bs") 
+        bs="$2"             
+    	;;
+    "-lr") 
+	lr="$2"
+        ;; 
+    "-m")
+        mode="$2"
+	;;
+    esac
+    shift                   
+done
+
+# run cmd
+if [ ${show} = "nohup" ];then
+    if [ ${phase} = "pre" ];then
+        nohup python preprocess.py > \
+        logs/preprocess.log 2>&1 &
+    else 
+        nohup python bootstrap.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} -p ${phase}\
+        > logs/epochs=${epochs}_bs=${bs}_initlr=${lr}_mode=${mode}_phase=${phase}.log 2>&1 &
+    fi
 else
-    python occlu_bootstrap.py -e "$2" -bs "$3" -lr "$4" -m "$5"
+    if [ ${phase} = "pre" ];then
+	    python preprocess.py
+    else
+        python bootstrap.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} -p ${phase}
+    fi
 fi
