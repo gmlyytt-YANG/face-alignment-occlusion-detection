@@ -84,6 +84,7 @@ if args['phase'] == 'occlu':
             img_size=data_param['img_size'],
             chosen=range(3148, 3837)
         )
+
         predictions = []
         for face, label in zip(faces, labels):
             prediction = occlu_clf.test(model=model,
