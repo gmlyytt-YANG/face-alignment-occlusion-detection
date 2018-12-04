@@ -14,6 +14,7 @@ Description: Machine Learning Method
 """
 import numpy as np
 from keras import backend as K
+from utils import logger
 
 from config.init_param import data_param
 
@@ -101,6 +102,18 @@ def recall_compute(labels, predictions, mode="occlu"):
             if labels[index][index_inner] == int(flag / 2):
                 count += 1
     return float(good_count) / count
+
+
+def metric_compute(val_labels, predict_labels):
+    logger("the result of prediction of validation is as follow:")
+    occlu_ratio = occlu_ratio_compute(val_labels)
+    accuracy = accuracy_compute(val_labels, predict_labels)
+    occlu_recall = recall_compute(val_labels, predict_labels, mode="occlu")
+    clear_recall = recall_compute(val_labels, predict_labels, mode="clear")
+    print("occlu_ratio is {}".format(occlu_ratio))
+    print("accuracy is {}".format(accuracy))
+    print("occlu_recall is {}".format(occlu_recall))
+    print("clear_recall is {}".format(clear_recall))
 
 
 class StdMinMaxScaler(object):

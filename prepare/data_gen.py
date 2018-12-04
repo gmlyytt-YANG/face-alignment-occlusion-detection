@@ -27,7 +27,6 @@ def load_landmark(label_name, mean_shape=None):
 
 
 def load_occlu(label_name, mean_shape=None):
-    print(label_name)
     return np.genfromtxt(label_name)
 
 

@@ -17,13 +17,10 @@ import cv2
 from keras.models import load_model
 from keras import backend as K
 import os
-import pickle
 
 from config.init_param import occlu_param, data_param
 from model_structure.base_model import Model
-from ml import accuracy_compute
-from ml import occlu_ratio_compute
-from ml import recall_compute
+from ml import metric_compute
 from utils import binary
 from utils import logger
 from utils import set_gpu
@@ -42,10 +39,10 @@ class OcclusionDetection(Model, object):
             metrics=["accuracy"],
             steps_per_epochs=len(os.listdir(train_dir)) // (occlu_param['bs'] * 6),
             classes=data_param['landmark_num'],
-            final_act="sigmoid",            
+            final_act="sigmoid",
         )
 
-    def val_compute(self, val_load, ext_lists, label_ext, normalizer=None, gpu_ratio=0.5):
+    def val_compute(self, val_load, ext_lists, label_ext, gpu_ratio=0.5):
         # set gpu usage
         set_gpu(ratio=gpu_ratio)
 
@@ -68,22 +65,10 @@ class OcclusionDetection(Model, object):
         K.clear_session()
 
         # compute
-        logger("the result of prediction of validation is as follow:")
-        occlu_ratio = occlu_ratio_compute(val_labels)
-        accuracy = accuracy_compute(val_labels, predict_labels)
-        occlu_recall = recall_compute(val_labels, predict_labels, mode="occlu")
-        clear_recall = recall_compute(val_labels, predict_labels, mode="clear")
-        print("occlu_ratio is {}".format(occlu_ratio))
-        print("accuracy is {}".format(accuracy))
-        print("occlu_recall is {}".format(occlu_recall))
-        print("clear_recall is {}".format(clear_recall))
+        metric_compute(val_labels, predict_labels)
 
-    def test(self, model, img, landmark, is_heat_map=False, binary_output=False, normalize=False):
+    def test(self, model, img, landmark, is_heat_map=False, binary_output=False):
         img = cv2.resize(img, (data_param['img_size'], data_param['img_size']))
-        if normalize:
-            f_mean = open(os.path.join(data_param['normalizer_dir'], "normalizer.pkl"), 'rb')
-            normalizer = pickle.load(f_mean)
-            img = normalizer.transform(img)
         net_input = img
         if is_heat_map:
             net_input = heat_map_compute(img, landmark,
