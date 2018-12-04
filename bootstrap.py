@@ -24,6 +24,7 @@ from model_structure.vgg16 import Vgg16Regress, Vgg16CutFC2
 from prepare.data_gen import train_data_feed, val_data_feed
 from utils import load_rough_imgs_labels
 from utils import load_rough_imgs_occlus
+from utils import logger
 from utils import set_gpu
 from ml import metric_compute
 
@@ -75,25 +76,31 @@ if args['phase'] == 'occlu':
                               label_ext='.opts',
                               gpu_ratio=0.5)
     elif args['mode'] == 'test':
-        set_gpu(ratio=0.5) 
+        set_gpu(ratio=0.5)
+        logger("loading imgs")
         model = load_model(
             os.path.join(data_param['model_dir'], occlu_param['model_name']))
-        faces, labels = load_rough_imgs_occlus(
+        faces, landmarks, occlus = load_rough_imgs_occlus(
             img_root=data_param['img_root_dir'],
             mat_file_name='raw_300W_release.mat',
             img_size=data_param['img_size'],
             chosen=range(3148, 3837)
         )
-
+        logger("predicting")
         predictions = []
-        for face, label in zip(faces, labels):
+        for face, landmark in zip(faces, landmarks):
             prediction = occlu_clf.test(model=model,
                                         img=face,
-                                        landmark=label,
+                                        landmark=landmark,
                                         is_heat_map=True,
                                         binary_output=True)
+            # print(prediction)
             predictions.append(prediction)
-        metric_compute(labels, predictions)
+            if data_param['print_debug'] and len(predictions) % 100 == 0:
+                logger("predicted {} imgs".format(len(predictions)))
+            # if len(predictions) == 100:
+            #     break
+        metric_compute(occlus, predictions)
 
 
 # face alignment rough

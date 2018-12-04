@@ -68,7 +68,6 @@ class OcclusionDetection(Model, object):
         metric_compute(val_labels, predict_labels)
 
     def test(self, model, img, landmark, is_heat_map=False, binary_output=False):
-        print(landmark)
         img = cv2.resize(img, (data_param['img_size'], data_param['img_size']))
         net_input = img
         if is_heat_map:

@@ -478,7 +478,9 @@ def load_rough_imgs_occlus_core(img_path, bbox, img_size, normalizer=None):
 
     label = np.genfromtxt(label_path)
     label = normalize_data(label, bbox, occlu_include=True)
-    return face, np.multiply(np.clip(label, 0, 1), img_size)
+    landmark = np.multiply(np.clip(label[:, :2], 0, 1), img_size)
+    occlu = label[:, -1]
+    return face, landmark, occlu
 
 
 def load_rough_imgs_occlus(img_root, mat_file_name, img_size,
@@ -503,9 +505,10 @@ def load_rough_imgs_occlus(img_root, mat_file_name, img_size,
                                            normalizer=normalizer)
     else:
         faces = []
-        labels = []
+        landmarks = []
+        occlus = []
         for index in chosen:
-            face, label = load_rough_imgs_occlus_core(img_path=img_paths[index],
+            face, landmark, occlu = load_rough_imgs_occlus_core(img_path=img_paths[index],
                                                       bbox=bboxes[index],
                                                       img_size=img_size,
                                                       normalizer=normalizer)
@@ -514,8 +517,9 @@ def load_rough_imgs_occlus(img_root, mat_file_name, img_size,
             # print(label)
             # show(face)
             faces.append(face)
-            labels.append(label)
-        return faces, labels
+            landmarks.append(landmark)
+            occlus.append(occlu)
+        return faces, landmarks, occlus
 
 
 def draw_landmark(img, landmarks):
