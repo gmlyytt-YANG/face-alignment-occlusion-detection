@@ -13,7 +13,7 @@ Date: 2018/11/10 17:43:31
 Description: Base Model
 """
 
-
+import matplotlib.pyplot as plt
 from keras.optimizers import Adam
 from keras.preprocessing.image import img_to_array
 from keras.callbacks import ModelCheckpoint, EarlyStopping
@@ -77,13 +77,25 @@ class Model(object):
         checkpoint = ModelCheckpoint(filepath=os.path.join(self.model_dir, self.model_name))
         early_stopping = EarlyStopping(monitor='val_acc', patience=10, verbose=2)
         callback_list = [checkpoint, early_stopping]
-        model.fit_generator(
+        H = model.fit_generator(
             train_load(batch_size=self.bs, data_dir=self.train_dir,
                        ext_lists=ext_lists, label_ext=label_ext, mean_data=mean_data),
             validation_data=(val_data, val_labels),
             steps_per_epoch=self.steps_per_epoch,
             epochs=self.epochs, verbose=1, callbacks=callback_list)
-
+       
+        # plt.style.use("ggplot")
+        # plt.figure()
+        # plt.plot(np.arange(0, self.epochs), H.history["loss"], label="train_loss")
+        # plt.plot(np.arange(0, self.epochs), H.history["val_loss"], label="val_loss")
+        # plt.plot(np.arange(0, self.epochs), H.history["acc"], label="train_acc")
+        # plt.plot(np.arange(0, self.epochs), H.history["val_acc"], label="val_acc")
+        # plt.title("Training Loss and Accuracy")
+        # plt.xlabel("Epoch #")
+        # plt.ylabel("Loss/Accuracy")
+        # plt.legend(loc="upper right")
+        # plt.savefig("Loss_Accuracy_{:d}e.jpg".format(epochs))
+        # 
         K.clear_session()
 
     @staticmethod

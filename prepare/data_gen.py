@@ -17,9 +17,10 @@ from utils import *
 
 def load_landmark(label_name, mean_data=None):
     landmarks = np.genfromtxt(label_name)
-    print("-------------------")
-    print(landmarks)
-    print(mean_data)
+    # print("-------------------")
+    # print(landmarks)
+    # print(mean_data)
+    # print(landmarks.flatten() - mean_data.flatten())
     if mean_data is not None:
         return landmarks.flatten() - mean_data.flatten()
     return landmarks.flatten()
@@ -44,6 +45,8 @@ def load_img_label(img_name_list, label_name_list, load_label,
         if print_debug and (count + 1) % 500 == 0:
             logger("loaded {} data".format(count + 1))
         count += 1
+        # if (index + 1) > 1000:
+        #     break
     return img_list, label_list
 
 
