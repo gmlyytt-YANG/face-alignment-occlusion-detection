@@ -12,10 +12,11 @@ Author: Yang Li
 Date: 2018/11/28 09:31:31
 Description: Program Main Entry
 """
+import os
 
 from config.init_param import data_param, occlu_param
-from prepare.ImageServer import ImageServer
-from utils import *
+from prepare.img_server import ImageServer
+from utils import load_basic_info
 
 # load data(img, bbox, pts)
 mat_file = os.path.join(data_param['img_root_dir'], 'raw_300W_release.mat')

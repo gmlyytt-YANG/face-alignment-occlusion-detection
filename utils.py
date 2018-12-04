@@ -168,12 +168,6 @@ def rotate(face, landmark, alpha):
     landmark_rotated = np.asarray([(rot_mat[0][0] * x + rot_mat[0][1] * y + rot_mat[0][2],
                                     rot_mat[1][0] * x + rot_mat[1][1] * y + rot_mat[1][2], _)
                                    for (x, y, _) in landmark_real])
-    # landmark_num = len(landmark)
-    # for landmark_index in range(landmark_num):
-    #     x = int(landmark_rotated[landmark_index][0])
-    #     y = int(landmark_rotated[landmark_index][1])
-    #     cv2.circle(face_rotated_by_alpha, (x, y), 1, (255, 0, 0), thickness=-1)
-    # show(face_rotated_by_alpha)
 
     # landmark projects to [0, 1]
     landmark_01 = project_landmark(height, width, landmark_rotated)
@@ -295,6 +289,14 @@ def show(img):
 
 
 def range_search(x, y, patch_size, face_size, maintain_radius=True):
+    """Generate square box around [x, y] in 2*face_size square
+
+    :param: x, y
+    :param: patch_size: side length of square
+    :param: face_size:
+    :param: maintain_raidus: control area of square, if True, the area of square is
+                             face_size^2
+    """
     left = x - patch_size / 2 if x - patch_size / 2 >= 0 else 0
     top = y - patch_size / 2 if y - patch_size / 2 >= 0 else 0
 
@@ -320,6 +322,11 @@ def range_search(x, y, patch_size, face_size, maintain_radius=True):
 
 
 def heat_map_dist(point, matrix):
+    """Heat_map distance compute method
+
+    :param: point: one point.
+    :param: matrix: points set.
+    """
     sigma = 0.05
     D = np.sqrt(np.sum((point - matrix) ** 2))
     M = np.exp(np.multiply(D ** 2, - 2 * sigma ** 2))
@@ -327,6 +334,13 @@ def heat_map_dist(point, matrix):
 
 
 def color(landmark_elem, face_size, heat_map_mask, radius):
+    """Color the img according to landmark_elem
+
+    :param: landmark_elem: one landmark coordinate.
+    :param: face_size:
+    :param: heat_map_mask: result container.
+    :param: radius: color range.
+    """
     x = landmark_elem[0]
     y = landmark_elem[1]
     left, right, top, bottom = range_search(x, y, radius * 2, face_size, maintain_radius=False)
@@ -337,17 +351,13 @@ def color(landmark_elem, face_size, heat_map_mask, radius):
                 heat_map_mask[y_elem][x_elem] = heat
 
 
-def normalize_data(landmark, bbox=None):
-    # if bbox is None:
-    #     left = np.min(landmark[:, 0])
-    #     right = np.max(landmark[:, 0])
-    #     top = np.min(landmark[:, 1])
-    #     bottom = np.max(landmark[:, 1])
-    # else:
-    #     left, right, top, bottom = bbox
-    #
-    # x_normalized = (landmark[:, 0] - left) / (right - left)
-    # y_normalized = (landmark[:, 1] - top) / (bottom - top)
+def normalize_data(landmark, bbox=None, occlu_include=True):
+    """Normalize landmark
+
+    :param: landmark:
+    :param: bbox:
+    :param: occlu_include: bool like obj, control whether landmark has col2(0 starting index)
+    """
     if bbox is None:
         min_x, min_y = np.min(landmark[:, :2], axis=0)
         w, h = np.ptp(landmark[:, :2], axis=0)
@@ -355,7 +365,9 @@ def normalize_data(landmark, bbox=None):
         min_x, min_y = bbox[0], bbox[2]
         w, h = bbox[1] - bbox[0], bbox[3] - bbox[2]
     normalized_landmark = (landmark[:, :2] - [min_x, min_y]) / [w, h]
-    return np.hstack((normalized_landmark, np.expand_dims(landmark[:, 2], axis=1)))
+    if occlu_include:
+        return np.hstack((normalized_landmark, np.expand_dims(landmark[:, 2], axis=1)))
+    return normalized_landmark
 
 
 def heat_map_compute(face, landmark, landmark_is_01, img_color, radius):
@@ -367,7 +379,6 @@ def heat_map_compute(face, landmark, landmark_is_01, img_color, radius):
     :param radius:
     """
     face_size = face.shape[:2]
-    # landmark_backup = landmark
     if img_color:
         heat_map_mask = np.zeros_like(face[:, :, 0], dtype=np.float)
     else:
@@ -381,7 +392,6 @@ def heat_map_compute(face, landmark, landmark_is_01, img_color, radius):
     if img_color:
         heat_map_mask = heat_map_mask[:, :, np.newaxis].repeat([3], axis=2)
     heat_map = np.multiply(face, heat_map_mask)
-    # landmark = landmark_backup
     # show(heat_map_mask)
     # show(heat_map)
     return heat_map
@@ -410,34 +420,51 @@ def load_basic_info(mat_file, img_root=None):
     return img_paths, bboxes
 
 
-def load_imgs(img_root, mat_file_name, total=True, chosed="random"):
-    """Load images
+def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None):
+    img = cv2.imread(img_path)
+    face = cv2.resize(get_face(img, bbox, need_to_convert_to_int=True),
+                      (img_size, img_size))
+    if normalizer:
+        face = normalizer.transform(face)
+    label_path = os.path.splitext(img_path)[0] + ".pts"
+
+    label = np.multiply(np.clip(
+        normalize_data(np.genfromtxt(label_path, skip_header=3, skip_footer=1),
+                       bbox, occlu_include=False), 0, 1), img_size)
+    return face, label
+
+
+def load_rough_imgs_labels(img_root, mat_file_name, img_size, normalizer=None, chosen="random"):
+    """Load rough imgs and labels without normalization.
 
     :param img_root: img root dir
     :param mat_file_name:
-    :param total: bool obj, control to return whole dataset or just part
-    :param chosed: whether to choose specific indices of dataset or just random
+    :param img_size:
+    :param normalizer:
+    :param chosen: whether to choose specific indices of dataset or just random
 
-    :return chosed objs
+    :return chosen objs
     """
     img_paths, bboxes = load_basic_info(mat_file_name, img_root)
-    if not total:
-        if isinstance(chosed, list):
-            faces = []
-            for index in chosed:
-                print(img_paths[index])
-                img = cv2.imread(img_paths[index])
-                faces.append(get_face(img, bboxes[index], need_to_convert_to_int=True))
-            return faces
-        elif chosed == "random":
-            length = len(img_paths)
-            index = np.random.randint(0, length)
-            img = img_paths[index]
-            face = get_face(img, bboxes[index], need_to_convert_to_int=True)
-            return face
-
-    return (get_face(cv2.imread(img_paths[index]), bboxes[index], need_to_convert_to_int=True)
-            for index in range(len(img_paths)))
+    if chosen == "random":
+        length = len(img_paths)
+        index = np.random.randint(0, length)
+        return load_rough_imgs_labels_core(img_path=img_paths[index],
+                                           bbox=bboxes[index],
+                                           img_size=img_size,
+                                           normalizer=normalizer)
+    else:
+        faces = []
+        labels = []
+        for index in chosen:
+            face, label = load_rough_imgs_labels_core(img_path=img_paths[index],
+                                                      bbox=bboxes[index],
+                                                      img_size=img_size,
+                                                      normalizer=normalizer)
+            # show(face)
+            faces.append(face)
+            labels.append(label)
+        return faces, labels
 
 
 def draw_landmark(img, landmarks):
