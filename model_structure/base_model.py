@@ -27,8 +27,7 @@ from config.init_param import data_param
 from utils import set_gpu
 from utils import logger
 
-matplotlib.use('Agg')
-
+plt.switch_backend('agg')
 
 class Model(object):
     def __init__(self, lr, epochs, bs, model_name,
@@ -89,7 +88,7 @@ class Model(object):
         plt.xlabel('Epoch #')
         plt.ylabel('Loss/Accuracy')
         plt.legend(loc='upper right')
-        plt.savefig('Loss_Accuracy_{:d}e.jpg'.format(self.epochs))
+        plt.savefig('{}'.format(self.model_name))
 
         K.clear_session()
 

@@ -35,7 +35,8 @@ ap.add_argument('-m', '--mode', type=str, default='val_compute',
                 help='mode of ML')
 ap.add_argument('-p', '--phase', type=str, default='rough',
                 help='phase of pipeline')
-args = vars(ap.parse_args())
+args, unknown = ap.parse_known_args()
+args = vars(args)
 
 # load mean_shape and normalizer 
 f_mean_shape = open(os.path.join(data_param['model_dir'], 'mean_shape.pkl'), 'rb')

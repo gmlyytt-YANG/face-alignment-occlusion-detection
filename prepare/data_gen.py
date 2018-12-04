@@ -27,7 +27,6 @@ def load_landmark(label_name, mean_shape=None):
 
 
 def load_occlu(label_name, mean_shape=None):
-    print(label_name)
     return np.genfromtxt(label_name)
 
 
@@ -89,7 +88,7 @@ def train_data_feed(batch_size, data_dir, ext_lists, label_ext, mean_shape=None)
         if label_ext == ".pts":
             load_label = load_landmark
         img_list, label_list = load_img_label(img_name_list=img_name_list,
-                                              label_name_list=img_name_list,
+                                              label_name_list=label_name_list,
                                               load_label=load_label,
                                               chosen_indices=chosen_indices,
                                               mean_shape=mean_shape,
