@@ -476,7 +476,7 @@ def load_rough_imgs_occlus_core(img_path, bbox, img_size, normalizer=None):
         face = normalizer.transform(face)
     label_path = os.path.splitext(img_path)[0] + ".opts"
 
-    label = np.genfromtxt(label_path)[:, 2]
+    label = np.genfromtxt(label_path)
     return face, label
 
 

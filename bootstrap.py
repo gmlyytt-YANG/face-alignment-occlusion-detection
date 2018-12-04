@@ -86,7 +86,11 @@ if args['phase'] == 'occlu':
         )
         predictions = []
         for face, label in zip(faces, labels):
-            prediction = occlu_clf.test(model, face, label, is_heat_map=True, binary_output=True)
+            prediction = occlu_clf.test(model=model,
+                                        img=face,
+                                        landmark=label,
+                                        is_heat_map=True,
+                                        binary_output=True)
             predictions.append(prediction)
         metric_compute(labels, predictions)
 
