@@ -88,7 +88,7 @@ class Model(object):
         plt.xlabel('Epoch #')
         plt.ylabel('Loss/Accuracy')
         plt.legend(loc='upper right')
-        plt.savefig('{}'.format(self.model_name))
+        plt.savefig('{}'.format(os.path.join(data_param['record_dir'], self.model_name)))
 
         K.clear_session()
 
