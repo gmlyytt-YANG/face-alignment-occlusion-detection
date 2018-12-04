@@ -7,16 +7,31 @@
 ########################################################################
 
 """
-File: ImageServer.py
+File: img_server.py
 Author: Yang Li
 Date: 2018/11/17 19:05:31
 Description: Data Preparation
 """
 
+import cv2
+import numpy as np
+import pickle
+import os
 from sklearn.model_selection import train_test_split
 
-from config.init_param import *
-from ml import *
+from config.init_param import data_param
+from config.init_param import occlu_param
+from ml import gaussian_noise
+from ml import StdMinMaxScaler
+from utils import add_postfix
+from utils import create_dir
+from utils import data_aug
+from utils import extend
+from utils import get_face
+from utils import logger
+from utils import heat_map_compute
+from utils import normalize_data
+from utils import remove_content
 
 
 class ImageServer(object):
@@ -80,7 +95,7 @@ class ImageServer(object):
         logger("train validation splitting")
         self._train_val_split()
 
-    def _prepare(self, img_paths, bboxes, chosen_indices=[0, 1]):
+    def _prepare(self, img_paths, bboxes, chosen_indices=range(1)):
         """Getting data
         :param img_paths:
         :param bboxes:
@@ -100,7 +115,6 @@ class ImageServer(object):
                 logger("processed {} basic infos".format(index + 1))
             # if (index + 1) >= 10:
             #     break
-
 
     def _load_imgs(self):
         """Load imgs"""
@@ -139,10 +153,16 @@ class ImageServer(object):
     def _normalize_imgs(self):
         normalizer = StdMinMaxScaler()
         self.faces = normalizer.fit_transform(self.faces)
-        # for face in self.faces:
-        #     show(face)
+        mean_shape = np.multiply(np.mean(self.aug_landmarks, axis=0), self.img_size)
         create_dir(data_param['normalizer_dir'])
-        np.savez(os.path.join(data_param['normalizer_dir'], "normalizer.npz"))
+        f_normalizer = open(os.path.join(data_param['normalizer_dir'],
+                                         "normalizer.pkl"), 'wb')
+        pickle.dump(normalizer, f_normalizer)
+        f_normalizer.close()
+        f_mean_data = open(os.path.join(data_param['model_dir'],
+                                        'mean_shape.pkl'), 'wb')
+        pickle.dump(mean_shape, f_mean_data)
+        f_mean_data.close()
 
     def _heat_map_gen(self):
         """Generate heat map of each of faces"""
