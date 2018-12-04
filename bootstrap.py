@@ -23,6 +23,7 @@ from model_structure.rough_align import FaceAlignmentRough
 from model_structure.vgg16 import Vgg16Regress, Vgg16CutFC2
 from prepare.data_gen import train_data_feed, val_data_feed
 from utils import load_rough_imgs_labels
+from utils import load_rough_imgs_occlus
 from ml import metric_compute
 
 # load parameter
@@ -75,7 +76,7 @@ if args['phase'] == 'occlu':
     elif args['mode'] == 'test':
         model = load_model(
             os.path.join(data_param['model_dir'], occlu_param['model_name']))
-        faces, labels = load_rough_imgs_labels(
+        faces, labels = load_rough_imgs_occlus(
             img_root=data_param['img_root_dir'],
             mat_file_name='raw_300W_release.mat',
             img_size=data_param['img_size'],
@@ -113,5 +114,5 @@ if args['phase'] == 'rough':
                                                mat_file_name='raw_300W_release.mat',
                                                img_size=data_param['img_height'],
                                                normalizer=normalizer,
-                                               chosen=range(3148, 3837))
+                                               chosen=range(3148, -1))
         face_align_rgr.val_compute(imgs=faces, labels=labels, gpu_ratio=0.5)
