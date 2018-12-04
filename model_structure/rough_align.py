@@ -28,6 +28,7 @@ class FaceAlignmentRough(Model, object):
             lr=face_alignment_rough_param['init_lr'],
             epochs=face_alignment_rough_param['epochs'],
             bs=face_alignment_rough_param['bs'],
+            model_name=face_alignment_rough_param['model_name'],
             loss=landmark_loss,
             metrics=["accuracy"],
             steps_per_epochs=len(os.listdir(train_dir)) // (face_alignment_rough_param['bs'] * 6),

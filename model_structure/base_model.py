@@ -27,7 +27,8 @@ from config.init_param import data_param
 from utils import set_gpu
 from utils import logger
 
-plt.switch_backend('agg')
+matplotlib.use('agg')
+
 
 class Model(object):
     def __init__(self, lr, epochs, bs, model_name,
