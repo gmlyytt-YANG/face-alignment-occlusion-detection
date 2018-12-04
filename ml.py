@@ -12,12 +12,14 @@ Author: Yang Li
 Date: 2018/11/28 15:20:31
 Description: Machine Learning Method
 """
-from utils import *
+import numpy as np
 from keras import backend as K
+
 from config.init_param import data_param
 
 
 def landmark_loss(y_true, y_pred):
+    """Self defined loss function of landmark"""
     landmark_true = K.reshape(y_true, (-1, data_param['landmark_num'], 2))
     landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
     left_eye = K.mean(landmark_true[:, 36:42, :], axis=1)
@@ -27,7 +29,19 @@ def landmark_loss(y_true, y_pred):
     return loss
 
 
+def landmark_loss_compute(prediction, label):
+    """loss compute of landmark_loss"""
+    landmark_true = np.reshape(label, (-1, data_param['landmark_num'], 2))
+    landmark_pred = np.reshape(prediction, (-1, data_param['landmark_num'], 2))
+    left_eye = np.mean(landmark_true[:, 36:42, :], axis=1)
+    right_eye = np.mean(landmark_true[:, 42:48, :], axis=1)
+    loss = np.mean(np.sqrt(np.sum((landmark_true - landmark_pred) ** 2, axis=1)), axis=-1) / K.sqrt(
+        np.sum((right_eye - left_eye) ** 2))
+    return loss
+
+
 def scale(data):
+    """Scale data to [0, 255] using min max method. """
     return np.multiply((data - np.min(data)) / (np.max(data) - np.min(data)),
                        255).astype(int)
 
