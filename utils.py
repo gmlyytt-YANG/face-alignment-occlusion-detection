@@ -434,7 +434,8 @@ def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None):
     return face, label
 
 
-def load_rough_imgs_labels(img_root, mat_file_name, img_size, normalizer=None, chosen="random"):
+def load_rough_imgs_labels(img_root, mat_file_name, img_size,
+                           normalizer=None, chosen="random"):
     """Load rough imgs and labels without normalization.
 
     :param img_root: img root dir
@@ -458,6 +459,52 @@ def load_rough_imgs_labels(img_root, mat_file_name, img_size, normalizer=None, c
         labels = []
         for index in chosen:
             face, label = load_rough_imgs_labels_core(img_path=img_paths[index],
+                                                      bbox=bboxes[index],
+                                                      img_size=img_size,
+                                                      normalizer=normalizer)
+            # show(face)
+            faces.append(face)
+            labels.append(label)
+        return faces, labels
+
+
+def load_rough_imgs_occlus_core(img_path, bbox, img_size, normalizer=None):
+    img = cv2.imread(img_path)
+    face = cv2.resize(get_face(img, bbox, need_to_convert_to_int=True),
+                      (img_size, img_size))
+    if normalizer:
+        face = normalizer.transform(face)
+    label_path = os.path.splitext(img_path)[0] + ".opts"
+
+    label = np.genfromtxt(label_path)[:, 2]
+    return face, label
+
+
+def load_rough_imgs_occlus(img_root, mat_file_name, img_size,
+                           normalizer=None, chosen="random"):
+    """Load rough imgs and occlus without normalization.
+
+    :param img_root: img root dir
+    :param mat_file_name:
+    :param img_size:
+    :param normalizer:
+    :param chosen: whether to choose specific indices of dataset or just random
+
+    :return chosen objs
+    """
+    img_paths, bboxes = load_basic_info(mat_file_name, img_root)
+    if chosen == "random":
+        length = len(img_paths)
+        index = np.random.randint(0, length)
+        return load_rough_imgs_occlus_core(img_path=img_paths[index],
+                                           bbox=bboxes[index],
+                                           img_size=img_size,
+                                           normalizer=normalizer)
+    else:
+        faces = []
+        labels = []
+        for index in chosen:
+            face, label = load_rough_imgs_occlus_core(img_path=img_paths[index],
                                                       bbox=bboxes[index],
                                                       img_size=img_size,
                                                       normalizer=normalizer)
