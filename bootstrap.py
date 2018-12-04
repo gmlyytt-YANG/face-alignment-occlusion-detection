@@ -102,7 +102,6 @@ if args['phase'] == 'occlu':
             #     break
         metric_compute(occlus, predictions)
 
-
 # face alignment rough
 if args['phase'] == 'rough':
     face_alignment_rough_param['epochs'] = args['epoch']
