@@ -21,7 +21,7 @@ from utils import get_filenames
 
 def load_landmark(label_name, mean_shape=None):
     landmarks = np.genfromtxt(label_name)
-    if mean_shape:
+    if mean_shape is not None:
         return landmarks.flatten() - mean_shape.flatten()
     return landmarks.flatten()
 
