@@ -18,10 +18,10 @@ from config.init_param import data_param
 
 
 def landmark_loss(y_true, y_pred):
-    landmark_true = K.reshape(y_true, (data_param['landmark_num'], 2))
-    landmark_pred = K.reshape(y_pred, (data_param['landmark_num'], 2))
+    landmark_true = K.reshape(y_true, (-1, data_param['landmark_num'], 2))
+    landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
     loss = K.mean(K.mean(K.sqrt(K.sum((landmark_true - landmark_pred) ** 2, axis=1)), axis=-1) / K.sqrt(
-        K.sum((K.max(landmark_true, axis=0)) - K.min(landmark_true, axis=0)) ** 2), axis=-1)
+        K.sum((K.max(landmark_true, axis=1)) - K.min(landmark_true, axis=1)) ** 2), axis=-1)
     return loss
 
 
