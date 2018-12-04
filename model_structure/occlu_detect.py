@@ -7,10 +7,10 @@
 ########################################################################
 
 """
-File: model_run.py
+File: occlu_detect.py
 Author: Yang Li
 Date: 2018/11/10 17:43:31
-Description: Derived Model
+Description: Occlusion Detection
 """
 from keras.models import load_model
 from model_structure.base_model import *
@@ -85,17 +85,3 @@ class OcclusionDetection(Model, object):
         return self.classify(model, net_input)
 
 
-class FaceAlignmentRough(Model, object):
-    def __init__(self):
-        train_dir, val_dir = self._load_data()
-        super(FaceAlignmentRough, self).__init__(
-            lr=face_alignment_rough_param['init_lr'],
-            epochs=face_alignment_rough_param['epochs'],
-            bs=face_alignment_rough_param['bs'],
-            loss=landmark_loss,
-            metrics=["accuracy"],
-            steps_per_epochs=len(os.listdir(train_dir)) // (occlu_param['bs'] * 6),
-            train_dir=train_dir,
-            val_dir=val_dir,
-            classes=data_param['landmark_num'] * 2
-        )
