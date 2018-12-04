@@ -95,7 +95,7 @@ class Model(object):
         # plt.ylabel("Loss/Accuracy")
         # plt.legend(loc="upper right")
         # plt.savefig("Loss_Accuracy_{:d}e.jpg".format(epochs))
-        # 
+
         K.clear_session()
 
     @staticmethod
