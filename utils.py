@@ -508,6 +508,9 @@ def load_rough_imgs_occlus(img_root, mat_file_name, img_size,
                                                       bbox=bboxes[index],
                                                       img_size=img_size,
                                                       normalizer=normalizer)
+            # print(face)
+            # print('---------------')
+            # print(label)
             # show(face)
             faces.append(face)
             labels.append(label)
