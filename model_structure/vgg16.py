@@ -21,6 +21,7 @@ from keras.models import Sequential
 from keras.layers import Conv2D
 from keras.layers import MaxPooling2D
 import keras.backend as K
+import tensorflow as tf
 
 from config.init_param import occlu_param, data_param
 
@@ -107,7 +108,7 @@ class Vgg16Regress(Vgg16Base, object):
         )
 
         if mean_shape is not None:
-            mean_shape = K.reshape(mean_shape, [data_param['landmark_num'], 1])
+            mean_shape = K.reshape(mean_shape, [classes, 1])
             mean_shape_tensor = K.variable(value=mean_shape)
 
         # Regression block

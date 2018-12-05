@@ -15,6 +15,7 @@ Description: Main Entry of Training
 import argparse
 import pickle
 import os
+import numpy as np
 
 from config.init_param import data_param, occlu_param, face_alignment_rough_param
 from model_structure.occlu_detect import OcclusionDetection
@@ -45,6 +46,7 @@ args = vars(args)
 # load mean_shape and normalizer 
 f_mean_shape = open(os.path.join(data_param['model_dir'], 'mean_shape.pkl'), 'rb')
 mean_shape = pickle.load(f_mean_shape)
+mean_shape = np.array(mean_shape, dtype=np.float32)
 f_mean_shape.close()
 f_normalizer = open(os.path.join(data_param['model_dir'], 'normalizer.pkl'), 'rb')
 normalizer = pickle.load(f_normalizer)
