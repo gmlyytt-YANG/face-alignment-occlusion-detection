@@ -127,4 +127,3 @@ if args['phase'] == 'occlu':
             # if len(predictions) == 100:
             #     break
         metric_compute(occlus, predictions)
-

@@ -19,19 +19,15 @@ from utils import logger
 from utils import get_filenames
 
 
-def load_landmark(label_name, mean_shape=None):
+def load_label(label_name, flatten=False):
     landmarks = np.genfromtxt(label_name)
-    if mean_shape is not None:
-        return landmarks.flatten() - mean_shape.flatten()
-    return landmarks.flatten()
+    if flatten:
+        return landmarks.flatten()
+    return landmarks
 
 
-def load_occlu(label_name, mean_shape=None):
-    return np.genfromtxt(label_name)
-
-
-def load_img_label(img_name_list, label_name_list, load_label,
-                   chosen_indices, mean_shape=None, normalizer=None, print_debug=False):
+def load_img_label(img_name_list, label_name_list,
+                   chosen_indices, flatten=False, normalizer=None, print_debug=False):
     """Load faces and labels
 
     :param: img_name_list: face or heatmap img path name list.
@@ -49,7 +45,7 @@ def load_img_label(img_name_list, label_name_list, load_label,
         img = cv2.imread(img_name_list[index])
         if normalizer:
             img = normalizer.transform(img)
-        label = load_label(label_name_list[index], mean_shape)
+        label = load_label(label_name_list[index], flatten)
         img_list.append(img)
         label_list.append(label)
         if print_debug and (count + 1) % 500 == 0:
@@ -60,7 +56,7 @@ def load_img_label(img_name_list, label_name_list, load_label,
     return np.array(img_list), np.array(label_list)
 
 
-def train_data_feed(batch_size, data_dir, ext_lists, label_ext, mean_shape=None):
+def train_data_feed(batch_size, data_dir, ext_lists, label_ext, flatten=False):
     """Train data feed.
 
     :param: batch_size:
@@ -84,20 +80,16 @@ def train_data_feed(batch_size, data_dir, ext_lists, label_ext, mean_shape=None)
             batch_offset = batch_size
         end = batch_offset
         chosen_indices = indices[start: end]
-        load_label = load_occlu
-        if label_ext == ".pts":
-            load_label = load_landmark
         img_list, label_list = load_img_label(img_name_list=img_name_list,
                                               label_name_list=label_name_list,
-                                              load_label=load_label,
                                               chosen_indices=chosen_indices,
-                                              mean_shape=mean_shape,
+                                              flatten=flatten,
                                               print_debug=False)
         yield img_list, label_list
 
 
 def val_data_feed(data_dir, ext_lists, label_ext,
-                  mean_shape=None, normalizer=None, print_debug=False):
+                  flatten=False, normalizer=None, print_debug=False):
     """Validation data feed
 
     :param: data_dir:
@@ -111,14 +103,10 @@ def val_data_feed(data_dir, ext_lists, label_ext,
         get_filenames(data_dir, ext_lists, label_ext)
 
     data_size = len(img_name_list)
-    load_label = load_occlu
-    if label_ext == ".pts":
-        load_label = load_landmark
     img_list, label_list = load_img_label(img_name_list=img_name_list,
                                           label_name_list=label_name_list,
-                                          load_label=load_label,
                                           chosen_indices=range(data_size),
-                                          mean_shape=mean_shape,
+                                          flatten=flatten,
                                           normalizer=normalizer,
                                           print_debug=print_debug)
 
