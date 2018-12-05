@@ -20,8 +20,9 @@ from keras.layers import Dense
 from keras.models import Sequential
 from keras.layers import Conv2D
 from keras.layers import MaxPooling2D
+import keras.backend as K
 
-from config.init_param import occlu_param
+from config.init_param import occlu_param, data_param
 
 
 class Vgg16Base(object):
@@ -77,7 +78,7 @@ class Vgg16Base(object):
 
 
 class Vgg16CutFC2(Vgg16Base, object):
-    def build(self, width, height, depth, classes, final_act="softmax", weights='imagenet'):
+    def build(self, width, height, depth, classes, final_act="softmax", mean_shape=None, weights='imagenet'):
         model = super(Vgg16CutFC2, self).build(
             width=width,
             height=height,
@@ -96,7 +97,7 @@ class Vgg16CutFC2(Vgg16Base, object):
 
 
 class Vgg16Regress(Vgg16Base, object):
-    def build(self, width, height, depth, classes, final_act=None, weights='imagenet'):
+    def build(self, width, height, depth, classes, final_act=None, mean_shape=None, weights='imagenet'):
         model = super(Vgg16Regress, self).build(
             width=width,
             height=height,
@@ -105,10 +106,15 @@ class Vgg16Regress(Vgg16Base, object):
             weights=weights
         )
 
+        if mean_shape is not None:
+            mean_shape = K.reshape(mean_shape, [data_param['landmark_num'], 1])
+            mean_shape_tensor = K.variable(value=mean_shape)
+
         # Regression block
-        model.add(Flatten(name='flatten'))
-        model.add(Dense(4096, activation='relu', name='fc1_self'))
+        model = Flatten(name='flatten')(model)
+        model = Dense(4096, activation='relu', name='fc1_self')(model)
         # model.add(Dense(4096, activation='relu', name='fc2_self'))
-        model.add(Dense(classes, name='predictions_self'))
+        model = Dense(classes, name='predictions_self')(model)
+        model = K.identity(model+mean_shape_tensor, name="landmark")
 
         return self.load_weights(model)
