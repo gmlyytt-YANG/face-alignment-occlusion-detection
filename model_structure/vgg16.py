@@ -14,10 +14,11 @@ Description: self-define VGG16NET
 """
 
 import os
-
+import numpy as np
 from keras.layers import Flatten
 from keras.layers import Dense
 from keras.models import Sequential
+from keras.layers import Lambda
 from keras.layers import Input
 from keras.layers import Conv2D
 from keras.layers import MaxPooling2D
@@ -109,6 +110,7 @@ class Vgg16Regress(Vgg16Base, object):
         )
 
         if mean_shape is not None:
+            mean_shape = K.constant(np.reshape(mean_shape, [1, 2]))
             mean_shape = K.reshape(mean_shape, [data_param['landmark_num'], 1])
             mean_shape_tensor = K.variable(value=mean_shape, dtype=K.floatx())
 
