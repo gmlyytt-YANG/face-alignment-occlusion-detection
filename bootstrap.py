@@ -76,7 +76,7 @@ if args['phase'] == 'occlu':
                               label_ext='.opts',
                               gpu_ratio=0.5)
     elif args['mode'] == 'test':
-        set_gpu(ratio=0.5)
+        # set_gpu(ratio=0.5)
         logger("loading imgs")
         model = load_model(
             os.path.join(data_param['model_dir'], occlu_param['model_name']))
@@ -121,7 +121,7 @@ if args['phase'] == 'rough':
                              label_ext='.pts',
                              mean_shape=mean_shape,
                              normalizer=normalizer,
-                             gpu_ratio=0.5)
+                             gpu_ratio=0.8)
     if args['mode'] == 'val_compute':
         faces, labels = load_rough_imgs_labels(img_root=data_param['img_root_dir'],
                                                mat_file_name='raw_300W_release.mat',
