@@ -13,21 +13,18 @@ Date: 2018/11/21 09:41:31
 Description: Main Entry of Training
 """
 import argparse
-import pickle
 import os
-import numpy as np
 
 from config.init_param import data_param, occlu_param, face_alignment_rough_param
 from model_structure.occlu_detect import OcclusionDetection
 from model_structure.rough_align import FaceAlignmentRough
 from model_structure.vgg16 import Vgg16Regress, Vgg16CutFC2
 from prepare.data_gen import train_data_feed, val_data_feed
+from ml import metric_compute
+from ml import load_config
 from utils import load_rough_imgs_labels
 from utils import load_rough_imgs_occlus
 from utils import logger
-from utils import set_gpu
-from ml import metric_compute
-from ml import load_config
 
 # load parameter
 ap = argparse.ArgumentParser()
@@ -57,6 +54,7 @@ if args['phase'] == 'rough':
         face_alignment_rough_param['init_lr'])
 
     face_align_rgr = FaceAlignmentRough()
+    weight_path = os.path.join(face_alignment_rough_param['weight_path'], face_alignment_rough_param['weight_name'])
     if args['mode'] == 'train':
         face_align_rgr.train(model_structure=Vgg16Regress(),
                              train_load=train_data_feed,
@@ -65,6 +63,7 @@ if args['phase'] == 'rough':
                              label_ext='.pts',
                              mean_shape=mean_shape,
                              normalizer=normalizer,
+                             weight_path=weight_path,
                              gpu_ratio=0.5)
     if args['mode'] == 'val_compute':
         logger("loading data")
@@ -74,9 +73,6 @@ if args['phase'] == 'rough':
                                                normalizer=normalizer,
                                                mean_shape=mean_shape,
                                                chosen=range(3148, 3837))
-        # for label in labels:
-        #     print(label)
-        #     print('-----------')
         face_align_rgr.val_compute(imgs=faces, labels=labels, gpu_ratio=0.5)
 
 # occlusion detection
@@ -91,12 +87,14 @@ if args['phase'] == 'occlu':
 
     # learning
     occlu_clf = OcclusionDetection()
+    weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
     if args['mode'] == 'train':
         occlu_clf.train(model_structure=Vgg16CutFC2(),
                         train_load=train_data_feed,
                         val_load=val_data_feed,
                         ext_lists=['*_heatmap.png', '*_heatmap.jpg'],
                         label_ext='.opts',
+                        weight_path=weight_path,
                         gpu_ratio=0.5)
     elif args['mode'] == 'val_compute':
         occlu_clf.val_compute(val_load=val_data_feed,
@@ -104,7 +102,6 @@ if args['phase'] == 'occlu':
                               label_ext='.opts',
                               gpu_ratio=0.5)
     elif args['mode'] == 'test':
-        # set_gpu(ratio=0.5)
         logger("loading imgs")
         faces, landmarks, occlus = load_rough_imgs_occlus(
             img_root=data_param['img_root_dir'],

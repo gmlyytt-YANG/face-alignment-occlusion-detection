@@ -44,7 +44,7 @@ class Model(object):
         self.final_act = final_act
 
     def train(self, model_structure, train_load, val_load,
-              ext_lists, label_ext, mean_shape=None, normalizer=None, gpu_ratio=0.5):
+              ext_lists, label_ext, mean_shape=None, normalizer=None, weight_path=None, gpu_ratio=0.5):
         # set gpu usage
         set_gpu(ratio=gpu_ratio)
 
@@ -67,7 +67,8 @@ class Model(object):
                                       height=data_param['img_size'],
                                       depth=data_param['channel'],
                                       classes=self.classes,
-                                      final_act=self.final_act)
+                                      final_act=self.final_act,
+                                      weight_path=weight_path)
         model.compile(loss=self.loss, optimizer=opt, metrics=self.metrics)
 
         logger('training')

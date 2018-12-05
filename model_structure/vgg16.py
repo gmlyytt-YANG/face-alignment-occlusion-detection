@@ -66,17 +66,17 @@ class Vgg16Base(object):
         return x, input
 
     @staticmethod
-    def load_weights(model):
-        if not os.path.exists(occlu_param['weight_path']):
+    def load_weights(model, weight_path):
+        if not os.path.exists(weight_path):
             raise ValueError("there is no vgg16 weights data!")
 
-        model.load_weights(os.path.join(occlu_param['weight_path'], occlu_param['weight_name']), by_name=True)
+        model.load_weights(weight_path, by_name=True)
 
         return model
 
 
 class Vgg16CutFC2(Vgg16Base, object):
-    def build(self, width, height, depth, classes, final_act="softmax", weights='imagenet'):
+    def build(self, width, height, depth, classes, final_act="softmax", weights='imagenet', weight_path=None):
         x, input = super(Vgg16CutFC2, self).build(
             width=width,
             height=height,
@@ -93,11 +93,11 @@ class Vgg16CutFC2(Vgg16Base, object):
 
         model = Model(input, x)
 
-        return self.load_weights(model)
+        return self.load_weights(model, weight_path=weight_path)
 
 
 class Vgg16Regress(Vgg16Base, object):
-    def build(self, width, height, depth, classes, final_act=None, weights='imagenet'):
+    def build(self, width, height, depth, classes, final_act=None, weights='imagenet', weight_path=None):
         x, input = super(Vgg16Regress, self).build(
             width=width,
             height=height,
@@ -112,4 +112,4 @@ class Vgg16Regress(Vgg16Base, object):
         x = Dense(classes, name='predictions_self')(x)
         model = Model(input, x)
 
-        return self.load_weights(model)
+        return self.load_weights(model, weight_path=weight_path)
