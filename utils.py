@@ -420,7 +420,7 @@ def load_basic_info(mat_file, img_root=None):
     return img_paths, bboxes
 
 
-def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None):
+def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None, mean_shape=None):
     img = cv2.imread(img_path)
     face = cv2.resize(get_face(img, bbox, need_to_convert_to_int=True),
                       (img_size, img_size))
@@ -431,10 +431,12 @@ def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None):
     label = np.multiply(np.clip(
         normalize_data(np.genfromtxt(label_path, skip_header=3, skip_footer=1),
                        bbox, occlu_include=False), 0, 1), img_size)
+    if mean_shape:
+        label = label - mean_shape
     return face, label
 
 
-def load_rough_imgs_labels(img_root, mat_file_name, img_size,
+def load_rough_imgs_labels(img_root, mat_file_name, img_size, mean_shape=None,
                            normalizer=None, chosen="random"):
     """Load rough imgs and labels without normalization.
 
@@ -442,6 +444,7 @@ def load_rough_imgs_labels(img_root, mat_file_name, img_size,
     :param mat_file_name:
     :param img_size:
     :param normalizer:
+    :param mean_shape:
     :param chosen: whether to choose specific indices of dataset or just random
 
     :return chosen objs
@@ -453,7 +456,8 @@ def load_rough_imgs_labels(img_root, mat_file_name, img_size,
         return load_rough_imgs_labels_core(img_path=img_paths[index],
                                            bbox=bboxes[index],
                                            img_size=img_size,
-                                           normalizer=normalizer)
+                                           normalizer=normalizer,
+                                           mean_shape=mean_shape)
     else:
         faces = []
         labels = []
@@ -461,7 +465,8 @@ def load_rough_imgs_labels(img_root, mat_file_name, img_size,
             face, label = load_rough_imgs_labels_core(img_path=img_paths[index],
                                                       bbox=bboxes[index],
                                                       img_size=img_size,
-                                                      normalizer=normalizer)
+                                                      normalizer=normalizer,
+                                                      mean_shape=mean_shape)
             # show(face)
             faces.append(face)
             labels.append(label)
@@ -509,9 +514,9 @@ def load_rough_imgs_occlus(img_root, mat_file_name, img_size,
         occlus = []
         for index in chosen:
             face, landmark, occlu = load_rough_imgs_occlus_core(img_path=img_paths[index],
-                                                      bbox=bboxes[index],
-                                                      img_size=img_size,
-                                                      normalizer=normalizer)
+                                                                bbox=bboxes[index],
+                                                                img_size=img_size,
+                                                                normalizer=normalizer)
             # print(face)
             # print('---------------')
             # print(label)

@@ -76,6 +76,7 @@ if args['phase'] == 'rough':
                                                mat_file_name='raw_300W_release.mat',
                                                img_size=data_param['img_size'],
                                                normalizer=normalizer,
+                                               mean_shape=mean_shape,
                                                chosen=range(3148, 3837))
         face_align_rgr.val_compute(imgs=faces, labels=labels, gpu_ratio=0.5)
 
