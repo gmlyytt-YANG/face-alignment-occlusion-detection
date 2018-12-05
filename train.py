@@ -55,7 +55,7 @@ if args['phase'] == 'rough':
     face_alignment_rough_param['epochs'] = args['epoch']
     face_alignment_rough_param['bs'] = args['batch_size']
     face_alignment_rough_param['init_lr'] = args['init_lr']
-    face_alignment_rough_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}.h5'.format(
+    face_alignment_rough_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_rough.h5'.format(
         face_alignment_rough_param['epochs'],
         face_alignment_rough_param['bs'],
         face_alignment_rough_param['init_lr'])
@@ -73,7 +73,7 @@ if args['phase'] == 'rough':
     if args['mode'] == 'val_compute':
         faces, labels = load_rough_imgs_labels(img_root=data_param['img_root_dir'],
                                                mat_file_name='raw_300W_release.mat',
-                                               img_size=data_param['img_height'],
+                                               img_size=data_param['img_size'],
                                                normalizer=normalizer,
                                                chosen=range(3148, 3837))
         face_align_rgr.val_compute(imgs=faces, labels=labels, gpu_ratio=0.5)
@@ -149,7 +149,7 @@ if args['phase'] == 'rough':
     if args['mode'] == 'val_compute':
         faces, labels = load_rough_imgs_labels(img_root=data_param['img_root_dir'],
                                                mat_file_name='raw_300W_release.mat',
-                                               img_size=data_param['img_height'],
+                                               img_size=data_param['img_size'],
                                                normalizer=normalizer,
                                                chosen=range(3148, 3837))
         face_align_rgr.val_compute(imgs=faces, labels=labels, gpu_ratio=0.5)
