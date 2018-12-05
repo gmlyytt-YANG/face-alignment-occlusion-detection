@@ -48,6 +48,9 @@ class FaceAlignmentRough(Model, object):
             if normalizer:
                 img = normalizer.transform(img)
             prediction = self.classify(model, img)
+            # print(prediction)
+            # print(label)
+            # print('-------------')
             loss += landmark_loss_compute(prediction, label)
             count += 1
             if data_param['print_debug'] and count % 100 == 0:
