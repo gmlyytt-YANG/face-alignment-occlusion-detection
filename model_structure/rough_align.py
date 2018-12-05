@@ -51,3 +51,17 @@ class FaceAlignmentRough(Model, object):
             loss += landmark_loss_compute(prediction, label)
             count += 1
         logger("test loss is {}".format(loss / count))
+
+    def test(self, img, mean_shape=None, normalizer=None, gpu_ratio=0.5):
+        # set gpu usage
+        set_gpu(ratio=gpu_ratio)
+
+        model = load_model(
+            os.path.join(data_param['model_dir'], data_param['model_name']))
+
+        if normalizer:
+            img = normalizer.transform(img)
+        prediction = self.classify(model, img)
+        if mean_shape is not None:
+            prediction = prediction + mean_shape
+        return np.reshape(prediction, (data_param['landmark_num'], 2))
