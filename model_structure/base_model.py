@@ -72,8 +72,9 @@ class Model(object):
             os.makedirs(data_param['model_dir'])
         checkpoint = \
             ModelCheckpoint(filepath=os.path.join(data_param['model_dir'], self.model_name))
-        early_stopping = EarlyStopping(monitor='val_acc', patience=10, verbose=2)
-        callback_list = [checkpoint, early_stopping]
+        # early_stopping = EarlyStopping(monitor='val_acc', patience=1, verbose=2)
+        # callback_list = [checkpoint, early_stopping]
+        callback_list = [checkpoint]
         H = model.fit_generator(
             train_load(batch_size=self.bs, data_dir=os.path.join(data_param['data_save_dir'], 'train'),
                        ext_lists=ext_lists, label_ext=label_ext, mean_shape=mean_shape),

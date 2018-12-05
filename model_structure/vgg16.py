@@ -107,8 +107,8 @@ class Vgg16Regress(Vgg16Base, object):
 
         # Regression block
         model.add(Flatten(name='flatten'))
-        model.add(Dense(4096, activation='relu', name='fc1_self'))
-        model.add(Dense(4096, activation='relu', name='fc2_self'))
+        model.add(Dense(2048, activation='relu', name='fc1_self'))
+        # model.add(Dense(4096, activation='relu', name='fc2_self'))
         model.add(Dense(classes, name='predictions_self'))
 
         return self.load_weights(model)
