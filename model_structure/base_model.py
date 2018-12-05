@@ -81,10 +81,10 @@ class Model(object):
             steps_per_epoch=self.steps_per_epoch,
             epochs=self.epochs, verbose=1, callbacks=callback_list)
 
-        plt.plot(np.arange(0, self.epochs), H.history['loss'], label='train_loss')
-        plt.plot(np.arange(0, self.epochs), H.history['val_loss'], label='val_loss')
-        plt.plot(np.arange(0, self.epochs), H.history['acc'], label='train_acc')
-        plt.plot(np.arange(0, self.epochs), H.history['val_acc'], label='val_acc')
+        plt.plot(np.arange(0, H.history['epoch']), H.history['loss'], label='train_loss')
+        plt.plot(np.arange(0, H.history['epoch']), H.history['val_loss'], label='val_loss')
+        plt.plot(np.arange(0, H.history['epoch']), H.history['acc'], label='train_acc')
+        plt.plot(np.arange(0, H.history['epoch']), H.history['val_acc'], label='val_acc')
         plt.title('Training Loss and Accuracy')
         plt.xlabel('Epoch #')
         plt.ylabel('Loss/Accuracy')
