@@ -40,7 +40,7 @@ class FaceAlignmentRough(Model, object):
         set_gpu(ratio=gpu_ratio)
 
         model = load_model(
-            os.path.join(data_param['model_dir'], data_param['model_name']))
+            os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']), {'landmark_loss': landmark_loss})
 
         loss = 0.0
         count = 0
@@ -48,8 +48,13 @@ class FaceAlignmentRough(Model, object):
             if normalizer:
                 img = normalizer.transform(img)
             prediction = self.classify(model, img)
-            loss += landmark_loss_compute(prediction, label)
+            # print(prediction)
+            # print(label)
+            # print('-------------')
+            loss += landmark_loss_compute(prediction, label) 
             count += 1
+            if data_param['print_debug'] and count % 100 == 0:
+                logger("predicted {} imgs".format(count))
         logger("test loss is {}".format(loss / count))
 
     def test(self, img, mean_shape=None, normalizer=None, gpu_ratio=0.5):

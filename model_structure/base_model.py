@@ -44,16 +44,19 @@ class Model(object):
         self.final_act = final_act
 
     def train(self, model_structure, train_load, val_load,
-              ext_lists, label_ext, mean_shape=None, normalizer=None, gpu_ratio=0.5):
+              ext_lists, label_ext, mean_shape=None, normalizer=None, weight_path=None, gpu_ratio=0.5):
         # set gpu usage
         set_gpu(ratio=gpu_ratio)
 
         # load data
         logger('loading data')
+        flatten = False
+        if mean_shape is not None:
+            flatten = True
         val_data, val_labels = val_load(data_dir=os.path.join(data_param['data_save_dir'], 'val'),
                                         ext_lists=ext_lists,
                                         label_ext=label_ext,
-                                        mean_shape=mean_shape,
+                                        flatten=flatten,
                                         normalizer=normalizer,
                                         print_debug=data_param['print_debug'])
 
@@ -64,7 +67,8 @@ class Model(object):
                                       height=data_param['img_size'],
                                       depth=data_param['channel'],
                                       classes=self.classes,
-                                      final_act=self.final_act)
+                                      final_act=self.final_act,
+                                      weight_path=weight_path)
         model.compile(loss=self.loss, optimizer=opt, metrics=self.metrics)
 
         logger('training')
@@ -73,19 +77,20 @@ class Model(object):
         checkpoint = \
             ModelCheckpoint(filepath=os.path.join(data_param['model_dir'], self.model_name))
         # early_stopping = EarlyStopping(monitor='val_acc', patience=1, verbose=2)
+        # early_stopping = EarlyStopping(monitor='val_acc', patience=10, verbose=2)
         # callback_list = [checkpoint, early_stopping]
         callback_list = [checkpoint]
         H = model.fit_generator(
             train_load(batch_size=self.bs, data_dir=os.path.join(data_param['data_save_dir'], 'train'),
-                       ext_lists=ext_lists, label_ext=label_ext, mean_shape=mean_shape),
+                       ext_lists=ext_lists, label_ext=label_ext, flatten=flatten),
             validation_data=(val_data, val_labels),
             steps_per_epoch=self.steps_per_epoch,
             epochs=self.epochs, verbose=1, callbacks=callback_list)
 
         plt.plot(np.arange(0, len(H.history['loss'])), H.history['loss'], label='train_loss')
         plt.plot(np.arange(0, len(H.history['val_loss'])), H.history['val_loss'], label='val_loss')
-        plt.plot(np.arange(0, len(H.history['acc'])), H.history['acc'], label='train_acc')
-        plt.plot(np.arange(0, len(H.history['val_acc'])), H.history['val_acc'], label='val_acc')
+        # plt.plot(np.arange(0, len(H.history['acc'])), H.history['acc'], label='train_acc')
+        # plt.plot(np.arange(0, len(H.history['val_acc'])), H.history['val_acc'], label='val_acc')
         plt.title('Training Loss and Accuracy')
         plt.xlabel('Epoch #')
         plt.ylabel('Loss/Accuracy')
