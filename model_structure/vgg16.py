@@ -18,8 +18,10 @@ import os
 from keras.layers import Flatten
 from keras.layers import Dense
 from keras.models import Sequential
+from keras.layers import Input
 from keras.layers import Conv2D
 from keras.layers import MaxPooling2D
+from keras.models import Model
 import keras.backend as K
 
 from config.init_param import occlu_param, data_param
@@ -34,38 +36,36 @@ class Vgg16Base(object):
                              '`None` (random initialization) or `imagenet` '
                              '(pre-training on ImageNet).')
 
-        model = Sequential()
-
+        input = Input(input_shape)
         # Block 1
-        model.add(Conv2D(64, (3, 3), input_shape=input_shape,
-                         activation='relu', padding='same', name='block1_conv1'))
-        model.add(Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv2'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2), name='block1_pool'))
+        x = Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv1')(input)
+        x = Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv2')(x)
+        x = MaxPooling2D((2, 2), strides=(2, 2), name='block1_pool')(x)
 
         # Block 2
-        model.add(Conv2D(128, (3, 3), activation='relu', padding='same', name='block2_conv1'))
-        model.add(Conv2D(128, (3, 3), activation='relu', padding='same', name='block2_conv2'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2), name='block2_pool'))
+        x = Conv2D(128, (3, 3), activation='relu', padding='same', name='block2_conv1')(x)
+        x = Conv2D(128, (3, 3), activation='relu', padding='same', name='block2_conv2')(x)
+        x = MaxPooling2D((2, 2), strides=(2, 2), name='block2_pool')(x)
 
         # Block 3
-        model.add(Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv1'))
-        model.add(Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv2'))
-        model.add(Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv3'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2), name='block3_pool'))
+        x = Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv1')(x)
+        x = Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv2')(x)
+        x = Conv2D(256, (3, 3), activation='relu', padding='same', name='block3_conv3')(x)
+        x = MaxPooling2D((2, 2), strides=(2, 2), name='block3_pool')(x)
 
         # Block 4
-        model.add(Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv1'))
-        model.add(Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv2'))
-        model.add(Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv3'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2), name='block4_pool'))
+        x = Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv1')(x)
+        x = Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv2')(x)
+        x = Conv2D(512, (3, 3), activation='relu', padding='same', name='block4_conv3')(x)
+        x = MaxPooling2D((2, 2), strides=(2, 2), name='block4_pool')(x)
 
         # Block 5
-        model.add(Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv1'))
-        model.add(Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv2'))
-        model.add(Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv3'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2), name='block5_pool'))
+        x = Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv1')(x)
+        x = Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv2')(x)
+        x = Conv2D(512, (3, 3), activation='relu', padding='same', name='block5_conv3')(x)
+        x = MaxPooling2D((2, 2), strides=(2, 2), name='block5_pool')(x)
 
-        return model
+        return x, input
 
     @staticmethod
     def load_weights(model):
@@ -79,7 +79,7 @@ class Vgg16Base(object):
 
 class Vgg16CutFC2(Vgg16Base, object):
     def build(self, width, height, depth, classes, final_act="softmax", mean_shape=None, weights='imagenet'):
-        model = super(Vgg16CutFC2, self).build(
+        x, input = super(Vgg16CutFC2, self).build(
             width=width,
             height=height,
             depth=depth,
@@ -88,17 +88,19 @@ class Vgg16CutFC2(Vgg16Base, object):
         )
 
         # Classification block
-        model.add(Flatten(name='flatten'))
-        model.add(Dense(4096, activation='relu', name='fc1_self'))
+        x = Flatten(name='flatten')(x)
+        x = Dense(4096, activation='relu', name='fc1_self')(x)
         # model.add(Dense(4096, activation='relu', name='fc2'))
-        model.add(Dense(classes, activation=final_act, name='predictions_self'))
+        x = Dense(classes, activation=final_act, name='predictions_self')(x)
+
+        model = Model(input, x)
 
         return self.load_weights(model)
 
 
 class Vgg16Regress(Vgg16Base, object):
     def build(self, width, height, depth, classes, final_act=None, mean_shape=None, weights='imagenet'):
-        model = super(Vgg16Regress, self).build(
+        x, input = super(Vgg16Regress, self).build(
             width=width,
             height=height,
             depth=depth,
@@ -108,13 +110,15 @@ class Vgg16Regress(Vgg16Base, object):
 
         if mean_shape is not None:
             mean_shape = K.reshape(mean_shape, [data_param['landmark_num'], 1])
-            mean_shape_tensor = K.variable(value=mean_shape)
+            mean_shape_tensor = K.variable(value=mean_shape, dtype=K.floatx())
 
         # Regression block
-        model = Flatten(name='flatten')(model)
-        model = Dense(4096, activation='relu', name='fc1_self')(model)
+        x = Flatten(name='flatten')(x)
+        x = Dense(4096, activation='relu', name='fc1_self')(x)
         # model.add(Dense(4096, activation='relu', name='fc2_self'))
-        model = Dense(classes, name='predictions_self')(model)
-        model = K.identity(model+mean_shape_tensor, name="landmark")
+        x = Dense(classes, name='predictions_self')(x)
+        x = K.identity(x + mean_shape_tensor, name="landmark")
+
+        model = Model(input, x)
 
         return self.load_weights(model)
