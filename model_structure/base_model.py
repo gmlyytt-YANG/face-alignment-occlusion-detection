@@ -50,10 +50,13 @@ class Model(object):
 
         # load data
         logger('loading data')
+        flatten = False
+        if mean_shape is not None:
+            flatten = True
         val_data, val_labels = val_load(data_dir=os.path.join(data_param['data_save_dir'], 'val'),
                                         ext_lists=ext_lists,
                                         label_ext=label_ext,
-                                        mean_shape=mean_shape,
+                                        flatten=flatten,
                                         normalizer=normalizer,
                                         print_debug=data_param['print_debug'])
 
@@ -78,7 +81,7 @@ class Model(object):
         callback_list = [checkpoint]
         H = model.fit_generator(
             train_load(batch_size=self.bs, data_dir=os.path.join(data_param['data_save_dir'], 'train'),
-                       ext_lists=ext_lists, label_ext=label_ext, mean_shape=mean_shape),
+                       ext_lists=ext_lists, label_ext=label_ext, flatten=flatten),
             validation_data=(val_data, val_labels),
             steps_per_epoch=self.steps_per_epoch,
             epochs=self.epochs, verbose=1, callbacks=callback_list)
