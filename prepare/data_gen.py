@@ -47,7 +47,9 @@ def load_img_label(img_name_list, label_name_list,
             img = normalizer.transform(img)
         label = load_label(label_name_list[index], flatten)
         img_list.append(img)
+        # print(img.shape)
         label_list.append(label)
+        # print(label)
         if print_debug and (count + 1) % 500 == 0:
             logger("loaded {} data".format(count + 1))
         count += 1
@@ -85,6 +87,8 @@ def train_data_feed(batch_size, data_dir, ext_lists, label_ext, flatten=False):
                                               chosen_indices=chosen_indices,
                                               flatten=flatten,
                                               print_debug=False)
+        # for m in label_list:
+        #     print(m)
         yield img_list, label_list
 
 

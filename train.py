@@ -27,6 +27,7 @@ from utils import load_rough_imgs_occlus
 from utils import logger
 from utils import set_gpu
 from ml import metric_compute
+from ml import load_config
 
 # load parameter
 ap = argparse.ArgumentParser()
@@ -43,14 +44,7 @@ ap.add_argument('-p', '--phase', type=str, default='rough',
 args, unknown = ap.parse_known_args()
 args = vars(args)
 
-# load mean_shape and normalizer 
-f_mean_shape = open(os.path.join(data_param['model_dir'], 'mean_shape.pkl'), 'rb')
-mean_shape = pickle.load(f_mean_shape)
-mean_shape = np.array(mean_shape, dtype=np.float32)
-f_mean_shape.close()
-f_normalizer = open(os.path.join(data_param['model_dir'], 'normalizer.pkl'), 'rb')
-normalizer = pickle.load(f_normalizer)
-f_normalizer.close()
+normalizer, mean_shape = load_config()
 
 # face alignment rough
 if args['phase'] == 'rough':
@@ -80,6 +74,9 @@ if args['phase'] == 'rough':
                                                normalizer=normalizer,
                                                mean_shape=mean_shape,
                                                chosen=range(3148, 3837))
+        # for label in labels:
+        #     print(label)
+        #     print('-----------')
         face_align_rgr.val_compute(imgs=faces, labels=labels, gpu_ratio=0.5)
 
 # occlusion detection

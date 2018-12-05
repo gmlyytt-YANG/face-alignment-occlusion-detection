@@ -420,20 +420,22 @@ def load_basic_info(mat_file, img_root=None):
     return img_paths, bboxes
 
 
-def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None, mean_shape=None):
+def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None):
     img = cv2.imread(img_path)
     face = cv2.resize(get_face(img, bbox, need_to_convert_to_int=True),
                       (img_size, img_size))
     if normalizer is not None:
         face = normalizer.transform(face)
     label_path = os.path.splitext(img_path)[0] + ".pts"
-
+    # label_ori = np.genfromtxt(label_path, skip_header=3, skip_footer=1)
+    # label_normalized = normalize_data(label_ori, bbox=bbox, occlu_include=False)
+    # print(label_normalized)
+    # print('--------------')
     label = np.multiply(np.clip(
         normalize_data(np.genfromtxt(label_path, skip_header=3, skip_footer=1),
                        bbox, occlu_include=False), 0, 1), img_size)
-    if mean_shape is not None:
-        label = label - mean_shape
-        label = label.flatten()
+    # print(label)
+    # print('-------')
     return face, label
 
 
@@ -457,8 +459,7 @@ def load_rough_imgs_labels(img_root, mat_file_name, img_size, mean_shape=None,
         return load_rough_imgs_labels_core(img_path=img_paths[index],
                                            bbox=bboxes[index],
                                            img_size=img_size,
-                                           normalizer=normalizer,
-                                           mean_shape=mean_shape)
+                                           normalizer=normalizer)
     else:
         faces = []
         labels = []
@@ -466,8 +467,7 @@ def load_rough_imgs_labels(img_root, mat_file_name, img_size, mean_shape=None,
             face, label = load_rough_imgs_labels_core(img_path=img_paths[index],
                                                       bbox=bboxes[index],
                                                       img_size=img_size,
-                                                      normalizer=normalizer,
-                                                      mean_shape=mean_shape)
+                                                      normalizer=normalizer)
             # show(face)
             faces.append(face)
             labels.append(label)
