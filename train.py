@@ -7,15 +7,14 @@
 ########################################################################
 
 """
-File: bootstrap.py
+File: train.py
 Author: Yang Li
 Date: 2018/11/21 09:41:31
-Description: Main Entry
+Description: Main Entry of Training
 """
 import argparse
 import pickle
 import os
-from keras.models import load_model
 
 from config.init_param import data_param, occlu_param, face_alignment_rough_param
 from model_structure.occlu_detect import OcclusionDetection
@@ -51,6 +50,34 @@ f_normalizer = open(os.path.join(data_param['model_dir'], 'normalizer.pkl'), 'rb
 normalizer = pickle.load(f_normalizer)
 f_normalizer.close()
 
+# face alignment rough
+if args['phase'] == 'rough':
+    face_alignment_rough_param['epochs'] = args['epoch']
+    face_alignment_rough_param['bs'] = args['batch_size']
+    face_alignment_rough_param['init_lr'] = args['init_lr']
+    face_alignment_rough_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}.h5'.format(
+        face_alignment_rough_param['epochs'],
+        face_alignment_rough_param['bs'],
+        face_alignment_rough_param['init_lr'])
+
+    face_align_rgr = FaceAlignmentRough()
+    if args['mode'] == 'train':
+        face_align_rgr.train(model_structure=Vgg16Regress(),
+                             train_load=train_data_feed,
+                             val_load=val_data_feed,
+                             ext_lists=['*_face.png', '*_face.jpg'],
+                             label_ext='.pts',
+                             mean_shape=mean_shape,
+                             normalizer=normalizer,
+                             gpu_ratio=0.5)
+    if args['mode'] == 'val_compute':
+        faces, labels = load_rough_imgs_labels(img_root=data_param['img_root_dir'],
+                                               mat_file_name='raw_300W_release.mat',
+                                               img_size=data_param['img_height'],
+                                               normalizer=normalizer,
+                                               chosen=range(3148, 3837))
+        face_align_rgr.val_compute(imgs=faces, labels=labels, gpu_ratio=0.5)
+
 # occlusion detection
 if args['phase'] == 'occlu':
     occlu_param['epochs'] = args['epoch']
@@ -78,8 +105,6 @@ if args['phase'] == 'occlu':
     elif args['mode'] == 'test':
         # set_gpu(ratio=0.5)
         logger("loading imgs")
-        model = load_model(
-            os.path.join(data_param['model_dir'], occlu_param['model_name']))
         faces, landmarks, occlus = load_rough_imgs_occlus(
             img_root=data_param['img_root_dir'],
             mat_file_name='raw_300W_release.mat',
@@ -89,8 +114,7 @@ if args['phase'] == 'occlu':
         logger("predicting")
         predictions = []
         for face, landmark in zip(faces, landmarks):
-            prediction = occlu_clf.test(model=model,
-                                        img=face,
+            prediction = occlu_clf.test(img=face,
                                         landmark=landmark,
                                         is_heat_map=True,
                                         binary_output=True)
