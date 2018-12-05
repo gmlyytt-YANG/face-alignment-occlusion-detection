@@ -103,7 +103,7 @@ if args['phase'] == 'occlu':
                               label_ext='.opts',
                               gpu_ratio=0.5)
     elif args['mode'] == 'test':
-        set_gpu(ratio=0.5)
+        # set_gpu(ratio=0.5)
         logger("loading imgs")
         faces, landmarks, occlus = load_rough_imgs_occlus(
             img_root=data_param['img_root_dir'],
@@ -125,3 +125,31 @@ if args['phase'] == 'occlu':
             # if len(predictions) == 100:
             #     break
         metric_compute(occlus, predictions)
+
+# face alignment rough
+if args['phase'] == 'rough':
+    face_alignment_rough_param['epochs'] = args['epoch']
+    face_alignment_rough_param['bs'] = args['batch_size']
+    face_alignment_rough_param['init_lr'] = args['init_lr']
+    face_alignment_rough_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_rough.h5'.format(
+        face_alignment_rough_param['epochs'],
+        face_alignment_rough_param['bs'],
+        face_alignment_rough_param['init_lr'])
+
+    face_align_rgr = FaceAlignmentRough()
+    if args['mode'] == 'train':
+        face_align_rgr.train(model_structure=Vgg16Regress(),
+                             train_load=train_data_feed,
+                             val_load=val_data_feed,
+                             ext_lists=['*_face.png', '*_face.jpg'],
+                             label_ext='.pts',
+                             mean_shape=mean_shape,
+                             normalizer=normalizer,
+                             gpu_ratio=0.8)
+    if args['mode'] == 'val_compute':
+        faces, labels = load_rough_imgs_labels(img_root=data_param['img_root_dir'],
+                                               mat_file_name='raw_300W_release.mat',
+                                               img_size=data_param['img_height'],
+                                               normalizer=normalizer,
+                                               chosen=range(3148, 3837))
+        face_align_rgr.val_compute(imgs=faces, labels=labels, gpu_ratio=0.5)

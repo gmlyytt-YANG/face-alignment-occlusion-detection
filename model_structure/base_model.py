@@ -81,16 +81,16 @@ class Model(object):
             steps_per_epoch=self.steps_per_epoch,
             epochs=self.epochs, verbose=1, callbacks=callback_list)
 
-        plt.plot(np.arange(0, self.epochs), H.history['loss'], label='train_loss')
-        plt.plot(np.arange(0, self.epochs), H.history['val_loss'], label='val_loss')
-        plt.plot(np.arange(0, self.epochs), H.history['acc'], label='train_acc')
-        plt.plot(np.arange(0, self.epochs), H.history['val_acc'], label='val_acc')
+        plt.plot(np.arange(0, len(H.history['loss'])), H.history['loss'], label='train_loss')
+        plt.plot(np.arange(0, len(H.history['val_loss'])), H.history['val_loss'], label='val_loss')
+        plt.plot(np.arange(0, len(H.history['acc'])), H.history['acc'], label='train_acc')
+        plt.plot(np.arange(0, len(H.history['val_acc'])), H.history['val_acc'], label='val_acc')
         plt.title('Training Loss and Accuracy')
         plt.xlabel('Epoch #')
         plt.ylabel('Loss/Accuracy')
         plt.legend(loc='upper right')
-        plt.savefig('{}'.format(self.model_name))
-
+        filename = os.path.splitext(os.path.join(data_param['record_dir'], self.model_name))[0]
+        plt.savefig('{}'.format(filename+'.png'))
         K.clear_session()
 
     @staticmethod
