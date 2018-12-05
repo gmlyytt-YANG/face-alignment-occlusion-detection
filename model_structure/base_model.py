@@ -64,7 +64,8 @@ class Model(object):
                                       height=data_param['img_size'],
                                       depth=data_param['channel'],
                                       classes=self.classes,
-                                      final_act=self.final_act)
+                                      final_act=self.final_act,
+                                      mean_shape=mean_shape)
         model.compile(loss=self.loss, optimizer=opt, metrics=self.metrics)
 
         logger('training')
