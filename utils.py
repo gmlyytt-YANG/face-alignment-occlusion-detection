@@ -424,15 +424,16 @@ def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None, mean_
     img = cv2.imread(img_path)
     face = cv2.resize(get_face(img, bbox, need_to_convert_to_int=True),
                       (img_size, img_size))
-    if normalizer:
+    if normalizer is not None:
         face = normalizer.transform(face)
     label_path = os.path.splitext(img_path)[0] + ".pts"
 
     label = np.multiply(np.clip(
         normalize_data(np.genfromtxt(label_path, skip_header=3, skip_footer=1),
                        bbox, occlu_include=False), 0, 1), img_size)
-    if mean_shape:
+    if mean_shape is not None:
         label = label - mean_shape
+        label = label.flatten()
     return face, label
 
 

@@ -51,7 +51,7 @@ class FaceAlignmentRough(Model, object):
             # print(prediction)
             # print(label)
             # print('-------------')
-            loss += landmark_loss_compute(prediction, label)
+            loss += landmark_loss_compute(prediction, label) 
             count += 1
             if data_param['print_debug'] and count % 100 == 0:
                 logger("predicted {} imgs".format(count))
