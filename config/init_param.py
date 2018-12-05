@@ -24,6 +24,7 @@ data_param = {
     'model_dir': './model',
     'data_save_dir': './data',
     'normalizer_dir': './model',
+    'record_dir': './record',
 
     # dataset related
     'landmark_num': 68,

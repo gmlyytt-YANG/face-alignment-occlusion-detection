@@ -25,7 +25,7 @@ def landmark_loss(y_true, y_pred):
     landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
     left_eye = K.mean(landmark_true[:, 36:42, :], axis=1)
     right_eye = K.mean(landmark_true[:, 42:48, :], axis=1)
-    loss = K.mean(K.mean(K.sqrt(K.sum((landmark_true - landmark_pred) ** 2, axis=1)), axis=-1) / K.sqrt(
+    loss = K.mean(K.mean(K.sqrt(K.sum((landmark_true - landmark_pred) ** 2, axis=-1)), axis=-1) / K.sqrt(
         K.sum((right_eye - left_eye) ** 2)), axis=-1)
     return loss
 

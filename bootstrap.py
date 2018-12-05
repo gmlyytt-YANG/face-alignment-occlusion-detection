@@ -107,7 +107,7 @@ if args['phase'] == 'rough':
     face_alignment_rough_param['epochs'] = args['epoch']
     face_alignment_rough_param['bs'] = args['batch_size']
     face_alignment_rough_param['init_lr'] = args['init_lr']
-    face_alignment_rough_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}.h5'.format(
+    face_alignment_rough_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_rough.h5'.format(
         face_alignment_rough_param['epochs'],
         face_alignment_rough_param['bs'],
         face_alignment_rough_param['init_lr'])
