@@ -27,6 +27,8 @@ from utils import heat_map_compute
 from utils import load_basic_info
 from utils import load_rough_imgs_labels_core
 from utils import logger
+from model_structure.occlu_detect import OcclusionDetection
+from model_structure.rough_align import FaceAlignment
 from utils import binary
 from utils import set_gpu
 from ml import classify
@@ -63,11 +65,6 @@ occlu_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_occlu.h5'.format(
     occlu_param['bs'],
     occlu_param['init_lr'])
 
-model_rough = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
-                         {'landmark_loss': landmark_loss})
-model_occlu = load_model(
-        os.path.join(data_param['model_dir'], occlu_param['model_name']))
-
 # load mean_shape and normalizer
 f_mean_shape = open(os.path.join(data_param['model_dir'], 'mean_shape.pkl'), 'rb')
 mean_shape = pickle.load(f_mean_shape)
@@ -77,40 +74,15 @@ normalizer = pickle.load(f_normalizer)
 f_normalizer.close()
 
 
-def test_rough(img, mean_shape=None, normalizer=None, gpu_ratio=0.5):
-    # set gpu usage
-    # set_gpu(ratio=gpu_ratio)
-    if normalizer is not None:
-        img = normalizer.transform(img)
-    prediction = classify(model_rough, img)
-    if mean_shape is not None:
-        prediction = np.reshape(prediction, (data_param['landmark_num'], 2)) + mean_shape
-    return prediction
-
-
-def test_occlu(img, landmark, is_heat_map=False, binary_output=False):
-    img = cv2.resize(img, (data_param['img_size'], data_param['img_size']))
-
-    net_input = img
-    if is_heat_map:
-        net_input = heat_map_compute(img, landmark,
-                                     landmark_is_01=False,
-                                     img_color=True,
-                                     radius=occlu_param['radius'])
-    if binary_output:
-        return [binary(_, threshold=0.5) for _ in classify(model_occlu, net_input)]
-    return classify(model_occlu, net_input)
-
-
 def get_weighted_landmark(img, landmark):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
     start_time = time.time()
-    prediction = test_rough(img=img,
-                            mean_shape=mean_shape,
-                            normalizer=normalizer)
+    prediction = FaceAlignment.test(img=img,
+                                    mean_shape=mean_shape,
+                                    normalizer=normalizer)
     img = heat_map_compute(face=img, landmark=prediction,
                            landmark_is_01=False, img_color=True, radius=occlu_param['radius'])
-    occlu_ratio = test_occlu(img=img, landmark=prediction, is_heat_map=True)
+    occlu_ratio = OcclusionDetection.test(img=img, landmark=prediction, is_heat_map=True)
     delta = np.array((landmark - prediction)) * np.expand_dims(np.array(occlu_ratio), axis=1)
     end_time = time.time()
     # logger("time of processing one img is {}".format(end_time - start_time))

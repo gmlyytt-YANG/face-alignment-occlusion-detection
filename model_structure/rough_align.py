@@ -19,9 +19,13 @@ from config.init_param import face_alignment_rough_param
 from model_structure.base_model import *
 from ml import classify
 from ml import landmark_loss_compute
+from ml import landmark_loss
 
 
 class FaceAlignment(Model, object):
+    model_rough = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
+                             {'landmark_loss': landmark_loss})
+
     def __init__(self, loss):
         train_dir = os.path.join(data_param['data_save_dir'], 'train')
         super(FaceAlignment, self).__init__(
@@ -56,4 +60,13 @@ class FaceAlignment(Model, object):
                 logger("predicted {} imgs".format(count))
         logger("test loss is {}".format(loss / count))
 
-
+    @staticmethod
+    def test(img, mean_shape=None, normalizer=None, gpu_ratio=0.5):
+        # set gpu usage
+        # set_gpu(ratio=gpu_ratio)
+        if normalizer is not None:
+            img = normalizer.transform(img)
+        prediction = classify(FaceAlignment.model_rough, img)
+        if mean_shape is not None:
+            prediction = np.reshape(prediction, (data_param['landmark_num'], 2)) + mean_shape
+        return prediction
