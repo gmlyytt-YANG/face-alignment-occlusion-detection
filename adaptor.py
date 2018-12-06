@@ -79,8 +79,7 @@ f_normalizer.close()
 
 def test_rough(img, mean_shape=None, normalizer=None, gpu_ratio=0.5):
     # set gpu usage
-
-    set_gpu(ratio=gpu_ratio)
+    # set_gpu(ratio=gpu_ratio)
     if normalizer is not None:
         img = normalizer.transform(img)
     prediction = classify(model_rough, img)
