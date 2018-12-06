@@ -18,11 +18,13 @@ import numpy as np
 import os
 import pickle
 import time
+from keras.models import load_model
 
 from config.init_param import data_param, occlu_param, face_alignment_rough_param
 from model_structure.rough_align import FaceAlignment
 from model_structure.occlu_detect import OcclusionDetection
 from ml import landmark_delta_loss
+from ml import landmark_loss
 from utils import get_filenames
 from utils import heat_map_compute
 from utils import load_basic_info
@@ -70,12 +72,13 @@ normalizer = pickle.load(f_normalizer)
 f_normalizer.close()
 
 
-def get_weighted_landmark(img, landmark):
+def get_weighted_landmark(img, landmark, model_occlu=None, model_rough=None):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
     start_time = time.time()
     prediction = FaceAlignment(loss=landmark_delta_loss).test(img=img,
                                                               mean_shape=mean_shape,
-                                                              normalizer=normalizer)
+                                                              normalizer=normalizer,
+                                                              model=model_rough)
     img = heat_map_compute(face=img,
                            landmark=prediction,
                            landmark_is_01=False,
@@ -83,7 +86,8 @@ def get_weighted_landmark(img, landmark):
                            radius=occlu_param['radius'])
     occlu_ratio = OcclusionDetection().test(img=img,
                                             landmark=landmark,
-                                            is_heat_map=True)
+                                            is_heat_map=True,
+                                            model=model_occlu)
     delta = np.array((landmark - prediction)) * np.expand_dims(np.array(occlu_ratio), axis=1)
     end_time = time.time()
     logger("time of processing one img is {}".format(end_time - start_time))
@@ -98,6 +102,10 @@ def get_weighted_landmark(img, landmark):
 
 # load data
 def pipe(data_dir, face=False, chosen=range(1)):
+    model_occlu = load_model(
+        os.path.join(data_param['model_dir'], occlu_param['model_name']))
+    model_rough = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
+                             {'landmark_loss': landmark_loss})
     if face:
         img_name_list, label_name_list = \
             get_filenames(data_dir=[data_dir],
@@ -108,7 +116,8 @@ def pipe(data_dir, face=False, chosen=range(1)):
         for img_path, label_path in zip(img_name_list, label_name_list):
             img = cv2.imread(img_path)
             landmark = np.genfromtxt(label_path)
-            delta, time_pass = get_weighted_landmark(img, landmark)
+            delta, time_pass = get_weighted_landmark(img, landmark,
+                                                     model_occlu=model_occlu, model_rough=model_rough)
             np.savetxt(os.path.splitext(img_path)[0] + '.wdpts', delta, fmt='%.10f')
             count += 1
             if data_param['print_debug'] and count % 500 == 0:
