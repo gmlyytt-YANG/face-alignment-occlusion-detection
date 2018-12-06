@@ -29,9 +29,6 @@ from utils import heat_map_compute
 
 
 class OcclusionDetection(Model, object):
-    model = load_model(
-        os.path.join(data_param['model_dir'], occlu_param['model_name']))
-
     def __init__(self):
         train_dir = os.path.join(data_param['data_save_dir'], 'train')
         super(OcclusionDetection, self).__init__(
@@ -45,6 +42,8 @@ class OcclusionDetection(Model, object):
             classes=data_param['landmark_num'],
             final_act="sigmoid",
         )
+        self.model = load_model(
+            os.path.join(data_param['model_dir'], occlu_param['model_name']))
 
     def val_compute(self, val_load, ext_lists, label_ext, gpu_ratio=0.5):
         # set gpu usage
@@ -71,8 +70,7 @@ class OcclusionDetection(Model, object):
         # compute
         metric_compute(val_labels, predict_labels)
 
-    @staticmethod
-    def test(img, landmark, is_heat_map=False, binary_output=False):
+    def test(self, img, landmark, is_heat_map=False, binary_output=False):
         img = cv2.resize(img, (data_param['img_size'], data_param['img_size']))
         net_input = img
         # model = load_model(os.path.join(data_param['model_dir'], occlu_param['model_name']))
@@ -82,5 +80,5 @@ class OcclusionDetection(Model, object):
                                          img_color=True,
                                          radius=occlu_param['radius'])
         if binary_output:
-            return [binary(_, threshold=0.5) for _ in classify(OcclusionDetection.model, net_input)]
-        return classify(OcclusionDetection.model, net_input)
+            return [binary(_, threshold=0.5) for _ in classify(self.model, net_input)]
+        return classify(self.model, net_input)
