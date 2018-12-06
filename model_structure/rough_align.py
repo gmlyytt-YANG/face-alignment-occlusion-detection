@@ -15,7 +15,7 @@ Description: Rough Face Alignment
 
 from keras.models import load_model
 
-from config.init_param import face_alignment_rough_param
+from config.init_param import face_alignment_rough_param, occlu_param
 from model_structure.base_model import *
 from ml import classify
 from ml import landmark_loss_compute
@@ -56,14 +56,4 @@ class FaceAlignment(Model, object):
                 logger("predicted {} imgs".format(count))
         logger("test loss is {}".format(loss / count))
 
-    def test(self, img, mean_shape=None, normalizer=None, model=None, gpu_ratio=0.5):
-        # set gpu usage
-        set_gpu(ratio=gpu_ratio)
-        # model = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
-        #                    {'landmark_loss': landmark_loss})
-        if normalizer:
-            img = normalizer.transform(img)
-        prediction = classify(model, img)
-        if mean_shape is not None:
-            prediction = np.reshape(prediction, (data_param['landmark_num'], 2)) + mean_shape
-        return prediction
+
