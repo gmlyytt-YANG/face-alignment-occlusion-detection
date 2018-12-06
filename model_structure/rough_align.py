@@ -19,7 +19,6 @@ from config.init_param import face_alignment_rough_param
 from model_structure.base_model import *
 from ml import classify
 from ml import landmark_loss_compute
-from ml import landmark_loss
 
 
 class FaceAlignment(Model, object):
