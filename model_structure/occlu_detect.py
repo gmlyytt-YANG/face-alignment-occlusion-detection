@@ -27,11 +27,11 @@ from utils import logger
 from utils import set_gpu
 from utils import heat_map_compute
 
-model_occlu = load_model(
-    os.path.join(data_param['model_dir'], occlu_param['model_name']))
-
 
 class OcclusionDetection(Model, object):
+    model = load_model(
+        os.path.join(data_param['model_dir'], occlu_param['model_name']))
+
     def __init__(self):
         train_dir = os.path.join(data_param['data_save_dir'], 'train')
         super(OcclusionDetection, self).__init__(
@@ -82,5 +82,5 @@ class OcclusionDetection(Model, object):
                                          img_color=True,
                                          radius=occlu_param['radius'])
         if binary_output:
-            return [binary(_, threshold=0.5) for _ in classify(model_occlu, net_input)]
-        return classify(model_occlu, net_input)
+            return [binary(_, threshold=0.5) for _ in classify(OcclusionDetection.model, net_input)]
+        return classify(OcclusionDetection.model, net_input)
