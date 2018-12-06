@@ -23,7 +23,6 @@ from keras.models import load_model
 from config.init_param import data_param, occlu_param, face_alignment_rough_param
 from model_structure.rough_align import FaceAlignment
 from model_structure.occlu_detect import OcclusionDetection
-from ml import landmark_delta_loss
 from ml import landmark_loss
 from utils import get_filenames
 from utils import heat_map_compute
@@ -71,16 +70,14 @@ f_normalizer = open(os.path.join(data_param['model_dir'], 'normalizer.pkl'), 'rb
 normalizer = pickle.load(f_normalizer)
 f_normalizer.close()
 
-print(face_alignment_rough_param['model_name'])
-
 
 def get_weighted_landmark(img, landmark, model_occlu=None, model_rough=None):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
     start_time = time.time()
-    prediction = FaceAlignment(loss=landmark_delta_loss).test(img=img,
-                                                              mean_shape=mean_shape,
-                                                              normalizer=normalizer,
-                                                              model=model_rough)
+    prediction = FaceAlignment(loss=landmark_loss).test(img=img,
+                                                        mean_shape=mean_shape,
+                                                        normalizer=normalizer,
+                                                        model=model_rough)
     img = heat_map_compute(face=img,
                            landmark=prediction,
                            landmark_is_01=False,
