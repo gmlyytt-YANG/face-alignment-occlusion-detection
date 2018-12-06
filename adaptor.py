@@ -56,7 +56,7 @@ def get_weighted_landmark(img, landmark):
 def pipe(data_dir, face=False, chosen=range(1)):
     if face:
         img_name_list, label_name_list = \
-            get_filenames(data_dir=data_dir,
+            get_filenames(data_dir=[data_dir],
                           listext=["*_face.png", "*_face.jpg"],
                           label_ext=[".pts"])
 

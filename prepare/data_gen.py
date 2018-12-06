@@ -14,7 +14,9 @@ Description: Data Generator
 """
 import cv2
 import numpy as np
+import tensorflow as tf
 
+from config.init_param import face_alignment_precise_param
 from utils import logger
 from utils import get_filenames
 
@@ -69,7 +71,7 @@ def train_data_feed(batch_size, data_dir, ext_lists, label_ext, flatten=False):
     :param: print_debug:
     """
     img_name_list, label_name_list = \
-        get_filenames(data_dir, ext_lists, label_ext)
+        get_filenames([data_dir], ext_lists, label_ext)
     data_size = len(img_name_list)
     batch_offset = 0
     indices = [_ for _ in range(data_size)]
@@ -104,7 +106,7 @@ def val_data_feed(data_dir, ext_lists, label_ext,
     :param: print_debug:
     """
     img_name_list, label_name_list = \
-        get_filenames(data_dir, ext_lists, label_ext)
+        get_filenames([data_dir], ext_lists, label_ext)
 
     data_size = len(img_name_list)
     img_list, label_list = load_img_label(img_name_list=img_name_list,
@@ -115,3 +117,15 @@ def val_data_feed(data_dir, ext_lists, label_ext,
                                           print_debug=print_debug)
 
     return img_list, label_list
+
+
+def data_iter_gen(data_dir, ext_lists, label_ext):
+    img_name_list, label_name_list = get_filenames(data_dir, ext_lists, label_ext)
+    dataset_image = tf.data.Dataset.from_tensor_slices(img_name_list)
+    dataset_pts = tf.data.Dataset.from_tensor_slices(label_name_list)
+    dataset = tf.data.Dataset.zip((dataset_image, dataset_pts))
+
+    dataset = dataset.prefetch(face_alignment_precise_param['bs'])
+    dataset = dataset.repeat(face_alignment_precise_param['epochs'])
+
+    return dataset
