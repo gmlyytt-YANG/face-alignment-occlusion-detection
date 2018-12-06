@@ -30,17 +30,17 @@ from utils import logger
 
 # load parameter
 ap = argparse.ArgumentParser()
-ap.add_argument('-e1', '--epoch1', type=int, default=75,
+ap.add_argument('-E1', '--epoch1', type=int, default=75,
                 help='epochs1 of face alignment')
-ap.add_argument('-bs1', '--batch_size1', type=int, default=32,
+ap.add_argument('-BS1', '--batch_size1', type=int, default=32,
                 help='batch size of face alignment')
-ap.add_argument('-lr1', '--init_lr1', type=float, default=1e-3,
+ap.add_argument('-LR1', '--init_lr1', type=float, default=1e-3,
                 help='learning rate of face alignment')
-ap.add_argument('-e2', '--epoch2', type=int, default=75,
+ap.add_argument('-E2', '--epoch2', type=int, default=75,
                 help='epochs2 of occlu detection')
-ap.add_argument('-bs2', '--batch_size2', type=int, default=32,
+ap.add_argument('-BS2', '--batch_size2', type=int, default=32,
                 help='batch size of occlu detection')
-ap.add_argument('-lr2', '--init_lr2', type=float, default=1e-3,
+ap.add_argument('-LR2', '--init_lr2', type=float, default=1e-3,
                 help='learning rate of occlu detection')
 args, unknown = ap.parse_known_args()
 args = vars(args)
