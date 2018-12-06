@@ -71,6 +71,8 @@ f_normalizer = open(os.path.join(data_param['model_dir'], 'normalizer.pkl'), 'rb
 normalizer = pickle.load(f_normalizer)
 f_normalizer.close()
 
+print(face_alignment_rough_param['model_name'])
+
 
 def get_weighted_landmark(img, landmark, model_occlu=None, model_rough=None):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
