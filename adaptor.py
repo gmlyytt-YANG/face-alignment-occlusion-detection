@@ -30,35 +30,35 @@ from utils import logger
 
 # load parameter
 ap = argparse.ArgumentParser()
-ap.add_argument('-h1', '--hh1', type=int, default=75,
+ap.add_argument('-e1', '--epoch1', type=int, default=75,
                 help='epochs1 of face alignment')
-ap.add_argument('-p1', '--pp1', type=int, default=32,
+ap.add_argument('-bs1', '--batch_size1', type=int, default=32,
                 help='batch size of face alignment')
-# ap.add_argument('-LR1', '--init_lr1', type=float, default=1e-3,
-#                 help='learning rate of face alignment')
-# ap.add_argument('-E2', '--epoch2', type=int, default=75,
-#                 help='epochs2 of occlu detection')
-# ap.add_argument('-BS2', '--batch_size2', type=int, default=32,
-#                 help='batch size of occlu detection')
-# ap.add_argument('-LR2', '--init_lr2', type=float, default=1e-3,
-#                 help='learning rate of occlu detection')
-args, unknown = ap.parse_known_args()
+ap.add_argument('-lr1', '--init_lr1', type=float, default=1e-3,
+                help='learning rate of face alignment')
+ap.add_argument('-e2', '--epoch2', type=int, default=75,
+                help='epochs2 of occlu detection')
+ap.add_argument('-bs2', '--batch_size2', type=int, default=32,
+                help='batch size of occlu detection')
+ap.add_argument('-lr2', '--init_lr2', type=float, default=1e-3,
+                help='learning rate of occlu detection')
+args = ap.parse_args()
 args = vars(args)
 
 face_alignment_rough_param['epochs'] = args['epoch1']
 face_alignment_rough_param['bs'] = args['batch_size1']
-# face_alignment_rough_param['init_lr'] = args['init_lr1']
-# face_alignment_rough_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_rough.h5'.format(
-#     face_alignment_rough_param['epochs'],
-#     face_alignment_rough_param['bs'],
-#     face_alignment_rough_param['init_lr'])
-# occlu_param['epochs'] = args['epoch2']
-# occlu_param['bs'] = args['batch_size2']
-# occlu_param['init_lr'] = args['init_lr2']
-# occlu_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_occlu.h5'.format(
-#     occlu_param['epochs'],
-#     occlu_param['bs'],
-#     occlu_param['init_lr'])
+face_alignment_rough_param['init_lr'] = args['init_lr1']
+face_alignment_rough_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_rough.h5'.format(
+    face_alignment_rough_param['epochs'],
+    face_alignment_rough_param['bs'],
+    face_alignment_rough_param['init_lr'])
+occlu_param['epochs'] = args['epoch2']
+occlu_param['bs'] = args['batch_size2']
+occlu_param['init_lr'] = args['init_lr2']
+occlu_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_occlu.h5'.format(
+    occlu_param['epochs'],
+    occlu_param['bs'],
+    occlu_param['init_lr'])
 
 # load mean_shape and normalizer
 f_mean_shape = open(os.path.join(data_param['model_dir'], 'mean_shape.pkl'), 'rb')
