@@ -36,7 +36,7 @@ ap.add_argument('-bs1', '--batch_size1', type=int, default=32,
                 help='batch size of face alignment')
 ap.add_argument('-lr1', '--init_lr1', type=float, default=1e-3,
                 help='learning rate of face alignment')
-ap.add_argument('-e', '--epoch2', type=int, default=75,
+ap.add_argument('-e2', '--epoch2', type=int, default=75,
                 help='epochs2 of occlu detection')
 ap.add_argument('-bs2', '--batch_size2', type=int, default=32,
                 help='batch size of occlu detection')
