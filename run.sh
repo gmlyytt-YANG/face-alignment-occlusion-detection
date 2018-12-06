@@ -69,6 +69,7 @@ if [ ${show} = "nohup" ];then
         nohup python preprocess.py > \
         logs/preprocess.log 2>&1 &
     elif [ ${phase} = "adaptor" ];then
+        echo "lala"
         nohup python adaptor.py -e1 ${epochs1} -bs1 ${bs1} -lr1 ${lr1} -e2 ${epochs2} -bs2 ${bs2} -lr2 ${lr2}\
         > logs/adaptor.log 2>&1 &
     else
@@ -79,6 +80,7 @@ else
     if [ ${phase} = "pre" ];then
         python preprocess.py
     elif [ ${phase} = "adaptor" ];then
+        echo "lala"
         python adaptor.py -e1 ${epochs1} -bs1 ${bs1} -lr1 ${lr1} -e2 ${epochs2} -bs2 ${bs2} -lr2 ${lr2}
     else
         python train.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} -p ${phase} -dAgg
