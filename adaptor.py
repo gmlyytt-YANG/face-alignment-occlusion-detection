@@ -88,7 +88,7 @@ def get_weighted_landmark(img, landmark):
     print('----------------')
     print(landmark - prediction)
     print('----------------')
-    delta = (landmark - prediction) * occlu_ratio.T
+    delta = np.array((landmark - prediction)) * np.expand_dims(np.array(occlu_ratio), axis=1)
     left_eye = np.mean(landmark[36:42, :], axis=0)
     right_eye = np.mean(landmark[42:48, :], axis=0)
     pupil_dist = np.sqrt(np.sum((left_eye - right_eye) ** 2))
