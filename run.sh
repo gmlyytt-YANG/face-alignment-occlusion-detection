@@ -21,35 +21,35 @@ while [ -n "$1" ]
 do
     case "$1" in
     "-s")
-    show="$2"
-    ;;
+        show="$2"
+        ;;
     "-p")
-    phase="$2"
-    if [ ${phase} = "pre" ] || [ ${phase} = "adaptor" ];then
-        break
-    fi
-    ;;
+        phase="$2"
+        if [ ${phase} = "pre" ] || [ ${phase} = "adaptor" ];then
+            break
+        fi
+        ;;
     "-e")
         epochs="$2"
-    ;;
+        ;;
     "-bs")
         bs="$2"
         ;;
     "-lr")
-    lr="$2"
+        lr="$2"
         ;;
     "-e1")
         epochs1="$2"
-    ;;
+        ;;
     "-bs1")
         bs1="$2"
         ;;
     "-lr1")
         lr1="$2"
-            ;;
+        ;;
     "-e2")
         epochs2="$2"
-    ;;
+        ;;
     "-bs2")
         bs2="$2"
         ;;
@@ -58,7 +58,7 @@ do
         ;;
     "-m")
         mode="$2"
-    ;;
+        ;;
     esac
     shift
 done
