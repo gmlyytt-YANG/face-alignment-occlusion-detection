@@ -31,7 +31,6 @@ from utils import binary
 from utils import set_gpu
 from ml import classify
 
-
 # load parameter
 ap = argparse.ArgumentParser()
 ap.add_argument('-e1', '--epoch1', type=int, default=75,
@@ -78,6 +77,15 @@ model_occlu = load_model(
     os.path.join(data_param['model_dir'], occlu_param['model_name']))
 
 
+def test_rough(img, gpu_ratio=0.5):
+    # set gpu usage
+    set_gpu(ratio=gpu_ratio)
+    img = normalizer.transform(img)
+    prediction = classify(model_rough, img)
+    prediction = np.reshape(prediction, (data_param['landmark_num'], 2)) + mean_shape
+    return prediction
+
+
 def test_occlu(img, landmark, is_heat_map=False, binary_output=False):
     img = cv2.resize(img, (data_param['img_size'], data_param['img_size']))
     net_input = img
@@ -89,15 +97,6 @@ def test_occlu(img, landmark, is_heat_map=False, binary_output=False):
     if binary_output:
         return [binary(_, threshold=0.5) for _ in classify(model_occlu, net_input)]
     return classify(model_occlu, net_input)
-
-
-def test_rough(img, gpu_ratio=0.5):
-    # set gpu usage
-    set_gpu(ratio=gpu_ratio)
-    img = normalizer.transform(img)
-    prediction = classify(model_rough, img)
-    prediction = np.reshape(prediction, (data_param['landmark_num'], 2)) + mean_shape
-    return prediction
 
 
 def get_weighted_landmark(img, landmark):
