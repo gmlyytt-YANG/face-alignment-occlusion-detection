@@ -61,7 +61,7 @@ class FaceAlignment(Model, object):
         set_gpu(ratio=gpu_ratio)
 
         model = load_model(
-            os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']))
+            os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']), 
             {'landmark_loss': landmark_loss})
 
         if normalizer:
