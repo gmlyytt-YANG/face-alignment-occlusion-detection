@@ -19,6 +19,7 @@ from config.init_param import face_alignment_rough_param
 from model_structure.base_model import *
 from ml import classify
 from ml import landmark_loss_compute
+from ml import landmark_loss
 
 
 class FaceAlignment(Model, object):
@@ -40,7 +41,8 @@ class FaceAlignment(Model, object):
         set_gpu(ratio=gpu_ratio)
 
         model = load_model(
-            os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']), {'landmark_loss': self.loss})
+            os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
+            {'landmark_loss': self.loss})
 
         loss = 0.0
         count = 0
@@ -48,10 +50,7 @@ class FaceAlignment(Model, object):
             if normalizer:
                 img = normalizer.transform(img)
             prediction = classify(model, img)
-            # print(prediction)
-            # print(label)
-            # print('-------------')
-            loss += landmark_loss_compute(prediction, label) 
+            loss += landmark_loss_compute(prediction, label)
             count += 1
             if data_param['print_debug'] and count % 100 == 0:
                 logger("predicted {} imgs".format(count))
@@ -62,7 +61,8 @@ class FaceAlignment(Model, object):
         set_gpu(ratio=gpu_ratio)
 
         model = load_model(
-            os.path.join(data_param['model_dir'], data_param['model_name']))
+            os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
+            {'landmark_loss': landmark_loss})
 
         if normalizer:
             img = normalizer.transform(img)
