@@ -25,7 +25,7 @@ do
         ;;
     "-p")
         phase="$2"
-        if [ ${phase} = "pre" ] || [ ${phase} = "adaptor" ];then
+        if [ ${phase} = "pre" ];then
             break
         fi
         ;;
@@ -38,24 +38,24 @@ do
     "-lr")
         lr="$2"
         ;;
-    "-h1")
+    "-e1")
         epochs1="$2"
         ;;
-    "-p1")
+    "-bs1")
         bs1="$2"
         ;;
-#    "-LR1")
-#        lr1="$2"
-#        ;;
-#    "-E2")
-#        epochs2="$2"
-#        ;;
-#    "-BS2")
-#        bs2="$2"
-#        ;;
-#    "-LR2")
-#        lr2="$2"
-#        ;;
+    "-lr1")
+        lr1="$2"
+        ;;
+    "-e2")
+        epochs2="$2"
+        ;;
+    "-bs2")
+        bs2="$2"
+        ;;
+    "-lr2")
+        lr2="$2"
+        ;;
     "-m")
         mode="$2"
         ;;
@@ -69,9 +69,7 @@ if [ ${show} = "nohup" ];then
         nohup python preprocess.py > \
         logs/preprocess.log 2>&1 &
     elif [ ${phase} = "adaptor" ];then
-        echo "lala"
-        # nohup python adaptor.py -E1 ${epochs1} -BS1 ${bs1} -LR1 ${lr1} -E2 ${epochs2} -BS2 ${bs2} -LR2 ${lr2}\
-        nohup python adaptor.py -h1 ${epochs1} -p1 ${bs1}\
+        nohup python adaptor.py -e1 ${epochs1} -bs1 ${bs1} -lr1 ${lr1} -e2 ${epochs2} -bs2 ${bs2} -lr2 ${lr2}\
         > logs/adaptor.log 2>&1 &
     else
         nohup python train.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} -p ${phase} -dAgg\
@@ -81,7 +79,7 @@ else
     if [ ${phase} = "pre" ];then
         python preprocess.py
     elif [ ${phase} = "adaptor" ];then
-        python adaptor.py -h1 ${epochs1} -p1 ${bs1}
+        python adaptor.py -e1 ${epochs1} -bs1 ${bs1} -lr1 ${lr1} -e2 ${epochs2} -bs2 ${bs2} -lr2 ${lr2}
     else
         python train.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} -p ${phase} -dAgg
     fi
