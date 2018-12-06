@@ -63,6 +63,11 @@ occlu_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_occlu.h5'.format(
     occlu_param['bs'],
     occlu_param['init_lr'])
 
+model_rough = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
+                         {'landmark_loss': landmark_loss})
+model_occlu = load_model(
+        os.path.join(data_param['model_dir'], occlu_param['model_name']))
+
 # load mean_shape and normalizer
 f_mean_shape = open(os.path.join(data_param['model_dir'], 'mean_shape.pkl'), 'rb')
 mean_shape = pickle.load(f_mean_shape)
@@ -71,23 +76,22 @@ f_normalizer = open(os.path.join(data_param['model_dir'], 'normalizer.pkl'), 'rb
 normalizer = pickle.load(f_normalizer)
 f_normalizer.close()
 
-model_rough = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
-                         {'landmark_loss': landmark_loss})
-model_occlu = load_model(
-    os.path.join(data_param['model_dir'], occlu_param['model_name']))
 
-
-def test_rough(img, gpu_ratio=0.5):
+def test_rough(img, mean_shape=None, normalizer=None, gpu_ratio=0.5):
     # set gpu usage
+
     set_gpu(ratio=gpu_ratio)
-    img = normalizer.transform(img)
+    if normalizer is not None:
+        img = normalizer.transform(img)
     prediction = classify(model_rough, img)
-    prediction = np.reshape(prediction, (data_param['landmark_num'], 2)) + mean_shape
+    if mean_shape is not None:
+        prediction = np.reshape(prediction, (data_param['landmark_num'], 2)) + mean_shape
     return prediction
 
 
 def test_occlu(img, landmark, is_heat_map=False, binary_output=False):
     img = cv2.resize(img, (data_param['img_size'], data_param['img_size']))
+
     net_input = img
     if is_heat_map:
         net_input = heat_map_compute(img, landmark,
@@ -102,7 +106,9 @@ def test_occlu(img, landmark, is_heat_map=False, binary_output=False):
 def get_weighted_landmark(img, landmark):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
     start_time = time.time()
-    prediction = test_rough(img=img)
+    prediction = test_rough(img=img,
+                            mean_shape=mean_shape,
+                            normalizer=normalizer)
     img = heat_map_compute(face=img, landmark=prediction,
                            landmark_is_01=False, img_color=True, radius=occlu_param['radius'])
     occlu_ratio = test_occlu(img=img, landmark=prediction, is_heat_map=True)
@@ -124,7 +130,7 @@ def pipe(data_dir, face=False, chosen=range(1)):
         img_name_list, label_name_list = \
             get_filenames(data_dir=[data_dir],
                           listext=["*_face.png", "*_face.jpg"],
-                          label_ext=[".pts"])
+                          label_ext=".pts")
         time_total = 0.0
         count = 0
         for img_path, label_path in zip(img_name_list, label_name_list):
