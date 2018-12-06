@@ -30,9 +30,9 @@ from utils import logger
 
 # load parameter
 ap = argparse.ArgumentParser()
-ap.add_argument('-h1', '--epoch1', type=int, default=75,
+ap.add_argument('-h1', '--hh1', type=int, default=75,
                 help='epochs1 of face alignment')
-ap.add_argument('-p1', '--batch_size1', type=int, default=32,
+ap.add_argument('-p1', '--pp1', type=int, default=32,
                 help='batch size of face alignment')
 # ap.add_argument('-LR1', '--init_lr1', type=float, default=1e-3,
 #                 help='learning rate of face alignment')
