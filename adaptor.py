@@ -74,6 +74,8 @@ def get_weighted_landmark(img, landmark):
     prediction = FaceAlignment(loss=landmark_delta_loss).test(img=img,
                                                               mean_shape=mean_shape,
                                                               normalizer=normalizer)
+    print(prediction)
+    print('---------------')
     img = heat_map_compute(face=img,
                            landmark=prediction,
                            landmark_is_01=False,
@@ -82,6 +84,8 @@ def get_weighted_landmark(img, landmark):
     occlu_ratio = OcclusionDetection().test(img=img,
                                             landmark=landmark,
                                             is_heat_map=True)
+    print(occlu_ratio)
+    print('----------------')
     delta = (landmark - prediction) * occlu_ratio.T
     left_eye = np.mean(landmark[36:42, :], axis=0)
     right_eye = np.mean(landmark[42:48, :], axis=0)
@@ -100,7 +104,7 @@ def pipe(data_dir, face=False, chosen=range(1)):
 
         for img_path, label_path in zip(img_name_list, label_name_list):
             img = cv2.imread(img_path)
-            landmark = np.genfromtxt(label_path, skip_header=3, skip_footer=1)
+            landmark = np.genfromtxt(label_path)
             delta = get_weighted_landmark(img, landmark)
             np.savetxt(os.path.splitext(img_path)[0] + ".wdpts", delta, fmt='%.10f')
     else:

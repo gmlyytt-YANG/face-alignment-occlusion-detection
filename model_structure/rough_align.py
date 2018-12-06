@@ -66,8 +66,6 @@ class FaceAlignment(Model, object):
         if normalizer:
             img = normalizer.transform(img)
         prediction = classify(model, img)
-        print(prediction)
-        print('---------------')
         if mean_shape is not None:
             prediction = np.reshape(prediction, (data_param['landmark_num'], 2)) + mean_shape
         return prediction
