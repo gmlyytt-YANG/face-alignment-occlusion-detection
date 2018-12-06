@@ -25,9 +25,13 @@ from ml import classify
 from utils import binary
 from utils import logger
 from utils import set_gpu
+from utils import heat_map_compute
 
 
 class OcclusionDetection(Model, object):
+    model_occlu = load_model(
+        os.path.join(data_param['model_dir'], occlu_param['model_name']))
+
     def __init__(self):
         train_dir = os.path.join(data_param['data_save_dir'], 'train')
         super(OcclusionDetection, self).__init__(
@@ -67,3 +71,17 @@ class OcclusionDetection(Model, object):
 
         # compute
         metric_compute(val_labels, predict_labels)
+
+    @staticmethod
+    def test(img, landmark, is_heat_map=False, binary_output=False):
+        img = cv2.resize(img, (data_param['img_size'], data_param['img_size']))
+
+        net_input = img
+        if is_heat_map:
+            net_input = heat_map_compute(img, landmark,
+                                         landmark_is_01=False,
+                                         img_color=True,
+                                         radius=occlu_param['radius'])
+        if binary_output:
+            return [binary(_, threshold=0.5) for _ in classify(OcclusionDetection.model_occlu, net_input)]
+        return classify(OcclusionDetection.model_occlu, net_input)
