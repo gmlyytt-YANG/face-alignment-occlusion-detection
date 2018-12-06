@@ -72,56 +72,24 @@ f_normalizer = open(os.path.join(data_param['model_dir'], 'normalizer.pkl'), 'rb
 normalizer = pickle.load(f_normalizer)
 f_normalizer.close()
 
-model_occlu = load_model(
-    os.path.join(data_param['model_dir'], occlu_param['model_name']))
-model_rough = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
-                         {'landmark_loss': landmark_loss})
-
-
-def test_rough(img, mean_shape=None, normalizer=None, gpu_ratio=0.5):
-    # set gpu usage
-    # set_gpu(ratio=gpu_ratio)
-    # model = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
-    #                    {'landmark_loss': landmark_loss})
-    if normalizer:
-        img = normalizer.transform(img)
-    prediction = classify(model_rough, img)
-    if mean_shape is not None:
-        prediction = np.reshape(prediction, (data_param['landmark_num'], 2)) + mean_shape
-    return prediction
-
-
-def test_occlu(img, landmark, is_heat_map=False, binary_output=False):
-    img = cv2.resize(img, (data_param['img_size'], data_param['img_size']))
-    net_input = img
-    # model = load_model(os.path.join(data_param['model_dir'], occlu_param['model_name']))
-    if is_heat_map:
-        net_input = heat_map_compute(img, landmark,
-                                     landmark_is_01=False,
-                                     img_color=True,
-                                     radius=occlu_param['radius'])
-    if binary_output:
-        return [binary(_, threshold=0.5) for _ in classify(model_occlu, net_input)]
-    return classify(model_occlu, net_input)
-
 
 def get_weighted_landmark(img, landmark):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
     start_time = time.time()
-    prediction = test_rough(img=img,
-                            mean_shape=mean_shape,
-                            normalizer=normalizer)
+    prediction = FaceAlignment.test(img=img,
+                                    mean_shape=mean_shape,
+                                    normalizer=normalizer)
     img = heat_map_compute(face=img,
                            landmark=prediction,
                            landmark_is_01=False,
                            img_color=True,
                            radius=occlu_param['radius'])
-    occlu_ratio = test_occlu(img=img,
-                             landmark=prediction,
-                             is_heat_map=True)
+    occlu_ratio = OcclusionDetection.test(img=img,
+                                          landmark=prediction,
+                                          is_heat_map=True)
     delta = np.array((landmark - prediction)) * np.expand_dims(np.array(occlu_ratio), axis=1)
     end_time = time.time()
-    logger("time of processing one img is {}".format(end_time - start_time))
+    # logger("time of processing one img is {}".format(end_time - start_time))
     # print(delta)
     # print('------------')
     left_eye = np.mean(landmark[36:42, :], axis=0)
@@ -149,7 +117,7 @@ def pipe(data_dir, face=False, chosen=range(1)):
             if data_param['print_debug'] and count % 500 == 0:
                 logger('saved {} wdpts'.format(count))
             time_total += time_pass
-        logger("average speed for processing is {} fps".format(time_total / count))
+        logger("average speed for processing is {} fps".format(float(count) / time_total))
     else:
         img_paths, bboxes = load_basic_info('raw_300W_release.mat', data_dir)
         for index in chosen:
