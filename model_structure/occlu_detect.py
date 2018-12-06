@@ -25,7 +25,6 @@ from ml import classify
 from utils import binary
 from utils import logger
 from utils import set_gpu
-from utils import heat_map_compute
 
 
 class OcclusionDetection(Model, object):
@@ -43,8 +42,8 @@ class OcclusionDetection(Model, object):
             final_act="sigmoid",
         )
 
-
-    def val_compute(self, val_load, ext_lists, label_ext, gpu_ratio=0.5):
+    @staticmethod
+    def val_compute(val_load, ext_lists, label_ext, gpu_ratio=0.5):
         # set gpu usage
         set_gpu(ratio=gpu_ratio)
 
@@ -68,5 +67,3 @@ class OcclusionDetection(Model, object):
 
         # compute
         metric_compute(val_labels, predict_labels)
-
-
