@@ -24,7 +24,7 @@ from prepare.data_gen import train_data_feed, val_data_feed
 from ml import metric_compute
 from ml import load_config
 from ml import landmark_loss
-from ml import lanmark_delta_loss
+from ml import landmark_delta_loss
 from utils import load_rough_imgs_labels
 from utils import load_rough_imgs_occlus
 from utils import logger
@@ -136,7 +136,7 @@ if args['phase'] == 'precise':
         face_alignment_precise_param['bs'],
         face_alignment_precise_param['init_lr'])
 
-    face_align_rgr = FaceAlignment(loss=lanmark_delta_loss)
+    face_align_rgr = FaceAlignment(loss=landmark_delta_loss)
     weight_path = os.path.join(face_alignment_precise_param['weight_path'],
                                face_alignment_precise_param['weight_name'])
     if args['mode'] == 'train':
