@@ -18,7 +18,7 @@ import os
 import pickle
 
 from config.init_param import data_param, occlu_param
-from model_structure.rough_align import FaceAlignmentRough
+from model_structure.rough_align import FaceAlignment
 from model_structure.occlu_detect import OcclusionDetection
 from utils import get_filenames
 from utils import heat_map_compute
@@ -36,9 +36,9 @@ f_normalizer.close()
 
 def get_weighted_landmark(img, landmark):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
-    prediction = FaceAlignmentRough().test(img=img,
-                                           mean_shape=mean_shape,
-                                           normalizer=normalizer)
+    prediction = FaceAlignment().test(img=img,
+                                      mean_shape=mean_shape,
+                                      normalizer=normalizer)
     img = heat_map_compute(face=img,
                            landmark=prediction,
                            landmark_is_01=False,
@@ -48,8 +48,11 @@ def get_weighted_landmark(img, landmark):
                                             landmark=landmark,
                                             is_heat_map=True)
     delta = (landmark - prediction) * occlu_ratio.T
+    left_eye = np.mean(landmark[36:42, :], axis=0)
+    right_eye = np.mean(landmark[42:48, :], axis=0)
+    pupil_dist = np.sqrt(np.sum((left_eye - right_eye) ** 2))
 
-    return delta
+    return np.concatenate((delta.flatten(), np.array([pupil_dist])))
 
 
 # load data
@@ -75,7 +78,7 @@ def pipe(data_dir, face=False, chosen=range(1)):
             np.savetxt(os.path.splitext(img_paths[index])[0] + ".wdpts", delta, fmt='%.10f')
 
 
-if __name__ == "__main__":
+def adaptor():
     # train data
     pipe(os.path.join(data_param['data_save_dir'], 'train'), face=True)
 

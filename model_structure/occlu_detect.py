@@ -21,6 +21,7 @@ import os
 from config.init_param import occlu_param, data_param
 from model_structure.base_model import Model
 from ml import metric_compute
+from ml import classify
 from utils import binary
 from utils import logger
 from utils import set_gpu
@@ -58,7 +59,7 @@ class OcclusionDetection(Model, object):
         length = len(val_data)
         for index in range(length):
             prediction = [binary(_, threshold=0.5)
-                          for _ in self.classify(model, val_data[index])]
+                          for _ in classify(model, val_data[index])]
             predict_labels.append(prediction)
             if data_param['print_debug'] and (index + 1) % 500 == 0:
                 logger("predicted {} imgs".format(index + 1))
@@ -78,5 +79,5 @@ class OcclusionDetection(Model, object):
                                          img_color=True,
                                          radius=occlu_param['radius'])
         if binary_output:
-            return [binary(_, threshold=0.5) for _ in self.classify(model, net_input)]
-        return self.classify(model, net_input)
+            return [binary(_, threshold=0.5) for _ in classify(model, net_input)]
+        return classify(model, net_input)

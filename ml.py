@@ -16,9 +16,19 @@ import os
 import numpy as np
 from keras import backend as K
 import pickle
+import cv2
+from keras.preprocessing.image import img_to_array
 
 from utils import logger
 from config.init_param import data_param
+
+
+def classify(model, img):
+    if img.shape[:2] != [data_param['img_size'], data_param['img_size']]:
+        img = cv2.resize(img, (data_param['img_size'], data_param['img_size']))
+    img = np.expand_dims(img_to_array(img), axis=0)
+    return model.predict(img)[0]
+
 
 # load mean_shape and normalizer
 def load_config():
@@ -31,6 +41,7 @@ def load_config():
     f_normalizer.close()
     return normalizer, mean_shape
 
+
 def landmark_loss(y_true, y_pred):
     """Self defined loss function of landmark"""
     _, mean_shape = load_config()
@@ -39,9 +50,18 @@ def landmark_loss(y_true, y_pred):
     landmark_pred = landmark_pred + mean_shape
     left_eye = K.mean(landmark_true[:, 36:42, :], axis=1)
     right_eye = K.mean(landmark_true[:, 42:48, :], axis=1)
-    loss = K.mean(K.mean(K.sqrt(K.sum((landmark_true - landmark_pred) ** 2, axis=-1)), axis=-1) 
-        / K.sqrt(K.sum((right_eye - left_eye) ** 2, axis=-1)))
+    loss = K.mean(K.mean(K.sqrt(K.sum((landmark_true - landmark_pred) ** 2, axis=-1)), axis=-1)
+                  / K.sqrt(K.sum((right_eye - left_eye) ** 2, axis=-1)))
     return loss
+
+
+def lanmark_delta_loss(y_true, y_pred):
+    y_true = y_true[:, :136]
+    pupil_dist = y_true[:, -1]
+    landmark_true = K.reshape(y_true, (-1, data_param['landmark_num'], 2))
+    landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
+    loss = K.mean(K.mean(K.sqrt(K.sum((landmark_true - landmark_pred) ** 2, axis=-1)), axis=-1)
+                  / pupil_dist)
 
 
 def landmark_loss_compute(prediction, label):

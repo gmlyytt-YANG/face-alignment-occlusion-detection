@@ -117,15 +117,3 @@ def val_data_feed(data_dir, ext_lists, label_ext,
                                           print_debug=print_debug)
 
     return img_list, label_list
-
-
-def data_iter_gen(data_dir, ext_lists, label_ext):
-    img_name_list, label_name_list = get_filenames(data_dir, ext_lists, label_ext)
-    dataset_image = tf.data.Dataset.from_tensor_slices(img_name_list)
-    dataset_pts = tf.data.Dataset.from_tensor_slices(label_name_list)
-    dataset = tf.data.Dataset.zip((dataset_image, dataset_pts))
-
-    dataset = dataset.prefetch(face_alignment_precise_param['bs'])
-    dataset = dataset.repeat(face_alignment_precise_param['epochs'])
-
-    return dataset

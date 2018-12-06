@@ -17,19 +17,19 @@ from keras.models import load_model
 
 from config.init_param import face_alignment_rough_param
 from model_structure.base_model import *
-from ml import landmark_loss
+from ml import classify
 from ml import landmark_loss_compute
 
 
-class FaceAlignmentRough(Model, object):
-    def __init__(self):
+class FaceAlignment(Model, object):
+    def __init__(self, loss):
         train_dir = os.path.join(data_param['data_save_dir'], 'train')
-        super(FaceAlignmentRough, self).__init__(
+        super(FaceAlignment, self).__init__(
             lr=face_alignment_rough_param['init_lr'],
             epochs=face_alignment_rough_param['epochs'],
             bs=face_alignment_rough_param['bs'],
             model_name=face_alignment_rough_param['model_name'],
-            loss=landmark_loss,
+            loss=loss,
             metrics=["accuracy"],
             steps_per_epochs=len(os.listdir(train_dir)) // (face_alignment_rough_param['bs'] * 6),
             classes=data_param['landmark_num'] * 2
@@ -40,14 +40,14 @@ class FaceAlignmentRough(Model, object):
         set_gpu(ratio=gpu_ratio)
 
         model = load_model(
-            os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']), {'landmark_loss': landmark_loss})
+            os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']), {'landmark_loss': self.loss})
 
         loss = 0.0
         count = 0
         for img, label in zip(imgs, labels):
             if normalizer:
                 img = normalizer.transform(img)
-            prediction = self.classify(model, img)
+            prediction = classify(model, img)
             # print(prediction)
             # print(label)
             # print('-------------')
@@ -66,7 +66,7 @@ class FaceAlignmentRough(Model, object):
 
         if normalizer:
             img = normalizer.transform(img)
-        prediction = self.classify(model, img)
+        prediction = classify(model, img)
         if mean_shape is not None:
             prediction = prediction + mean_shape
         return np.reshape(prediction, (data_param['landmark_num'], 2))

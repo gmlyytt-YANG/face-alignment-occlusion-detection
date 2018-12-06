@@ -22,8 +22,6 @@ from keras.layers import Conv2D
 from keras.layers import MaxPooling2D
 from keras.models import Model
 
-from config.init_param import occlu_param
-
 
 class Vgg16Base(object):
     @staticmethod

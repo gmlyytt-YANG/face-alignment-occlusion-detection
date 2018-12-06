@@ -15,13 +15,17 @@ Description: Main Entry of Training
 import argparse
 import os
 
-from config.init_param import data_param, occlu_param, face_alignment_rough_param
+from adaptor import adaptor
+from config.init_param import data_param, occlu_param, \
+    face_alignment_rough_param, face_alignment_precise_param
 from model_structure.occlu_detect import OcclusionDetection
-from model_structure.rough_align import FaceAlignmentRough
+from model_structure.rough_align import FaceAlignment
 from model_structure.vgg16 import Vgg16Regress, Vgg16CutFC2
 from prepare.data_gen import train_data_feed, val_data_feed
 from ml import metric_compute
 from ml import load_config
+from ml import landmark_loss
+from ml import lanmark_delta_loss
 from utils import load_rough_imgs_labels
 from utils import load_rough_imgs_occlus
 from utils import logger
@@ -53,7 +57,7 @@ if args['phase'] == 'rough':
         face_alignment_rough_param['bs'],
         face_alignment_rough_param['init_lr'])
 
-    face_align_rgr = FaceAlignmentRough()
+    face_align_rgr = FaceAlignment(loss=landmark_loss)
     weight_path = os.path.join(face_alignment_rough_param['weight_path'], face_alignment_rough_param['weight_name'])
     if args['mode'] == 'train':
         face_align_rgr.train(model_structure=Vgg16Regress(),
@@ -61,7 +65,6 @@ if args['phase'] == 'rough':
                              val_load=val_data_feed,
                              ext_lists=['*_face.png', '*_face.jpg'],
                              label_ext='.pts',
-                             mean_shape=mean_shape,
                              normalizer=normalizer,
                              weight_path=weight_path,
                              gpu_ratio=0.5)
@@ -123,3 +126,29 @@ if args['phase'] == 'occlu':
             # if len(predictions) == 100:
             #     break
         metric_compute(occlus, predictions)
+
+if args['pahse'] == 'adaptor':
+    adaptor()
+
+if args['phase'] == 'precise':
+    # face alignment precise
+    face_alignment_precise_param['epochs'] = args['epoch']
+    face_alignment_precise_param['bs'] = args['batch_size']
+    face_alignment_precise_param['init_lr'] = args['init_lr']
+    face_alignment_precise_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_rough.h5'.format(
+        face_alignment_precise_param['epochs'],
+        face_alignment_precise_param['bs'],
+        face_alignment_precise_param['init_lr'])
+
+    face_align_rgr = FaceAlignment(loss=lanmark_delta_loss)
+    weight_path = os.path.join(face_alignment_precise_param['weight_path'],
+                               face_alignment_precise_param['weight_name'])
+    if args['mode'] == 'train':
+        face_align_rgr.train(model_structure=Vgg16Regress(),
+                             train_load=train_data_feed,
+                             val_load=val_data_feed,
+                             ext_lists=['*_face.png', '*_face.jpg'],
+                             label_ext='.wdpts',
+                             normalizer=normalizer,
+                             weight_path=weight_path,
+                             gpu_ratio=0.5)
