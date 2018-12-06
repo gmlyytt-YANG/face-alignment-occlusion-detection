@@ -17,6 +17,7 @@ import cv2
 import numpy as np
 import os
 import pickle
+import time
 
 from config.init_param import data_param, occlu_param, face_alignment_rough_param
 from model_structure.rough_align import FaceAlignment
@@ -71,11 +72,10 @@ f_normalizer.close()
 
 def get_weighted_landmark(img, landmark):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
+    start_time = time.time()
     prediction = FaceAlignment(loss=landmark_delta_loss).test(img=img,
                                                               mean_shape=mean_shape,
                                                               normalizer=normalizer)
-    print(prediction)
-    print('---------------')
     img = heat_map_compute(face=img,
                            landmark=prediction,
                            landmark_is_01=False,
@@ -84,16 +84,15 @@ def get_weighted_landmark(img, landmark):
     occlu_ratio = OcclusionDetection().test(img=img,
                                             landmark=prediction,
                                             is_heat_map=True)
-    print(occlu_ratio)
-    print('----------------')
-    print(landmark - prediction)
-    print('----------------')
     delta = np.array((landmark - prediction)) * np.expand_dims(np.array(occlu_ratio), axis=1)
+    end_time = time.time()
+    print(delta)
+    print('------------')
     left_eye = np.mean(landmark[36:42, :], axis=0)
     right_eye = np.mean(landmark[42:48, :], axis=0)
     pupil_dist = np.sqrt(np.sum((left_eye - right_eye) ** 2))
 
-    return np.concatenate((delta.flatten(), np.array([pupil_dist])))
+    return np.concatenate((delta.flatten(), np.array([pupil_dist]))), end_time - start_time
 
 
 # load data
@@ -103,12 +102,18 @@ def pipe(data_dir, face=False, chosen=range(1)):
             get_filenames(data_dir=[data_dir],
                           listext=["*_face.png", "*_face.jpg"],
                           label_ext=".pts")
-
+        time_total = 0.0
+        count = 0
         for img_path, label_path in zip(img_name_list, label_name_list):
             img = cv2.imread(img_path)
             landmark = np.genfromtxt(label_path)
-            delta = get_weighted_landmark(img, landmark)
-            np.savetxt(os.path.splitext(img_path)[0] + ".wdpts", delta, fmt='%.10f')
+            delta, time_pass = get_weighted_landmark(img, landmark)
+            np.savetxt(os.path.splitext(img_path)[0] + '.wdpts', delta, fmt='%.10f')
+            count += 1
+            if data_param['print_debug'] and count % 500 == 0:
+                logger('saved {} wdpts'.format(count))
+            time_total += time_pass
+        logger("average speed for processing is {} fps".format(time_total / count))
     else:
         img_paths, bboxes = load_basic_info('raw_300W_release.mat', data_dir)
         for index in chosen:
