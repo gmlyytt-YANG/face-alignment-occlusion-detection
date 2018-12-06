@@ -27,8 +27,7 @@ from utils import heat_map_compute
 from utils import load_basic_info
 from utils import load_rough_imgs_labels_core
 from utils import logger
-from model_structure.occlu_detect import OcclusionDetection
-from model_structure.rough_align import FaceAlignment
+
 from utils import binary
 from utils import set_gpu
 from ml import classify
@@ -64,6 +63,9 @@ occlu_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_occlu.h5'.format(
     occlu_param['epochs'],
     occlu_param['bs'],
     occlu_param['init_lr'])
+
+from model_structure.occlu_detect import OcclusionDetection
+from model_structure.rough_align import FaceAlignment
 
 # load mean_shape and normalizer
 f_mean_shape = open(os.path.join(data_param['model_dir'], 'mean_shape.pkl'), 'rb')
