@@ -71,22 +71,20 @@ normalizer = pickle.load(f_normalizer)
 f_normalizer.close()
 
 
-def get_weighted_landmark(img, landmark, model_occlu=None, model_rough=None):
+def get_weighted_landmark(img, landmark):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
     start_time = time.time()
     prediction = FaceAlignment(loss=landmark_loss).test(img=img,
                                                         mean_shape=mean_shape,
-                                                        normalizer=normalizer,
-                                                        model=model_rough)
+                                                        normalizer=normalizer)
     img = heat_map_compute(face=img,
                            landmark=prediction,
                            landmark_is_01=False,
                            img_color=True,
                            radius=occlu_param['radius'])
     occlu_ratio = OcclusionDetection().test(img=img,
-                                            landmark=landmark,
-                                            is_heat_map=True,
-                                            model=model_occlu)
+                                            landmark=prediction,
+                                            is_heat_map=True)
     delta = np.array((landmark - prediction)) * np.expand_dims(np.array(occlu_ratio), axis=1)
     end_time = time.time()
     logger("time of processing one img is {}".format(end_time - start_time))
@@ -115,8 +113,7 @@ def pipe(data_dir, face=False, chosen=range(1)):
         for img_path, label_path in zip(img_name_list, label_name_list):
             img = cv2.imread(img_path)
             landmark = np.genfromtxt(label_path)
-            delta, time_pass = get_weighted_landmark(img, landmark,
-                                                     model_occlu=model_occlu, model_rough=model_rough)
+            delta, time_pass = get_weighted_landmark(img, landmark)
             np.savetxt(os.path.splitext(img_path)[0] + '.wdpts', delta, fmt='%.10f')
             count += 1
             if data_param['print_debug'] and count % 500 == 0:
