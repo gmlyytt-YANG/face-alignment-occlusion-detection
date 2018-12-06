@@ -38,8 +38,8 @@ f_normalizer.close()
 def get_weighted_landmark(img, landmark):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
     prediction = FaceAlignment(loss=landmark_delta_loss).test(img=img,
-                                      mean_shape=mean_shape,
-                                      normalizer=normalizer)
+                                                              mean_shape=mean_shape,
+                                                              normalizer=normalizer)
     img = heat_map_compute(face=img,
                            landmark=prediction,
                            landmark_is_01=False,
