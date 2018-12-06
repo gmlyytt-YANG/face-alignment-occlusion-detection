@@ -76,17 +76,17 @@ f_normalizer.close()
 def get_weighted_landmark(img, landmark):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
     start_time = time.time()
-    prediction = FaceAlignment.test(img=img,
-                                    mean_shape=mean_shape,
-                                    normalizer=normalizer)
+    prediction = FaceAlignment(loss=None).test(img=img,
+                                               mean_shape=mean_shape,
+                                               normalizer=normalizer)
     img = heat_map_compute(face=img,
                            landmark=prediction,
                            landmark_is_01=False,
                            img_color=True,
                            radius=occlu_param['radius'])
-    occlu_ratio = OcclusionDetection.test(img=img,
-                                          landmark=prediction,
-                                          is_heat_map=True)
+    occlu_ratio = OcclusionDetection().test(img=img,
+                                            landmark=prediction,
+                                            is_heat_map=True)
     delta = np.array((landmark - prediction)) * np.expand_dims(np.array(occlu_ratio), axis=1)
     end_time = time.time()
     # logger("time of processing one img is {}".format(end_time - start_time))
