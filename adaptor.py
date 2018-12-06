@@ -20,6 +20,7 @@ import pickle
 from config.init_param import data_param, occlu_param
 from model_structure.rough_align import FaceAlignment
 from model_structure.occlu_detect import OcclusionDetection
+from ml import landmark_delta_loss
 from utils import get_filenames
 from utils import heat_map_compute
 from utils import load_basic_info
@@ -36,9 +37,9 @@ f_normalizer.close()
 
 def get_weighted_landmark(img, landmark):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
-    prediction = FaceAlignment().test(img=img,
-                                      mean_shape=mean_shape,
-                                      normalizer=normalizer)
+    prediction = FaceAlignment(loss=landmark_delta_loss).test(img=img,
+                                                              mean_shape=mean_shape,
+                                                              normalizer=normalizer)
     img = heat_map_compute(face=img,
                            landmark=prediction,
                            landmark_is_01=False,
