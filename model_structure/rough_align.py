@@ -60,13 +60,14 @@ class FaceAlignment(Model, object):
         # set gpu usage
         set_gpu(ratio=gpu_ratio)
 
-        model = load_model(
-            os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
-            {'landmark_loss': landmark_loss})
+        model = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
+                           {'landmark_loss': landmark_loss})
 
         if normalizer:
             img = normalizer.transform(img)
         prediction = classify(model, img)
+        print(prediction)
+        print('---------------')
         if mean_shape is not None:
-            prediction = prediction + mean_shape
-        return np.reshape(prediction, (data_param['landmark_num'], 2))
+            prediction = np.reshape(prediction, (data_param['landmark_num'], 2)) + mean_shape
+        return prediction
