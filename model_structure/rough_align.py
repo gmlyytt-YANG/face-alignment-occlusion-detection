@@ -62,7 +62,7 @@ class FaceAlignment(Model, object):
         set_gpu(ratio=gpu_ratio)
 
         model = load_model(
-            os.path.join(data_param['model_dir'], data_param['model_name']))
+            os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']))
 
         if normalizer:
             img = normalizer.transform(img)

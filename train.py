@@ -15,7 +15,6 @@ Description: Main Entry of Training
 import argparse
 import os
 
-from adaptor import adaptor
 from config.init_param import data_param, occlu_param, \
     face_alignment_rough_param, face_alignment_precise_param
 from model_structure.occlu_detect import OcclusionDetection
@@ -126,9 +125,6 @@ if args['phase'] == 'occlu':
             # if len(predictions) == 100:
             #     break
         metric_compute(occlus, predictions)
-
-if args['pahse'] == 'adaptor':
-    adaptor()
 
 if args['phase'] == 'precise':
     # face alignment precise

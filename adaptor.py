@@ -20,6 +20,7 @@ import pickle
 from config.init_param import data_param, occlu_param
 from model_structure.rough_align import FaceAlignment
 from model_structure.occlu_detect import OcclusionDetection
+from ml import landmark_delta_loss
 from utils import get_filenames
 from utils import heat_map_compute
 from utils import load_basic_info
@@ -36,7 +37,7 @@ f_normalizer.close()
 
 def get_weighted_landmark(img, landmark):
     """Get weighted landmark based on rough face alignment and occlusion detection"""
-    prediction = FaceAlignment().test(img=img,
+    prediction = FaceAlignment(loss=landmark_delta_loss).test(img=img,
                                       mean_shape=mean_shape,
                                       normalizer=normalizer)
     img = heat_map_compute(face=img,
@@ -45,9 +46,9 @@ def get_weighted_landmark(img, landmark):
                            img_color=True,
                            radius=occlu_param['radius'])
     occlu_ratio = OcclusionDetection().test(img=img,
-                                            landmark=landmark,
+                                            landmark=prediction,
                                             is_heat_map=True)
-    delta = (landmark - prediction) * occlu_ratio.T
+    delta = (landmark - prediction) * (1 - occlu_ratio).T
     left_eye = np.mean(landmark[36:42, :], axis=0)
     right_eye = np.mean(landmark[42:48, :], axis=0)
     pupil_dist = np.sqrt(np.sum((left_eye - right_eye) ** 2))
@@ -61,7 +62,7 @@ def pipe(data_dir, face=False, chosen=range(1)):
         img_name_list, label_name_list = \
             get_filenames(data_dir=[data_dir],
                           listext=["*_face.png", "*_face.jpg"],
-                          label_ext=[".pts"])
+                          label_ext=".pts")
 
         for img_path, label_path in zip(img_name_list, label_name_list):
             img = cv2.imread(img_path)
@@ -78,7 +79,7 @@ def pipe(data_dir, face=False, chosen=range(1)):
             np.savetxt(os.path.splitext(img_paths[index])[0] + ".wdpts", delta, fmt='%.10f')
 
 
-def adaptor():
+if __name__ == "__main__":
     # train data
     pipe(os.path.join(data_param['data_save_dir'], 'train'), face=True)
 

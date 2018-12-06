@@ -55,7 +55,7 @@ def landmark_loss(y_true, y_pred):
     return loss
 
 
-def lanmark_delta_loss(y_true, y_pred):
+def landmark_delta_loss(y_true, y_pred):
     y_true = y_true[:, :136]
     pupil_dist = y_true[:, -1]
     landmark_true = K.reshape(y_true, (-1, data_param['landmark_num'], 2))
