@@ -86,7 +86,9 @@ def get_weighted_landmark(img, landmark):
                                             is_heat_map=True)
     print(occlu_ratio)
     print('----------------')
-    delta = (landmark - prediction) * (1 - occlu_ratio).T
+    print(landmark - prediction)
+    print('----------------')
+    delta = (landmark - prediction) * occlu_ratio.T
     left_eye = np.mean(landmark[36:42, :], axis=0)
     right_eye = np.mean(landmark[42:48, :], axis=0)
     pupil_dist = np.sqrt(np.sum((left_eye - right_eye) ** 2))
