@@ -15,17 +15,17 @@ Description: Rough Face Alignment
 
 from keras.models import load_model
 
-from config.init_param import face_alignment_rough_param, occlu_param
+from config.init_param import face_alignment_rough_param
 from model_structure.base_model import *
 from ml import classify
 from ml import landmark_loss_compute
 from ml import landmark_loss
 
-model_rough = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
-                         {'landmark_loss': landmark_loss})
-
 
 class FaceAlignment(Model, object):
+    model = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
+                       {'landmark_loss': landmark_loss})
+
     def __init__(self, loss):
         train_dir = os.path.join(data_param['data_save_dir'], 'train')
         super(FaceAlignment, self).__init__(
@@ -38,6 +38,7 @@ class FaceAlignment(Model, object):
             steps_per_epochs=len(os.listdir(train_dir)) // (face_alignment_rough_param['bs'] * 6),
             classes=data_param['landmark_num'] * 2
         )
+        self.load_model_flag = 0
 
     def val_compute(self, imgs, labels, normalizer=None, gpu_ratio=0.5):
         # set gpu usage
@@ -59,15 +60,12 @@ class FaceAlignment(Model, object):
                 logger("predicted {} imgs".format(count))
         logger("test loss is {}".format(loss / count))
 
-    @staticmethod
-    def test(img, mean_shape=None, normalizer=None, gpu_ratio=0.5):
+    def test(self, img, mean_shape=None, normalizer=None, gpu_ratio=0.5):
         # set gpu usage
         set_gpu(ratio=gpu_ratio)
-        # model = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
-        #                    {'landmark_loss': landmark_loss})
         if normalizer:
             img = normalizer.transform(img)
-        prediction = classify(model_rough, img)
+        prediction = classify(FaceAlignment.model, img)
         if mean_shape is not None:
             prediction = np.reshape(prediction, (data_param['landmark_num'], 2)) + mean_shape
         return prediction
