@@ -120,7 +120,7 @@ def pipe(data_dir, face=False, chosen=range(1)):
             print(landmark)
             print('----------------')
             delta = get_weighted_landmark(img, landmark)
-            np.savetxt(os.path.splitext(img_paths[index])[0] + ".wdpts", delta, fmt='%.10f')
+            np.savetxt(os.path.splitext(img_paths[index])[0] + '.wdpts', delta, fmt='%.10f')
 
 
 if __name__ == "__main__":
