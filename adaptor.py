@@ -18,19 +18,13 @@ import numpy as np
 import os
 import pickle
 import time
-from keras.models import load_model
 
 from config.init_param import data_param, occlu_param, face_alignment_rough_param
-from ml import landmark_loss
 from utils import get_filenames
 from utils import heat_map_compute
 from utils import load_basic_info
 from utils import load_rough_imgs_labels_core
 from utils import logger
-
-from utils import binary
-from utils import set_gpu
-from ml import classify
 
 # load parameter
 ap = argparse.ArgumentParser()
