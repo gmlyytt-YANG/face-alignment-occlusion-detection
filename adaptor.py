@@ -87,7 +87,7 @@ def get_weighted_landmark(img, landmark):
     occlu_ratio = OcclusionDetection.test(img=img, landmark=prediction, is_heat_map=True)
     delta = np.array((landmark - prediction)) * np.expand_dims(np.array(occlu_ratio), axis=1)
     end_time = time.time()
-    logger("time of processing one img is {}".format(end_time - start_time))
+    # logger("time of processing one img is {}".format(end_time - start_time))
     # print(delta)
     # print('------------')
     left_eye = np.mean(landmark[36:42, :], axis=0)
