@@ -116,6 +116,9 @@ def pipe(data_dir, face=False, chosen=range(1)):
             img, landmark = load_rough_imgs_labels_core(img_path=img_paths[index],
                                                         bbox=bboxes[index],
                                                         img_size=data_param['img_size'])
+            print(img)
+            print(landmark)
+            print('----------------')
             delta = get_weighted_landmark(img, landmark)
             np.savetxt(os.path.splitext(img_paths[index])[0] + ".wdpts", delta, fmt='%.10f')
 
