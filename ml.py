@@ -24,6 +24,7 @@ from config.init_param import data_param
 
 
 def classify(model, img):
+    """forward function"""
     if img.shape[:2] != [data_param['img_size'], data_param['img_size']]:
         img = cv2.resize(img, (data_param['img_size'], data_param['img_size']))
     img = np.expand_dims(img_to_array(img), axis=0)
@@ -31,6 +32,7 @@ def classify(model, img):
 
 
 def load_config():
+    """Load mean shape and normalizer"""
     f_mean_shape = open(os.path.join(data_param['model_dir'], 'mean_shape.pkl'), 'rb')
     mean_shape = pickle.load(f_mean_shape)
     mean_shape = np.array(mean_shape, dtype=np.float32)
@@ -55,12 +57,18 @@ def landmark_loss(y_true, y_pred):
 
 
 def landmark_delta_loss(y_true, y_pred):
-    y_true = y_true[:, :136]
-    pupil_dist = y_true[:, -1]
-    landmark_true = K.reshape(y_true, (-1, data_param['landmark_num'], 2))
+    """Self defined loss function of delta loss
+        loss = sqrt(sum((weight * (landmark_true - landmark_rough) - landmark_pred) ^ 2))
+    """
+    landmark_true = y_true[:, :136]
+    landmark_rough = y_true[:, 136:272]
+    occlu_ratio = y_true[:, 272:-1]
+    landmark_true = K.reshape(landmark_true, (-1, data_param['landmark_num'], 2))
+    landmark_rough = K.reshape(landmark_rough, (-1, data_param['landmark_num'], 2))
     landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
-    loss = K.mean(K.mean(K.sqrt(K.sum((landmark_true - landmark_pred) ** 2, axis=-1)), axis=-1)
-                  / pupil_dist)
+    location_delta = landmark_true - landmark_rough
+    weighted_delta = location_delta * occlu_ratio.T
+    loss = K.mean(K.mean(K.sqrt(K.sum((weighted_delta - landmark_pred) ** 2, axis=-1))))
     return loss
 
 
