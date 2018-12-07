@@ -14,6 +14,7 @@ Description: Main Entry of Training
 """
 import argparse
 import os
+from keras.models import load_model
 
 from config.init_param import data_param, occlu_param, \
     face_alignment_rough_param, face_alignment_precise_param
@@ -26,6 +27,7 @@ from ml import landmark_delta_loss
 from utils import load_rough_imgs_labels
 from utils import load_rough_imgs_occlus
 from utils import logger
+from utils import set_gpu
 
 # load parameter
 ap = argparse.ArgumentParser()
@@ -45,7 +47,11 @@ args = vars(args)
 
 print(args['content'])
 
+# load mean_shape and normalizer
 normalizer, mean_shape = load_config()
+
+# gpu related
+set_gpu(ratio=0.5)
 
 # face alignment rough
 if args['phase'] == 'rough':
@@ -71,17 +77,18 @@ if args['phase'] == 'rough':
                              ext_lists=['*_face.png', '*_face.jpg'],
                              label_ext='.pts',
                              normalizer=normalizer,
-                             weight_path=weight_path,
-                             gpu_ratio=0.5)
+                             weight_path=weight_path)
     if args['mode'] == 'val_compute':
         logger("loading data")
+        model = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
+                           {'landmark_loss': landmark_loss})
         faces, labels = load_rough_imgs_labels(img_root=data_param['img_root_dir'],
                                                mat_file_name='raw_300W_release.mat',
                                                img_size=data_param['img_size'],
                                                normalizer=normalizer,
                                                mean_shape=mean_shape,
                                                chosen=range(3148, 3837))
-        face_align_rgr.val_compute(imgs=faces, labels=labels, gpu_ratio=0.5)
+        face_align_rgr.val_compute(imgs=faces, labels=labels, model=model)
 
 # occlusion detection
 if args['phase'] == 'occlu':
@@ -102,15 +109,16 @@ if args['phase'] == 'occlu':
                         val_load=val_data_feed,
                         ext_lists=['*_heatmap.png', '*_heatmap.jpg'],
                         label_ext='.opts',
-                        weight_path=weight_path,
-                        gpu_ratio=0.5)
+                        weight_path=weight_path)
     elif args['mode'] == 'val_compute':
+        model = load_model(os.path.join(data_param['model_dir'], occlu_param['model_name']))
         occlu_clf.val_compute(val_load=val_data_feed,
                               ext_lists=['*_heatmap.png', '*_heatmap.jpg'],
                               label_ext='.opts',
-                              gpu_ratio=0.5)
+                              model=model)
     elif args['mode'] == 'test':
         logger("loading imgs")
+        model = load_model(os.path.join(data_param['model_dir'], occlu_param['model_name']))
         faces, landmarks, occlus = load_rough_imgs_occlus(
             img_root=data_param['img_root_dir'],
             mat_file_name='raw_300W_release.mat',
@@ -123,7 +131,8 @@ if args['phase'] == 'occlu':
             prediction = occlu_clf.test(img=face,
                                         landmark=landmark,
                                         is_heat_map=True,
-                                        binary_output=True)
+                                        binary_output=True,
+                                        model=model)
             # print(prediction)
             predictions.append(prediction)
             if data_param['print_debug'] and len(predictions) % 100 == 0:
@@ -132,8 +141,8 @@ if args['phase'] == 'occlu':
             #     break
         metric_compute(occlus, predictions)
 
+# face precise alignment
 if args['phase'] == 'precise':
-    # face alignment precise
     face_alignment_precise_param['epochs'] = args['epoch']
     face_alignment_precise_param['bs'] = args['batch_size']
     face_alignment_precise_param['init_lr'] = args['init_lr']
@@ -152,5 +161,4 @@ if args['phase'] == 'precise':
                              ext_lists=['*_face.png', '*_face.jpg'],
                              label_ext='.wdpts',
                              normalizer=normalizer,
-                             weight_path=weight_path,
-                             gpu_ratio=0.5)
+                             weight_path=weight_path)
