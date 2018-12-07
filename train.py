@@ -17,8 +17,6 @@ import os
 
 from config.init_param import data_param, occlu_param, \
     face_alignment_rough_param, face_alignment_precise_param
-from model_structure.occlu_detect import OcclusionDetection
-from model_structure.rough_align import FaceAlignment
 from model_structure.vgg16 import Vgg16Regress, Vgg16CutFC2
 from prepare.data_gen import train_data_feed, val_data_feed
 from ml import metric_compute
@@ -31,6 +29,7 @@ from utils import logger
 
 # load parameter
 ap = argparse.ArgumentParser()
+ap.add_argument('-c', '--content', type=str, help='description of model')
 ap.add_argument('-e', '--epoch', type=int, default=75,
                 help='epochs of training')
 ap.add_argument('-bs', '--batch_size', type=int, default=32,
@@ -44,6 +43,8 @@ ap.add_argument('-p', '--phase', type=str, default='rough',
 args, unknown = ap.parse_known_args()
 args = vars(args)
 
+print(args['content'])
+
 normalizer, mean_shape = load_config()
 
 # face alignment rough
@@ -51,14 +52,19 @@ if args['phase'] == 'rough':
     face_alignment_rough_param['epochs'] = args['epoch']
     face_alignment_rough_param['bs'] = args['batch_size']
     face_alignment_rough_param['init_lr'] = args['init_lr']
-    face_alignment_rough_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_rough.h5'.format(
+    face_alignment_rough_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_des={}_rough.h5'.format(
         face_alignment_rough_param['epochs'],
         face_alignment_rough_param['bs'],
-        face_alignment_rough_param['init_lr'])
+        face_alignment_rough_param['init_lr'],
+        args['content'])
 
+    # from model_structure.occlu_detect import OcclusionDetection
+    from model_structure.rough_align import FaceAlignment
+    
     face_align_rgr = FaceAlignment(loss=landmark_loss)
     weight_path = os.path.join(face_alignment_rough_param['weight_path'], face_alignment_rough_param['weight_name'])
     if args['mode'] == 'train':
+        logger("-----------epochs: {}, bs: {}, lr: {} ---------".format(args['epoch'], args['batch_size'], args['init_lr']))
         face_align_rgr.train(model_structure=Vgg16Regress(),
                              train_load=train_data_feed,
                              val_load=val_data_feed,

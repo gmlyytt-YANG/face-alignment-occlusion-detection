@@ -106,7 +106,7 @@ def pipe(data_dir, face=False, chosen=range(1)):
             img = cv2.imread(img_path)
             landmark = np.genfromtxt(label_path)
             prediction, occlu_ratio, time_pass = get_weighted_landmark(img, landmark)
-            delta = np.concatenate((landmark, prediction, occlu_ratio))
+            delta = np.concatenate((landmark.flatten(), prediction, occlu_ratio))
             np.savetxt(os.path.splitext(img_path)[0] + '.wdpts', delta, fmt='%.10f')
             count += 1
             if data_param['print_debug'] and count % 500 == 0:
@@ -133,7 +133,7 @@ def pipe(data_dir, face=False, chosen=range(1)):
 if __name__ == "__main__":
     # train data
     logger("save training data")
-    # pipe(os.path.join(data_param['data_save_dir'], 'train'), face=True)
+    pipe(os.path.join(data_param['data_save_dir'], 'train'), face=True)
 
     # val data
     logger("save val data")
@@ -141,4 +141,4 @@ if __name__ == "__main__":
 
     # test data
     logger("save test data")
-    pipe(data_param['img_root_dir'], face=False, chosen=range(3148, 3837))
+    # pipe(data_param['img_root_dir'], face=False, chosen=range(3148, 3837))
