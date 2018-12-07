@@ -93,12 +93,13 @@ def get_weighted_landmark(img, landmark):
 
 # load data
 def pipe(data_dir, face=False, chosen=range(1)):
+    time_total = 0.0
     if face:
         img_name_list, label_name_list = \
             get_filenames(data_dir=[data_dir],
                           listext=["*_face.png", "*_face.jpg"],
                           label_ext=".pts")
-        time_total = 0.0
+
         count = 0
         for img_path, label_path in zip(img_name_list, label_name_list):
             img = cv2.imread(img_path)
@@ -109,18 +110,21 @@ def pipe(data_dir, face=False, chosen=range(1)):
             if data_param['print_debug'] and count % 500 == 0:
                 logger('saved {} wdpts'.format(count))
             time_total += time_pass
-        logger("average speed for processing is {} fps".format(float(count) / time_total))
+
     else:
         img_paths, bboxes = load_basic_info('raw_300W_release.mat', data_dir)
+        count = 0
         for index in chosen:
             img, landmark = load_rough_imgs_labels_core(img_path=img_paths[index],
                                                         bbox=bboxes[index],
                                                         img_size=data_param['img_size'])
-            print(img)
-            print(landmark)
-            print('----------------')
-            delta = get_weighted_landmark(img, landmark)
+            delta, time_pass = get_weighted_landmark(img, landmark)
             np.savetxt(os.path.splitext(img_paths[index])[0] + '.wdpts', delta, fmt='%.10f')
+            if data_param['print_debug'] and (index + 1) % 100 == 0:
+                logger('saved {} wdpts'.format(index + 1))
+            count = index + 1
+            time_total += time_pass
+    logger("average speed for processing is {} fps".format(float(count) / time_total))
 
 
 if __name__ == "__main__":
