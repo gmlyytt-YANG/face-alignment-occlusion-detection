@@ -30,7 +30,6 @@ def classify(model, img):
     return model.predict(img)[0]
 
 
-# load mean_shape and normalizer
 def load_config():
     f_mean_shape = open(os.path.join(data_param['model_dir'], 'mean_shape.pkl'), 'rb')
     mean_shape = pickle.load(f_mean_shape)
@@ -62,6 +61,7 @@ def landmark_delta_loss(y_true, y_pred):
     landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
     loss = K.mean(K.mean(K.sqrt(K.sum((landmark_true - landmark_pred) ** 2, axis=-1)), axis=-1)
                   / pupil_dist)
+    return loss
 
 
 def landmark_loss_compute(prediction, label):
