@@ -16,6 +16,7 @@ import argparse
 import os
 from keras.models import load_model
 
+print("lala")
 from config.init_param import data_param, occlu_param, \
     face_alignment_rough_param, face_alignment_precise_param
 from model_structure.vgg16 import Vgg16Regress, Vgg16CutFC2
