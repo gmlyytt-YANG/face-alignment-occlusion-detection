@@ -13,24 +13,22 @@ Date: 2018/11/10 17:43:31
 Description: Base Model
 """
 
-import cv2
 import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 from keras.optimizers import Adam
-from keras.preprocessing.image import img_to_array
-from keras.callbacks import ModelCheckpoint, EarlyStopping
-from keras import backend as K
+from keras.callbacks import ModelCheckpoint
 import os
 
 from config.init_param import data_param
-from utils import set_gpu
 from utils import logger
 
 matplotlib.use('agg')
 
 
 class Model(object):
+    """Base Model"""
+
     def __init__(self, lr, epochs, bs, model_name,
                  loss, metrics, steps_per_epochs, classes, final_act=None):
         self.lr = lr
@@ -44,15 +42,10 @@ class Model(object):
         self.final_act = final_act
 
     def train(self, model_structure, train_load, val_load,
-              ext_lists, label_ext, mean_shape=None, normalizer=None, weight_path=None, gpu_ratio=0.5):
-        # set gpu usage
-        set_gpu(ratio=gpu_ratio)
-
+              ext_lists, label_ext, flatten=False, normalizer=None, weight_path=None):
+        """Train procedure"""
         # load data
         logger('loading data')
-        flatten = False
-        if mean_shape is not None:
-            flatten = True
         val_data, val_labels = val_load(data_dir=os.path.join(data_param['data_save_dir'], 'val'),
                                         ext_lists=ext_lists,
                                         label_ext=label_ext,
@@ -96,12 +89,4 @@ class Model(object):
         plt.ylabel('Loss/Accuracy')
         plt.legend(loc='upper right')
         filename = os.path.splitext(os.path.join(data_param['record_dir'], self.model_name))[0]
-        plt.savefig('{}'.format(filename+'.png'))
-        K.clear_session()
-
-    @staticmethod
-    def classify(model, img):
-        if img.shape[:2] != [data_param['img_size'], data_param['img_size']]:
-            img = cv2.resize(img, (data_param['img_size'], data_param['img_size']))
-        img = np.expand_dims(img_to_array(img), axis=0)
-        return model.predict(img)[0]
+        plt.savefig('{}'.format(filename + '.png'))

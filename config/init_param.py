@@ -38,6 +38,18 @@ data_param = {
     'mode': 'gaussian',
 }
 
+face_alignment_rough_param = {
+    # path-related
+    'model_name': 'face_alignment_rough.h5',
+
+    # dl-related
+    'epochs': 100,
+    'init_lr': 1e-3,
+    'bs': 64,
+    'weight_path': os.path.join(os.getcwd(), 'weights'),
+    'weight_name': 'vgg16_weights_tf_dim_ordering_tf_kernels.h5'
+}
+
 occlu_param = {
     # path-related
     'model_name': 'occlu_detection.h5',
@@ -54,12 +66,9 @@ occlu_param = {
     'weight_name': 'vgg16_weights_tf_dim_ordering_tf_kernels.h5'
 }
 
-face_alignment_rough_param = {
+face_alignment_precise_param = {
     # path-related
-    'model_name': 'face_alignment_rough.h5',
-
-    # dataset related
-    'channel': 3,
+    'model_name': 'face_alignment_precise.h5',
 
     # dl-related
     'epochs': 100,
@@ -67,4 +76,5 @@ face_alignment_rough_param = {
     'bs': 64,
     'weight_path': os.path.join(os.getcwd(), 'weights'),
     'weight_name': 'vgg16_weights_tf_dim_ordering_tf_kernels.h5'
+
 }

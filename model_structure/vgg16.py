@@ -22,8 +22,6 @@ from keras.layers import Conv2D
 from keras.layers import MaxPooling2D
 from keras.models import Model
 
-from config.init_param import occlu_param
-
 
 class Vgg16Base(object):
     @staticmethod
@@ -108,7 +106,8 @@ class Vgg16Regress(Vgg16Base, object):
 
         # Regression block
         x = Flatten(name='flatten')(x)
-        x = Dense(1000, activation='relu', name='fc1_self')(x)
+        x = Dense(1000, name='fc1_self')(x)
+        # x = Dense(1000, activation='relu', name='fc1_self')(x)
         x = Dense(classes, name='predictions_self')(x)
         model = Model(input, x)
 
