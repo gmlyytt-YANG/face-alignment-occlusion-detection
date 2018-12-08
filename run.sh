@@ -7,6 +7,7 @@ lr=""
 mode=""
 show=""
 phase=""
+content=""
 
 # adaptor param init
 epochs1=""
@@ -28,6 +29,9 @@ do
         if [ ${phase} = "pre" ];then
             break
         fi
+        ;;
+    "-c")
+        content="$2"
         ;;
     "-e")
         epochs="$2"
@@ -72,8 +76,8 @@ if [ ${show} = "nohup" ];then
         nohup python adaptor.py -e1 ${epochs1} -bs1 ${bs1} -lr1 ${lr1} -e2 ${epochs2} -bs2 ${bs2} -lr2 ${lr2}\
         > logs/adaptor.log 2>&1 &
     else
-        nohup python train.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} -p ${phase} -dAgg\
-        > logs/epochs=${epochs}_bs=${bs}_initlr=${lr}_mode=${mode}_phase=${phase}.log 2>&1 &
+        nohup python train.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} -p ${phase} -c ${content} -dAgg\
+        > logs/epochs=${epochs}_bs=${bs}_initlr=${lr}_mode=${mode}_phase=${phase}_content=${content}.log 2>&1 &
     fi
 else
     if [ ${phase} = "pre" ];then
@@ -81,6 +85,6 @@ else
     elif [ ${phase} = "adaptor" ];then
         python adaptor.py -e1 ${epochs1} -bs1 ${bs1} -lr1 ${lr1} -e2 ${epochs2} -bs2 ${bs2} -lr2 ${lr2}
     else
-        python train.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} -p ${phase} -dAgg
+        python train.py -e ${epochs} -bs ${bs} -lr ${lr} -m ${mode} -p ${phase} -c ${content} -dAgg
     fi
 fi

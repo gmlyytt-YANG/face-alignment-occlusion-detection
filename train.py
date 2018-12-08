@@ -45,8 +45,6 @@ ap.add_argument('-p', '--phase', type=str, default='rough',
 args, unknown = ap.parse_known_args()
 args = vars(args)
 
-print(args['content'])
-
 # load mean_shape and normalizer
 normalizer, mean_shape = load_config()
 
@@ -76,6 +74,7 @@ if args['phase'] == 'rough':
                              val_load=val_data_feed,
                              ext_lists=['*_face.png', '*_face.jpg'],
                              label_ext='.pts',
+                             flatten=True,
                              normalizer=normalizer,
                              weight_path=weight_path)
     if args['mode'] == 'val_compute':

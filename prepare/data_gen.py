@@ -75,6 +75,7 @@ def train_data_feed(batch_size, data_dir, ext_lists, label_ext, flatten=False):
     data_size = len(img_name_list)
     batch_offset = 0
     indices = [_ for _ in range(data_size)]
+    print(len(indices))
     while True:
         start = batch_offset
         batch_offset += batch_size
