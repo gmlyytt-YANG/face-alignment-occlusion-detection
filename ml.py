@@ -62,7 +62,7 @@ def landmark_delta_loss(y_true, y_pred):
     """
     landmark_true = y_true[:, :136]
     landmark_rough = y_true[:, 136:272]
-    occlu_ratio = y_true[:, 272:-1]
+    occlu_ratio = y_true[:, 272:340]
     landmark_true = K.reshape(landmark_true, (-1, data_param['landmark_num'], 2))
     landmark_rough = K.reshape(landmark_rough, (-1, data_param['landmark_num'], 2))
     landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
