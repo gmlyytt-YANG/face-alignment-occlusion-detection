@@ -64,7 +64,6 @@ if args['phase'] == 'rough':
 
     # learning
     from model_structure.rough_align import FaceAlignment
-
     face_align_rgr = FaceAlignment(lr=face_alignment_rough_param['init_lr'],
                                    epochs=face_alignment_rough_param['epochs'],
                                    bs=face_alignment_rough_param['bs'],
@@ -107,7 +106,6 @@ if args['phase'] == 'occlu':
 
     # learning
     from model_structure.occlu_detect import OcclusionDetection
-
     occlu_clf = OcclusionDetection()
     weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
     if args['mode'] == 'train':
@@ -150,6 +148,8 @@ if args['phase'] == 'occlu':
 
 # face precise alignment
 if args['phase'] == 'precise':
+    # learning
+    from model_structure.rough_align import FaceAlignment
     face_alignment_precise_param['epochs'] = args['epoch']
     face_alignment_precise_param['bs'] = args['batch_size']
     face_alignment_precise_param['init_lr'] = args['init_lr']
