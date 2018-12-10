@@ -86,6 +86,7 @@ def landmark_loss_compute(prediction, label):
 
 
 def landmark_delta_loss_compute(prediction, label):
+    print(label)
     landmark_true = label[:136]
     landmark_rough = label[136:272]
     occlu_ratio = 1 - label[272:340]
