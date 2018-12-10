@@ -64,6 +64,7 @@ if args['phase'] == 'rough':
 
     # learning
     from model_structure.rough_align import FaceAlignment
+
     face_align_rgr = FaceAlignment(lr=face_alignment_rough_param['init_lr'],
                                    epochs=face_alignment_rough_param['epochs'],
                                    bs=face_alignment_rough_param['bs'],
@@ -106,6 +107,7 @@ if args['phase'] == 'occlu':
 
     # learning
     from model_structure.occlu_detect import OcclusionDetection
+
     occlu_clf = OcclusionDetection()
     weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
     if args['mode'] == 'train':
@@ -150,6 +152,7 @@ if args['phase'] == 'occlu':
 if args['phase'] == 'precise':
     # learning
     from model_structure.rough_align import FaceAlignment
+
     face_alignment_precise_param['epochs'] = args['epoch']
     face_alignment_precise_param['bs'] = args['batch_size']
     face_alignment_precise_param['init_lr'] = args['init_lr']
@@ -163,9 +166,10 @@ if args['phase'] == 'precise':
                                    bs=face_alignment_precise_param['bs'],
                                    model_name=face_alignment_precise_param['model_name'],
                                    loss=landmark_delta_loss)
-    weight_path = os.path.join(face_alignment_precise_param['weight_path'],
-                               face_alignment_precise_param['weight_name'])
+
     if args['mode'] == 'train':
+        weight_path = os.path.join(face_alignment_precise_param['weight_path'],
+                                   face_alignment_precise_param['weight_name'])
         face_align_rgr.train(model_structure=Vgg16Regress(),
                              train_load=train_data_feed,
                              val_load=val_data_feed,
@@ -173,3 +177,16 @@ if args['phase'] == 'precise':
                              label_ext='.wdpts',
                              normalizer=normalizer,
                              weight_path=weight_path)
+
+    if args['mode'] == 'val_compute':
+        logger("loading imgs")
+        model = load_model(os.path.join(data_param['model_dir'], face_alignment_precise_param['model_name']))
+        faces, labels = load_rough_imgs_labels(img_root=data_param['img_root_dir'],
+                                               mat_file_name='raw_300W_release.mat',
+                                               img_size=data_param['img_size'],
+                                               normalizer=normalizer,
+                                               mean_shape=mean_shape,
+                                               chosen=range(3148, 3837),
+                                               exts=".wdpts")
+        logger("predicting")
+        face_align_rgr.val_compute(faces, labels, normalizer=normalizer, model=model)

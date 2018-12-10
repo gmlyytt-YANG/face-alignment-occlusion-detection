@@ -433,13 +433,13 @@ def load_basic_info(mat_file, img_root=None):
     return img_paths, bboxes
 
 
-def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None):
+def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None, exts=".pts"):
     img = cv2.imread(img_path)
     face = cv2.resize(get_face(img, bbox, need_to_convert_to_int=True),
                       (img_size, img_size))
     if normalizer is not None:
         face = normalizer.transform(face)
-    label_path = os.path.splitext(img_path)[0] + ".pts"
+    label_path = os.path.splitext(img_path)[0] + exts
     # label_ori = np.genfromtxt(label_path, skip_header=3, skip_footer=1)
     # label_normalized = normalize_data(label_ori, bbox=bbox, occlu_include=False)
     # print(label_normalized)
@@ -453,7 +453,7 @@ def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None):
 
 
 def load_rough_imgs_labels(img_root, mat_file_name, img_size, mean_shape=None,
-                           normalizer=None, chosen="random"):
+                           normalizer=None, chosen="random", exts=".pts"):
     """Load rough imgs and labels without normalization.
 
     :param img_root: img root dir
@@ -462,6 +462,7 @@ def load_rough_imgs_labels(img_root, mat_file_name, img_size, mean_shape=None,
     :param normalizer:
     :param mean_shape:
     :param chosen: whether to choose specific indices of dataset or just random
+    :param exts:
 
     :return chosen objs
     """
@@ -480,7 +481,8 @@ def load_rough_imgs_labels(img_root, mat_file_name, img_size, mean_shape=None,
             face, label = load_rough_imgs_labels_core(img_path=img_paths[index],
                                                       bbox=bboxes[index],
                                                       img_size=img_size,
-                                                      normalizer=normalizer)
+                                                      normalizer=normalizer,
+                                                      exts=exts)
             # show(face)
             faces.append(face)
             labels.append(label)
