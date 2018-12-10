@@ -21,12 +21,15 @@ from ml import classify
 from utils import binary
 from utils import logger
 from utils import heat_map_compute
+from utils import count_file
 
 
 class OcclusionDetection(Model, object):
     """Occlusion Detection Model"""
+
     def __init__(self):
         train_dir = os.path.join(data_param['data_save_dir'], 'train')
+        train_num = count_file([train_dir], ["_heatmap.png", "_heatmap.jpg"])
         super(OcclusionDetection, self).__init__(
             lr=occlu_param['init_lr'],
             epochs=occlu_param['epochs'],
@@ -34,7 +37,7 @@ class OcclusionDetection(Model, object):
             model_name=occlu_param['model_name'],
             loss=occlu_param['loss'],
             metrics=["accuracy"],
-            steps_per_epochs=len(os.listdir(train_dir)) // (occlu_param['bs'] * 6),
+            steps_per_epochs=train_num // occlu_param['bs'],
             classes=data_param['landmark_num'],
             final_act="sigmoid",
         )

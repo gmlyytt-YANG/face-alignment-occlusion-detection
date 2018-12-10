@@ -44,6 +44,17 @@ def create_dir(path):
         os.makedirs(path)
 
 
+def count_file(paths, exts):
+    count = 0
+    for path in paths:
+        for root, dirname, filenames in os.walk(path):
+            for filename in filenames:
+                for ext in exts:
+                    if ext in filename:
+                        count += 1
+    return count
+
+
 def set_gpu(ratio=0):
     command1 = "nvidia-smi -q -d Memory | grep -A4 GPU | grep Free | awk '{print $3}'"
     command2 = "nvidia-smi -q | grep Gpu | awk '{print $3}'"

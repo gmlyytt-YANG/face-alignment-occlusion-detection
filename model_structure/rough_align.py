@@ -20,12 +20,15 @@ from model_structure.base_model import Model
 from ml import classify
 from ml import landmark_loss_compute
 from utils import logger
+from utils import count_file
 
 
 class FaceAlignment(Model, object):
     """"Face Alignment Training"""
+
     def __init__(self, loss):
         train_dir = os.path.join(data_param['data_save_dir'], 'train')
+        train_num = count_file([train_dir], ["_face.png", "_face.jpg"])
         super(FaceAlignment, self).__init__(
             lr=face_alignment_rough_param['init_lr'],
             epochs=face_alignment_rough_param['epochs'],
@@ -33,7 +36,7 @@ class FaceAlignment(Model, object):
             model_name=face_alignment_rough_param['model_name'],
             loss=loss,
             metrics=["accuracy"],
-            steps_per_epochs=len(os.listdir(train_dir)) // (face_alignment_rough_param['bs'] * 6),
+            steps_per_epochs=train_num // face_alignment_rough_param['bs'],
             classes=data_param['landmark_num'] * 2
         )
 
