@@ -446,9 +446,11 @@ def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None, exts=
     if normalizer is not None:
         face = normalizer.transform(face)
     label_path = os.path.splitext(img_path)[0] + exts
-    label = np.multiply(np.clip(
-        normalize_data(np.genfromtxt(label_path, skip_header=3, skip_footer=1),
-                       bbox, occlu_include=False), 0, 1), img_size, exts=exts)
+    landmark_ori = np.genfromtxt(label_path, skip_header=3, skip_footer=1)
+    if exts == ".wdpts":
+        landmark_ori = np.genfromtxt(label_path)
+    label = np.multiply(np.clip(normalize_data(landmark_ori, bbox, occlu_include=False), 0, 1),
+                        img_size, exts=exts)
     # print(label)
     # print('-------')
     return face, label
