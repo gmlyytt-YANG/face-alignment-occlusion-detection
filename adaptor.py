@@ -68,7 +68,7 @@ model_rough = load_model(os.path.join(data_param['model_dir'], face_alignment_ro
 model_occlu = load_model(os.path.join(data_param['model_dir'], occlu_param['model_name']))
 
 from model_structure.occlu_detect import OcclusionDetection
-from model_structure.rough_align import FaceAlignment
+from model_structure.align_v1 import FaceAlignment
 
 
 def get_pipe_data(img):
