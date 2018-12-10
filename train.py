@@ -181,7 +181,8 @@ if args['phase'] == 'precise':
 
     if args['mode'] == 'val_compute':
         logger("loading imgs")
-        model = load_model(os.path.join(data_param['model_dir'], face_alignment_precise_param['model_name']))
+        model = load_model(os.path.join(data_param['model_dir'], 
+            face_alignment_precise_param['model_name']), {'landmark_delta_loss': landmark_delta_loss})
         faces, labels = load_rough_imgs_labels(img_root=data_param['img_root_dir'],
                                                mat_file_name='raw_300W_release.mat',
                                                img_size=data_param['img_size'],

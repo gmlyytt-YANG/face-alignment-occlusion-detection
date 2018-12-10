@@ -375,8 +375,7 @@ def normalize_data(landmark, bbox=None, occlu_include=True, exts=".pts"):
     """
     print(landmark.shape)
     if exts == ".wdpts":
-        landmark = np.reshape(landmark[:, :(data_param['landmark_num'] * 2)], (data_param['landmark_num'], 2))
-    print(landmark.shape)
+        landmark = np.reshape(landmark[:(data_param['landmark_num'] * 2)], (data_param['landmark_num'], 2))
     if bbox is None:
         min_x, min_y = np.min(landmark[:, :2], axis=0)
         w, h = np.ptp(landmark[:, :2], axis=0)
