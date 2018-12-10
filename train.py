@@ -16,7 +16,6 @@ import argparse
 import os
 from keras.models import load_model
 
-print("lala")
 from config.init_param import data_param, occlu_param, \
     face_alignment_rough_param, face_alignment_precise_param
 from model_structure.vgg16 import Vgg16Regress, Vgg16CutFC2
@@ -63,13 +62,13 @@ if args['phase'] == 'rough':
         face_alignment_rough_param['init_lr'],
         args['content'])
 
-    # from model_structure.occlu_detect import OcclusionDetection
+    # learning
     from model_structure.rough_align import FaceAlignment
-    
     face_align_rgr = FaceAlignment(loss=landmark_loss)
     weight_path = os.path.join(face_alignment_rough_param['weight_path'], face_alignment_rough_param['weight_name'])
     if args['mode'] == 'train':
-        logger("-----------epochs: {}, bs: {}, lr: {} ---------".format(args['epoch'], args['batch_size'], args['init_lr']))
+        logger("-----------epochs: {}, bs: {}, lr: {} ---------".format(args['epoch'], args['batch_size'],
+                                                                        args['init_lr']))
         face_align_rgr.train(model_structure=Vgg16Regress(),
                              train_load=train_data_feed,
                              val_load=val_data_feed,
@@ -101,6 +100,7 @@ if args['phase'] == 'occlu':
         occlu_param['init_lr'])
 
     # learning
+    from model_structure.occlu_detect import OcclusionDetection
     occlu_clf = OcclusionDetection()
     weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
     if args['mode'] == 'train':
