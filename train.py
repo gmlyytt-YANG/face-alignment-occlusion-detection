@@ -16,7 +16,6 @@ import argparse
 import os
 from keras.models import load_model
 
-print("lala")
 from config.init_param import data_param, occlu_param, \
     face_alignment_rough_param, face_alignment_precise_param
 from model_structure.vgg16 import Vgg16Regress, Vgg16CutFC2
@@ -88,6 +87,7 @@ if args['phase'] == 'rough':
                                                normalizer=normalizer,
                                                mean_shape=mean_shape,
                                                chosen=range(3148, 3837))
+        logger("result of epochs {}, bs {}, lr {} ...".format(args['epoch'], args['batch_size'], args['init_lr'])) 
         face_align_rgr.val_compute(imgs=faces, labels=labels, model=model)
 
 # occlusion detection
