@@ -189,6 +189,7 @@ if args['phase'] == 'precise':
                                                mean_shape=mean_shape,
                                                chosen=range(3148, 3837),
                                                exts=".wdpts")
+        print(len(faces), len(labels))
         logger("predicting")
         face_align_rgr.val_compute(faces, labels, normalizer=normalizer, model=model,
                                    loss_compute=landmark_delta_loss_compute)
