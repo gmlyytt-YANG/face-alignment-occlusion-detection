@@ -24,6 +24,7 @@ from ml import metric_compute
 from ml import load_config
 from ml import landmark_loss
 from ml import landmark_delta_loss
+from ml import landmark_delta_loss_compute
 from utils import load_rough_imgs_labels
 from utils import load_rough_imgs_occlus
 from utils import logger
@@ -63,7 +64,7 @@ if args['phase'] == 'rough':
         args['content'])
 
     # learning
-    from model_structure.rough_align import FaceAlignment
+    from model_structure.align_v1 import FaceAlignment
 
     face_align_rgr = FaceAlignment(lr=face_alignment_rough_param['init_lr'],
                                    epochs=face_alignment_rough_param['epochs'],
@@ -151,7 +152,7 @@ if args['phase'] == 'occlu':
 # face precise alignment
 if args['phase'] == 'precise':
     # learning
-    from model_structure.rough_align import FaceAlignment
+    from model_structure.align_v1 import FaceAlignment
 
     face_alignment_precise_param['epochs'] = args['epoch']
     face_alignment_precise_param['bs'] = args['batch_size']
@@ -189,4 +190,5 @@ if args['phase'] == 'precise':
                                                chosen=range(3148, 3837),
                                                exts=".wdpts")
         logger("predicting")
-        face_align_rgr.val_compute(faces, labels, normalizer=normalizer, model=model)
+        face_align_rgr.val_compute(faces, labels, normalizer=normalizer, model=model,
+                                   loss_compute=landmark_delta_loss_compute)

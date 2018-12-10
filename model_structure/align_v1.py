@@ -7,7 +7,7 @@
 ########################################################################
 
 """
-File: rough_align.py
+File: align_v1.py
 Author: Yang Li
 Date: 2018/11/10 17:43:31
 Description: Rough Face Alignment
@@ -15,7 +15,7 @@ Description: Rough Face Alignment
 import numpy as np
 import os
 
-from config.init_param import data_param, face_alignment_rough_param
+from config.init_param import data_param
 from model_structure.base_model import Model
 from ml import classify
 from ml import landmark_loss_compute
@@ -41,7 +41,7 @@ class FaceAlignment(Model, object):
         )
 
     @staticmethod
-    def val_compute(imgs, labels, normalizer=None, model=None):
+    def val_compute(imgs, labels, normalizer=None, model=None, loss_compute=landmark_loss_compute):
         """Compute interocular loss of input imgs and labels"""
         loss = 0.0
         count = 0
@@ -49,7 +49,7 @@ class FaceAlignment(Model, object):
             if normalizer:
                 img = normalizer.transform(img)
             prediction = classify(model, img)
-            loss += landmark_loss_compute(prediction, label)
+            loss += loss_compute(prediction, label)
             count += 1
             if data_param['print_debug'] and count % 100 == 0:
                 logger("predicted {} imgs".format(count))
