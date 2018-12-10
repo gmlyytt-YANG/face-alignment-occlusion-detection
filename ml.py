@@ -67,7 +67,7 @@ def landmark_delta_loss(y_true, y_pred):
     landmark_rough = K.reshape(landmark_rough, (-1, data_param['landmark_num'], 2))
     landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
     location_delta = landmark_true - landmark_rough
-    weighted_delta = location_delta * occlu_ratio
+    weighted_delta = location_delta * K.expand_dims(occlu_ratio, axis=1)
     loss = K.mean(K.mean(K.sqrt(K.sum((weighted_delta - landmark_pred) ** 2, axis=-1))))
     return loss
 
