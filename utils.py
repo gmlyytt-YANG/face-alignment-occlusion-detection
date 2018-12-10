@@ -21,6 +21,8 @@ import scipy.io as scio
 import tensorflow as tf
 from keras import backend as K
 
+from config.init_param import data_param
+
 
 def logger(msg):
     """Get logger format"""
@@ -364,13 +366,15 @@ def color(landmark_elem, face_size, heat_map_mask, radius):
                 heat_map_mask[y_elem][x_elem] = heat
 
 
-def normalize_data(landmark, bbox=None, occlu_include=True):
+def normalize_data(landmark, bbox=None, occlu_include=True, exts=".pts"):
     """Normalize landmark
 
     :param: landmark:
     :param: bbox:
     :param: occlu_include: bool like obj, control whether landmark has col2(0 starting index)
     """
+    if exts == ".wdpts":
+        landmark = np.reshape(landmark[:, :(data_param['landmark_num'] * 2)], (data_param['landmark_num'], 2))
     if bbox is None:
         min_x, min_y = np.min(landmark[:, :2], axis=0)
         w, h = np.ptp(landmark[:, :2], axis=0)
@@ -440,13 +444,9 @@ def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None, exts=
     if normalizer is not None:
         face = normalizer.transform(face)
     label_path = os.path.splitext(img_path)[0] + exts
-    # label_ori = np.genfromtxt(label_path, skip_header=3, skip_footer=1)
-    # label_normalized = normalize_data(label_ori, bbox=bbox, occlu_include=False)
-    # print(label_normalized)
-    # print('--------------')
     label = np.multiply(np.clip(
         normalize_data(np.genfromtxt(label_path, skip_header=3, skip_footer=1),
-                       bbox, occlu_include=False), 0, 1), img_size)
+                       bbox, occlu_include=False), 0, 1), img_size, exts=exts)
     # print(label)
     # print('-------')
     return face, label
