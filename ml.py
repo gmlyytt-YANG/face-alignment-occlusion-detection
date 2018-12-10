@@ -62,7 +62,7 @@ def landmark_delta_loss(y_true, y_pred):
     """
     landmark_true = y_true[:, :136]
     landmark_rough = y_true[:, 136:272]
-    occlu_ratio = y_true[:, 272:340]
+    occlu_ratio = 1 - y_true[:, 272:340]
     landmark_true = K.reshape(landmark_true, (-1, data_param['landmark_num'], 2))
     landmark_rough = K.reshape(landmark_rough, (-1, data_param['landmark_num'], 2))
     landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
@@ -81,6 +81,21 @@ def landmark_loss_compute(prediction, label):
     left_eye = np.mean(landmark_true[36:42, :], axis=0)
     right_eye = np.mean(landmark_true[42:48, :], axis=0)
     loss = np.mean(np.sqrt(np.sum((landmark_true - landmark_pred) ** 2, axis=-1)), axis=-1) / np.sqrt(
+        np.sum((right_eye - left_eye) ** 2))
+    return loss
+
+
+def landmark_delta_loss_compute(prediction, label):
+    landmark_true = label[:136]
+    landmark_rough = label[136:272]
+    occlu_ratio = 1 - label[272:340]
+    landmark_rough = np.reshape(landmark_rough, (data_param['landmark_num'], 2))
+    landmark_true = np.reshape(landmark_true, (data_param['landmark_num'], 2))
+    left_eye = np.mean(landmark_true[36:42, :], axis=0)
+    right_eye = np.mean(landmark_true[42:48, :], axis=0)
+    prediction_all = np.reshape(prediction, (data_param['landmark_num'], 2)) / np.expand_dims(occlu_ratio,
+                                                                                              axis=-1) + landmark_rough
+    loss = np.mean(np.sqrt(np.sum((landmark_true - prediction_all) ** 2, axis=-1)), axis=-1) / np.sqrt(
         np.sum((right_eye - left_eye) ** 2))
     return loss
 
