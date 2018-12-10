@@ -26,17 +26,17 @@ from utils import count_file
 class FaceAlignment(Model, object):
     """"Face Alignment Training"""
 
-    def __init__(self, loss):
+    def __init__(self, lr, epochs, bs, model_name, loss):
         train_dir = os.path.join(data_param['data_save_dir'], 'train')
         train_num = count_file([train_dir], ["_face.png", "_face.jpg"])
         super(FaceAlignment, self).__init__(
-            lr=face_alignment_rough_param['init_lr'],
-            epochs=face_alignment_rough_param['epochs'],
-            bs=face_alignment_rough_param['bs'],
-            model_name=face_alignment_rough_param['model_name'],
+            lr=lr,
+            epochs=epochs,
+            bs=bs,
+            model_name=model_name,
             loss=loss,
             metrics=["accuracy"],
-            steps_per_epochs=train_num // face_alignment_rough_param['bs'],
+            steps_per_epochs=train_num // bs,
             classes=data_param['landmark_num'] * 2
         )
 

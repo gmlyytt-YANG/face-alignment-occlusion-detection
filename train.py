@@ -64,7 +64,12 @@ if args['phase'] == 'rough':
 
     # learning
     from model_structure.rough_align import FaceAlignment
-    face_align_rgr = FaceAlignment(loss=landmark_loss)
+
+    face_align_rgr = FaceAlignment(lr=face_alignment_rough_param['init_lr'],
+                                   epochs=face_alignment_rough_param['epochs'],
+                                   bs=face_alignment_rough_param['bs'],
+                                   model_name=face_alignment_rough_param['model_name'],
+                                   loss=landmark_loss)
     weight_path = os.path.join(face_alignment_rough_param['weight_path'], face_alignment_rough_param['weight_name'])
     if args['mode'] == 'train':
         logger("-----------epochs: {}, bs: {}, lr: {} ---------".format(args['epoch'], args['batch_size'],
@@ -87,7 +92,7 @@ if args['phase'] == 'rough':
                                                normalizer=normalizer,
                                                mean_shape=mean_shape,
                                                chosen=range(3148, 3837))
-        logger("result of epochs {}, bs {}, lr {} ...".format(args['epoch'], args['batch_size'], args['init_lr'])) 
+        logger("result of epochs {}, bs {}, lr {} ...".format(args['epoch'], args['batch_size'], args['init_lr']))
         face_align_rgr.val_compute(imgs=faces, labels=labels, model=model)
 
 # occlusion detection
@@ -102,6 +107,7 @@ if args['phase'] == 'occlu':
 
     # learning
     from model_structure.occlu_detect import OcclusionDetection
+
     occlu_clf = OcclusionDetection()
     weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
     if args['mode'] == 'train':
@@ -152,7 +158,11 @@ if args['phase'] == 'precise':
         face_alignment_precise_param['bs'],
         face_alignment_precise_param['init_lr'])
 
-    face_align_rgr = FaceAlignment(loss=landmark_delta_loss)
+    face_align_rgr = FaceAlignment(lr=face_alignment_precise_param['init_lr'],
+                                   epochs=face_alignment_precise_param['epochs'],
+                                   bs=face_alignment_precise_param['bs'],
+                                   model_name=face_alignment_precise_param['model_name'],
+                                   loss=landmark_delta_loss)
     weight_path = os.path.join(face_alignment_precise_param['weight_path'],
                                face_alignment_precise_param['weight_name'])
     if args['mode'] == 'train':
