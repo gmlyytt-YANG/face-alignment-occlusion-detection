@@ -449,7 +449,7 @@ def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None, exts=
     landmark_ori = np.genfromtxt(label_path, skip_header=3, skip_footer=1)
     if exts == ".wdpts":
         landmark_ori = np.genfromtxt(label_path)
-    label = np.multiply(np.clip(normalize_data(landmark_ori, bbox, occlu_include=False), 0, 1),
+    label = np.multiply(np.clip(normalize_data(landmark_ori, bbox, occlu_include=False, exts=exts), 0, 1),
                         img_size, exts=exts)
     # print(label)
     # print('-------')
@@ -477,7 +477,8 @@ def load_rough_imgs_labels(img_root, mat_file_name, img_size, mean_shape=None,
         return load_rough_imgs_labels_core(img_path=img_paths[index],
                                            bbox=bboxes[index],
                                            img_size=img_size,
-                                           normalizer=normalizer)
+                                           normalizer=normalizer,
+                                           exts=exts)
     else:
         faces = []
         labels = []
