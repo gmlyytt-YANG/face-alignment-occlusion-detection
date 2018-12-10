@@ -87,6 +87,7 @@ if args['phase'] == 'rough':
                                                normalizer=normalizer,
                                                mean_shape=mean_shape,
                                                chosen=range(3148, 3837))
+        logger("result of epochs {}, bs {}, lr {} ...".format(args['epoch'], args['batch_size'], args['init_lr'])) 
         face_align_rgr.val_compute(imgs=faces, labels=labels, model=model)
 
 # occlusion detection
