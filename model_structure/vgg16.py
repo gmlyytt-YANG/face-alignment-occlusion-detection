@@ -25,13 +25,8 @@ from keras.models import Model
 
 class Vgg16Base(object):
     @staticmethod
-    def build(width, height, depth, classes, weights='imagenet'):
+    def build(width, height, depth, classes):
         input_shape = (height, width, depth)
-        if weights not in {'imagenet', None}:
-            raise ValueError('The `weights` argument should be either '
-                             '`None` (random initialization) or `imagenet` '
-                             '(pre-training on ImageNet).')
-
         input = Input(input_shape)
         # Block 1
         x = Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv1')(input)
@@ -74,13 +69,12 @@ class Vgg16Base(object):
 
 
 class Vgg16CutFC2(Vgg16Base, object):
-    def build(self, width, height, depth, classes, final_act="softmax", weights='imagenet', weight_path=None):
+    def build(self, width, height, depth, classes, final_act="softmax", weight_path=None):
         x, input = super(Vgg16CutFC2, self).build(
             width=width,
             height=height,
             depth=depth,
             classes=classes,
-            weights=weights
         )
 
         # Classification block
@@ -95,13 +89,12 @@ class Vgg16CutFC2(Vgg16Base, object):
 
 
 class Vgg16Regress(Vgg16Base, object):
-    def build(self, width, height, depth, classes, final_act=None, weights='imagenet', weight_path=None):
+    def build(self, width, height, depth, classes, final_act=None, weight_path=None):
         x, input = super(Vgg16Regress, self).build(
             width=width,
             height=height,
             depth=depth,
             classes=classes,
-            weights=weights
         )
 
         # Regression block

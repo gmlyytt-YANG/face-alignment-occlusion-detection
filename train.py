@@ -19,6 +19,7 @@ from keras.models import load_model
 from config.init_param import data_param, occlu_param, \
     face_alignment_rough_param, face_alignment_precise_param
 from model_structure.vgg16 import Vgg16Regress, Vgg16CutFC2
+from model_structure.resnet import ResNet
 from prepare.data_gen import train_data_feed, val_data_feed
 from ml import metric_compute
 from ml import load_config
@@ -75,7 +76,7 @@ if args['phase'] == 'rough':
     if args['mode'] == 'train':
         logger("-----------epochs: {}, bs: {}, lr: {} ---------".format(args['epoch'], args['batch_size'],
                                                                         args['init_lr']))
-        face_align_rgr.train(model_structure=Vgg16Regress(),
+        face_align_rgr.train(model_structure=ResNet(),
                              train_load=train_data_feed,
                              val_load=val_data_feed,
                              ext_lists=['*_face.png', '*_face.jpg'],
