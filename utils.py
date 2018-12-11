@@ -21,6 +21,8 @@ import scipy.io as scio
 import tensorflow as tf
 from keras import backend as K
 
+from config.init_param import data_param
+
 
 def logger(msg):
     """Get logger format"""
@@ -42,6 +44,17 @@ def remove_content(path):
 def create_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
+
+def count_file(paths, exts):
+    count = 0
+    for path in paths:
+        for root, dirname, filenames in os.walk(path):
+            for filename in filenames:
+                for ext in exts:
+                    if ext in filename:
+                        count += 1
+    return count
 
 
 def set_gpu(ratio=0):
@@ -353,13 +366,16 @@ def color(landmark_elem, face_size, heat_map_mask, radius):
                 heat_map_mask[y_elem][x_elem] = heat
 
 
-def normalize_data(landmark, bbox=None, occlu_include=True):
+def normalize_data(landmark, bbox=None, occlu_include=True, exts=".pts"):
     """Normalize landmark
 
     :param: landmark:
     :param: bbox:
     :param: occlu_include: bool like obj, control whether landmark has col2(0 starting index)
     """
+    if exts == ".wdpts":
+        landmark = np.reshape(landmark[:(data_param['landmark_num'] * 2)], (data_param['landmark_num'], 2))
+    print(landmark)
     if bbox is None:
         min_x, min_y = np.min(landmark[:, :2], axis=0)
         w, h = np.ptp(landmark[:, :2], axis=0)
@@ -422,27 +438,25 @@ def load_basic_info(mat_file, img_root=None):
     return img_paths, bboxes
 
 
-def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None):
+def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None, exts=".pts"):
     img = cv2.imread(img_path)
     face = cv2.resize(get_face(img, bbox, need_to_convert_to_int=True),
                       (img_size, img_size))
     if normalizer is not None:
         face = normalizer.transform(face)
-    label_path = os.path.splitext(img_path)[0] + ".pts"
-    # label_ori = np.genfromtxt(label_path, skip_header=3, skip_footer=1)
-    # label_normalized = normalize_data(label_ori, bbox=bbox, occlu_include=False)
-    # print(label_normalized)
-    # print('--------------')
-    label = np.multiply(np.clip(
-        normalize_data(np.genfromtxt(label_path, skip_header=3, skip_footer=1),
-                       bbox, occlu_include=False), 0, 1), img_size)
+    label_path = os.path.splitext(img_path)[0] + exts
+    landmark_ori = np.genfromtxt(label_path, skip_header=3, skip_footer=1)
+    if exts == ".wdpts":
+        landmark_ori = np.genfromtxt(label_path)
+    label = np.multiply(np.clip(normalize_data(landmark_ori, bbox, occlu_include=False, exts=exts), 0, 1),
+                        img_size)
     # print(label)
     # print('-------')
     return face, label
 
 
 def load_rough_imgs_labels(img_root, mat_file_name, img_size, mean_shape=None,
-                           normalizer=None, chosen="random"):
+                           normalizer=None, chosen="random", exts=".pts"):
     """Load rough imgs and labels without normalization.
 
     :param img_root: img root dir
@@ -451,6 +465,7 @@ def load_rough_imgs_labels(img_root, mat_file_name, img_size, mean_shape=None,
     :param normalizer:
     :param mean_shape:
     :param chosen: whether to choose specific indices of dataset or just random
+    :param exts:
 
     :return chosen objs
     """
@@ -461,7 +476,8 @@ def load_rough_imgs_labels(img_root, mat_file_name, img_size, mean_shape=None,
         return load_rough_imgs_labels_core(img_path=img_paths[index],
                                            bbox=bboxes[index],
                                            img_size=img_size,
-                                           normalizer=normalizer)
+                                           normalizer=normalizer,
+                                           exts=exts)
     else:
         faces = []
         labels = []
@@ -469,7 +485,8 @@ def load_rough_imgs_labels(img_root, mat_file_name, img_size, mean_shape=None,
             face, label = load_rough_imgs_labels_core(img_path=img_paths[index],
                                                       bbox=bboxes[index],
                                                       img_size=img_size,
-                                                      normalizer=normalizer)
+                                                      normalizer=normalizer,
+                                                      exts=exts)
             # show(face)
             faces.append(face)
             labels.append(label)
