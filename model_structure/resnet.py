@@ -12,6 +12,7 @@ Author: Yang Li
 Date: 2018/12/04 21:35:31
 Description: self-define ResNet
 """
+import os
 
 from keras.layers import Flatten
 from keras.layers import Dense
@@ -28,7 +29,16 @@ from keras.models import Model
 
 class ResNet(object):
     @staticmethod
-    def identity_block(model, f, filters, stage, block):
+    def load_weights(model, weight_path):
+        if not os.path.exists(weight_path):
+            raise ValueError("there is no resnet weights data!")
+
+        model.load_weights(weight_path, by_name=True)
+
+        return model
+
+    @staticmethod
+    def identity_block(X, f, filters, stage, block):
         # defining name basis
         conv_name_base = 'res' + str(stage) + block + '_branch'
         bn_name_base = 'bn' + str(stage) + block + '_branch'
@@ -37,29 +47,29 @@ class ResNet(object):
         F1, F2, F3 = filters
 
         # Save the input value. You'll need this later to add back to the main path.
-        model_shortcut = model
+        X_shortcut = X
 
         # First component of main path
-        model.add(Conv2D(filters=F1, kernel_size=(1, 1), strides=(1, 1), padding='valid', name=conv_name_base + '2a'))
-        model.add(BatchNormalization(axis=3, name=bn_name_base + '2a'))
-        model.add(Activation('relu'))
+        X = Conv2D(filters=F1, kernel_size=(1, 1), strides=(1, 1), padding='valid', name=conv_name_base + '2a')(X)
+        X = BatchNormalization(axis=3, name=bn_name_base + '2a')(X)
+        X = Activation('relu')(X)
 
         # Second component of main path (≈3 lines)
-        model.add(Conv2D(filters=F2, kernel_size=(f, f), strides=(1, 1), padding='same', name=conv_name_base + '2b'))
-        model.add(BatchNormalization(axis=3, name=bn_name_base + '2b'))
-        model.add(Activation('relu'))
+        X = Conv2D(filters=F2, kernel_size=(f, f), strides=(1, 1), padding='same', name=conv_name_base + '2b')(X)
+        X = BatchNormalization(axis=3, name=bn_name_base + '2b')(X)
+        X = Activation('relu')(X)
 
         # Third component of main path (≈2 lines)
-        model.add(Conv2D(filters=F3, kernel_size=(1, 1), strides=(1, 1), padding='valid', name=conv_name_base + '2c'))
-        model.add(BatchNormalization(axis=3, name=bn_name_base + '2c'))
+        X = Conv2D(filters=F3, kernel_size=(1, 1), strides=(1, 1), padding='valid', name=conv_name_base + '2c')(X)
+        X = BatchNormalization(axis=3, name=bn_name_base + '2c')(X)
 
         # Final step: Add shortcut value to main path, and pass it through a RELU activation (≈2 lines)
-        model = Add()([model, model_shortcut])
-        model.add(Activation('relu'))
-        return model
+        X = Add()([X, X_shortcut])
+        X = Activation('relu')(X)
+        return X
 
     @staticmethod
-    def convolutional_block(model, f, filters, stage, block, s=2):
+    def convolutional_block(X, f, filters, stage, block, s=2):
         # defining name basis
         conv_name_base = 'res' + str(stage) + block + '_branch'
         bn_name_base = 'bn' + str(stage) + block + '_branch'
@@ -68,33 +78,33 @@ class ResNet(object):
         F1, F2, F3 = filters
 
         # Save the input value
-        model_shortcut = model
+        X_shortcut = X
 
         # MAIN PATH
         # First component of main path
-        model.add(Conv2D(F1, (1, 1), strides=(s, s), padding='valid', name=conv_name_base + '2a'))
-        model.add(BatchNormalization(axis=3, name=bn_name_base + '2a'))
-        model.add(Activation('relu'))
+        X = Conv2D(F1, (1, 1), strides=(s, s), padding='valid', name=conv_name_base + '2a')(X)
+        X = BatchNormalization(axis=3, name=bn_name_base + '2a')(X)
+        X = Activation('relu')(X)
 
         # Second component of main path (≈3 lines)
-        model.add(Conv2D(F2, (f, f), strides=(1, 1), padding='same', name=conv_name_base + '2b'))
-        model.add(BatchNormalization(axis=3, name=bn_name_base + '2b'))
-        model.add(Activation('relu'))
+        X = Conv2D(F2, (f, f), strides=(1, 1), padding='same', name=conv_name_base + '2b')(X)
+        X = BatchNormalization(axis=3, name=bn_name_base + '2b')(X)
+        X = Activation('relu')(X)
 
         # Third component of main path (≈2 lines)
-        model.add(Conv2D(F3, (1, 1), strides=(1, 1), padding='valid', name=conv_name_base + '2c'))
-        model.add(BatchNormalization(axis=3, name=bn_name_base + '2c'))
+        X = Conv2D(F3, (1, 1), strides=(1, 1), padding='valid', name=conv_name_base + '2c')(X)
+        X = BatchNormalization(axis=3, name=bn_name_base + '2c')(X)
 
         # SHORTCUT PATH (≈2 lines)
-        model_shortcut.add(Conv2D(F3, (1, 1), strides=(s, s), padding='valid', name=conv_name_base + '1'))
-        model_shortcut.add(BatchNormalization(axis=3, name=bn_name_base + '1'))
+        X_shortcut = Conv2D(F3, (1, 1), strides=(s, s), padding='valid', name=conv_name_base + '1')(X_shortcut)
+        X_shortcut = BatchNormalization(axis=3, name=bn_name_base + '1')(X_shortcut)
 
         # Final step: Add shortcut value to main path, and pass it through a RELU activation (≈2 lines)
-        model = Add()([model, model_shortcut])
-        model.add(Activation('relu'))
-        return model
+        X = Add()([X, X_shortcut])
+        X = Activation('relu')(X)
+        return X
 
-    def build(self, width, height, depth, classes):
+    def build(self, width, height, depth, classes, final_act=None, weight_path=None):
         input_shape = (height, width, depth)
         # Define the input as a tensor with shape input_shape
         X_input = Input(input_shape)
@@ -140,4 +150,4 @@ class ResNet(object):
         X = Dense(units=classes)(X)
         model = Model(inputs=X_input, outputs=X, name='ResNet50')
 
-        return model
+        return self.load_weights(model, weight_path=weight_path)
