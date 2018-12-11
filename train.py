@@ -16,7 +16,6 @@ import argparse
 import os
 from keras.models import load_model
 
-print("lala")
 from config.init_param import data_param, occlu_param, \
     face_alignment_rough_param, face_alignment_precise_param
 from model_structure.vgg16 import Vgg16Regress, Vgg16CutFC2
@@ -50,7 +49,7 @@ args = vars(args)
 normalizer, mean_shape = load_config()
 
 # gpu related
-set_gpu(ratio=0.5)
+set_gpu(ratio=0.9)
 
 # face alignment rough
 if args['phase'] == 'rough':
