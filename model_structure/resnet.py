@@ -28,6 +28,15 @@ from keras.models import Model
 
 class ResNet(object):
     @staticmethod
+    def load_weights(model, weight_path):
+        if not os.path.exists(weight_path):
+            raise ValueError("there is no vgg16 weights data!")
+
+        model.load_weights(weight_path, by_name=True)
+
+        return model
+
+    @staticmethod
     def identity_block(model, f, filters, stage, block):
         # defining name basis
         conv_name_base = 'res' + str(stage) + block + '_branch'
@@ -94,7 +103,7 @@ class ResNet(object):
         model.add(Activation('relu'))
         return model
 
-    def build(self, width, height, depth, classes):
+    def build(self, width, height, depth, classes, final_act=None, weight_path=None): 
         input_shape = (height, width, depth)
         # Define the input as a tensor with shape input_shape
         X_input = Input(input_shape)
@@ -137,7 +146,7 @@ class ResNet(object):
 
         # output layer
         X = Flatten()(X)
-        X = Dense(units=classes)(X)
-        model = Model(inputs=X_input, outputs=X, name='ResNet50')
+        X = Dense(units=classes, name='prediction_self')(X)
+        model = Model(inputs=X_input, outputs=X)
 
-        return model
+        return self.load_weights(model, weight_path=weight_path)
