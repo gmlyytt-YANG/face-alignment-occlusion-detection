@@ -366,16 +366,13 @@ def color(landmark_elem, face_size, heat_map_mask, radius):
                 heat_map_mask[y_elem][x_elem] = heat
 
 
-def normalize_data(landmark, bbox=None, occlu_include=True, exts=".pts"):
+def normalize_data(landmark, bbox=None, occlu_include=True):
     """Normalize landmark
 
     :param: landmark:
     :param: bbox:
     :param: occlu_include: bool like obj, control whether landmark has col2(0 starting index)
     """
-    if exts == ".wdpts":
-        landmark = np.reshape(landmark[:(data_param['landmark_num'] * 2)], (data_param['landmark_num'], 2))
-    print(landmark)
     if bbox is None:
         min_x, min_y = np.min(landmark[:, :2], axis=0)
         w, h = np.ptp(landmark[:, :2], axis=0)
@@ -445,11 +442,13 @@ def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None, exts=
     if normalizer is not None:
         face = normalizer.transform(face)
     label_path = os.path.splitext(img_path)[0] + exts
-    landmark_ori = np.genfromtxt(label_path, skip_header=3, skip_footer=1)
+    if exts == ".pts":
+        landmark_ori = np.genfromtxt(label_path, skip_header=3, skip_footer=1)
+        label = np.multiply(np.clip(normalize_data(landmark_ori, bbox, 
+                                occlu_include=False), 0, 1), img_size)
     if exts == ".wdpts":
         landmark_ori = np.genfromtxt(label_path)
-    label = np.multiply(np.clip(normalize_data(landmark_ori, bbox, occlu_include=False, exts=exts), 0, 1),
-                        img_size)
+        label = landmark_ori
     # print(label)
     # print('-------')
     return face, label

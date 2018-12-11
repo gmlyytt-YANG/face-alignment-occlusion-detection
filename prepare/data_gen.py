@@ -89,8 +89,10 @@ def train_data_feed(batch_size, data_dir, ext_lists, label_ext, flatten=False):
                                               chosen_indices=chosen_indices,
                                               flatten=flatten,
                                               print_debug=False)
-        # for m in label_list:
-        #     print(m)
+        for index in range(len(label_list)):
+            label_list[index] = [round(_, 2) for _ in label_list[index]]
+        label_list = np.array(label_list)
+
         yield img_list, label_list
 
 
@@ -115,5 +117,9 @@ def val_data_feed(data_dir, ext_lists, label_ext,
                                           flatten=flatten,
                                           normalizer=normalizer,
                                           print_debug=print_debug)
-
+    for index in range(len(label_list)):
+        label_list[index] = [round(_, 2) for _ in label_list[index]]
+    #     print(label_list[index])
+    #     print('---------')
+    label_list = np.array(label_list)
     return img_list, label_list

@@ -49,7 +49,8 @@ class FaceAlignment(Model, object):
             if normalizer:
                 img = normalizer.transform(img)
             prediction = classify(model, img)
-            loss += loss_compute(prediction, label)
+            loss_elem = loss_compute(prediction, label)
+            loss += loss_elem
             count += 1
             if data_param['print_debug'] and count % 100 == 0:
                 logger("predicted {} imgs".format(count))

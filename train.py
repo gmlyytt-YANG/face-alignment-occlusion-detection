@@ -15,6 +15,7 @@ Description: Main Entry of Training
 import argparse
 import os
 from keras.models import load_model
+import keras.backend as K 
 
 from config.init_param import data_param, occlu_param, \
     face_alignment_rough_param, face_alignment_precise_param
@@ -161,6 +162,8 @@ if args['phase'] == 'precise':
         face_alignment_precise_param['epochs'],
         face_alignment_precise_param['bs'],
         face_alignment_precise_param['init_lr'])
+    logger("-----------epochs: {}, bs: {}, lr: {} ---------".format(args['epoch'], args['batch_size'],
+                                                                            args['init_lr']))
 
     face_align_rgr = FaceAlignment(lr=face_alignment_precise_param['init_lr'],
                                    epochs=face_alignment_precise_param['epochs'],
@@ -169,6 +172,7 @@ if args['phase'] == 'precise':
                                    loss=landmark_delta_loss)
 
     if args['mode'] == 'train':
+        
         weight_path = os.path.join(face_alignment_precise_param['weight_path'],
                                    face_alignment_precise_param['weight_name'])
         face_align_rgr.train(model_structure=Vgg16Regress(),
@@ -193,3 +197,4 @@ if args['phase'] == 'precise':
         logger("predicting")
         face_align_rgr.val_compute(faces, labels, normalizer=normalizer, model=model,
                                    loss_compute=landmark_delta_loss_compute)
+        K.clear_session()
