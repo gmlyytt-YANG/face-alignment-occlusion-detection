@@ -69,6 +69,7 @@ class Model(object):
             os.makedirs(data_param['model_dir'])
         checkpoint = \
             ModelCheckpoint(filepath=os.path.join(data_param['model_dir'], self.model_name))
+        # early_stopping = EarlyStopping(monitor='val_acc', patience=1, verbose=2)
         # early_stopping = EarlyStopping(monitor='val_acc', patience=10, verbose=2)
         # callback_list = [checkpoint, early_stopping]
         callback_list = [checkpoint]
@@ -84,6 +85,8 @@ class Model(object):
         y_2_list = H.history['val_loss']
         plt.plot(x_list, y_1_list, 'g*-', label='train_loss')
         plt.plot(x_list, y_2_list, 'r*-', label='val_loss')
+		# plt.plot(np.arange(0, len(H.history['acc'])), H.history['acc'], label='train_acc')
+        # plt.plot(np.arange(0, len(H.history['val_acc'])), H.history['val_acc'], label='val_acc')
         plt.title('Training Loss and Accuracy')
         plt.xlabel('Epoch #')
         plt.ylabel('Loss/Accuracy')

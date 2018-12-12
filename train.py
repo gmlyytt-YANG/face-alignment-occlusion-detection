@@ -52,7 +52,7 @@ args = vars(args)
 normalizer, mean_shape = load_config()
 
 # gpu related
-set_gpu(ratio=0.5)
+set_gpu(ratio=0.9)
 
 # face alignment rough
 if args['phase'] == 'rough':

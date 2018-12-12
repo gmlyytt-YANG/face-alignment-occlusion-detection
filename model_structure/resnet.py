@@ -147,7 +147,7 @@ class ResNet(object):
 
         # output layer
         X = Flatten()(X)
-        X = Dense(units=classes)(X)
-        model = Model(inputs=X_input, outputs=X, name='ResNet50')
+        X = Dense(units=classes, name='prediction_self')(X)
+        model = Model(inputs=X_input, outputs=X)
 
         return self.load_weights(model, weight_path=weight_path)
