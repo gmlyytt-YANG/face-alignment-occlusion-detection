@@ -67,7 +67,7 @@ def landmark_delta_loss(y_true, y_pred):
     landmark_rough = K.reshape(landmark_rough, (-1, data_param['landmark_num'], 2))
     landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
     location_delta = landmark_true - landmark_rough
-    weighted_delta = location_delta * K.expand_dims(occlu_ratio, axis=1)
+    weighted_delta = location_delta * K.expand_dims(occlu_ratio, axis=-1)
     loss = K.mean(K.mean(K.sqrt(K.sum((weighted_delta - landmark_pred) ** 2, axis=-1))))
     return loss
 
@@ -92,8 +92,23 @@ def landmark_delta_loss_compute(prediction, label):
     right_eye = np.mean(landmark_true[42:48, :], axis=0)
     prediction_all = np.reshape(prediction, (data_param['landmark_num'], 2)) / np.expand_dims(occlu_ratio,
                                                                                               axis=-1) + landmark_rough
-    loss = np.mean(np.sqrt(np.sum((landmark_true - prediction_all) ** 2, axis=-1)), axis=-1) / np.sqrt(
-        np.sum((right_eye - left_eye) ** 2))
+    # print(np.reshape(prediction, (data_param['landmark_num'], 2))) 
+    # print(np.reshape(prediction, (data_param['landmark_num'], 2)) / np.expand_dims(occlu_ratio, axis=-1))
+    # print(landmark_true)
+    # print(prediction_all)
+    # print(landmark_true - prediction_all) 
+    # print('------------')
+    pupil_dist = np.sqrt(np.sum((right_eye - left_eye) ** 2))
+    # print(np.mean(np.sqrt(np.sum((landmark_true - prediction_all) ** 2, axis=-1)), axis=-1))
+    loss = np.mean(np.sqrt(np.sum((landmark_true - prediction_all) ** 2, axis=-1)), axis=-1) / pupil_dist
+    if loss > 0.2:
+        print(occlu_ratio)
+        print(prediction_all)
+        print(landmark_true) 
+        print(loss)
+        print('------------')
+    # print(loss)
+    # print('------------')
     return loss
 
 

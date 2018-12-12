@@ -15,6 +15,7 @@ Description: Main Entry of Training
 import argparse
 import os
 import keras.backend as K
+from keras.models import load_model
 
 from config.init_param import data_param, occlu_param, far_param, fap_param
 from config.parse_param import parse_param

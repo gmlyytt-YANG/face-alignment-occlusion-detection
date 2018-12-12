@@ -71,7 +71,6 @@ def train_data_feed(batch_size, data_dir, img_ext_lists, label_ext, flatten=Fals
     data_size = len(img_name_list)
     batch_offset = 0
     indices = [_ for _ in range(data_size)]
-    print(len(indices))
     while True:
         start = batch_offset
         batch_offset += batch_size
@@ -84,6 +83,10 @@ def train_data_feed(batch_size, data_dir, img_ext_lists, label_ext, flatten=Fals
         img_list, label_list = \
             load_img_label(img_name_list=img_name_list, label_name_list=label_name_list,
                            chosen_indices=chosen_indices, flatten=flatten, print_debug=False)
+        for index in range(len(label_list)):
+            label_list[index] = [round(_, 2) for _ in label_list[index]]
+        label_list = np.array(label_list)
+
         yield img_list, label_list
 
 
@@ -107,4 +110,9 @@ def val_data_feed(data_dir, img_ext_lists, label_ext,
                        chosen_indices=range(data_size), flatten=flatten,
                        normalizer=normalizer, print_debug=print_debug)
 
+    for index in range(len(label_list)):
+        label_list[index] = [round(_, 2) for _ in label_list[index]]
+    #     print(label_list[index])
+    #     print('---------')
+    label_list = np.array(label_list)
     return img_list, label_list
