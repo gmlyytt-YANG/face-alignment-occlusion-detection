@@ -50,6 +50,7 @@ class FaceAlignment(Model, object):
                 img = normalizer.transform(img)
             prediction = classify(model, img)
             loss_elem = loss_compute(prediction, label)
+            print(loss_elem)
             loss += loss_elem
             count += 1
             if data_param['print_debug'] and count % 100 == 0:
