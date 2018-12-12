@@ -56,7 +56,7 @@ def load_img_label(img_name_list, label_name_list,
     return np.array(img_list), np.array(label_list)
 
 
-def train_data_feed(batch_size, data_dir, img_ext_lists, label_ext, flatten=False):
+def train_data_feed(batch_size, train_vars=None):
     """Train data feed.
 
     :param: batch_size:
@@ -66,6 +66,10 @@ def train_data_feed(batch_size, data_dir, img_ext_lists, label_ext, flatten=Fals
     :param: mean_shape:
     :param: print_debug:
     """
+    data_dir = train_vars['data_dir']
+    img_ext_lists = train_vars['img_ext_lists']
+    label_ext = train_vars['label_lists']
+    flatten = train_vars['flatten']
     img_name_list, label_name_list = \
         get_filenames([data_dir], img_ext_lists, label_ext)
     data_size = len(img_name_list)
@@ -90,8 +94,7 @@ def train_data_feed(batch_size, data_dir, img_ext_lists, label_ext, flatten=Fals
         yield img_list, label_list
 
 
-def val_data_feed(data_dir, img_ext_lists, label_ext,
-                  flatten=False, normalizer=None, print_debug=False):
+def val_data_feed(val_vars=None):
     """Validation data feed
 
     :param: data_dir:
@@ -101,6 +104,12 @@ def val_data_feed(data_dir, img_ext_lists, label_ext,
     :param: normalizer:
     :param: print_debug:
     """
+    data_dir = val_vars['data_dir']
+    img_ext_lists = val_vars['img_ext_lists']
+    label_ext = val_vars['label_lists']
+    flatten = val_vars['flatten']
+    normalizer = val_vars['normalizer']
+    print_debug = val_vars['print_debug']
     img_name_list, label_name_list = \
         get_filenames([data_dir], img_ext_lists, label_ext)
 

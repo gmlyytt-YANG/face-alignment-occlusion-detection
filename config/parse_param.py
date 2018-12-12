@@ -12,8 +12,6 @@ Author: Yang Li
 Date: 2018/12/11 21:28:31
 Description: param parse
 """
-import os
-from keras.models import load_model
 
 from model_structure.vgg16 import Vgg16CutFC2, Vgg16Regress
 from model_structure.resnet import ResNet
@@ -21,7 +19,6 @@ from ml import landmark_loss
 from ml import landmark_loss_compute
 from ml import landmark_delta_loss
 from ml import landmark_delta_loss_compute
-from config.init_param import data_param
 
 
 def parse_param(model_type, loss_name):

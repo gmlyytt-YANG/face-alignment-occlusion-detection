@@ -41,16 +41,13 @@ class Model(object):
         self.classes = classes
         self.final_act = final_act
 
-    def train(self, model_structure, train_load, val_load, img_ext_lists,
-              train_data_dir, val_data_dir, label_ext, flatten=False,
-              normalizer=None, weight_path=None):
+    def train(self, model_structure=None, train_load=None,
+              train_vars=None, val_load=None, val_vars=None, weight_path=None):
         """Train procedure"""
         # load data
         logger('loading data')
         print(self.lr, self.epochs, self.bs, self.model_name, self.loss, self.steps_per_epoch)
-        val_data, val_labels = val_load(data_dir=val_data_dir, img_ext_lists=img_ext_lists,
-                                        label_ext=label_ext, flatten=flatten,
-                                        normalizer=normalizer, print_debug=data_param['print_debug'])
+        val_data, val_labels = val_load(val_vars=val_vars)
 
         # build model
         logger('building model')
@@ -69,8 +66,7 @@ class Model(object):
         # callback_list = [checkpoint, early_stopping]
         callback_list = [checkpoint]
         H = model.fit_generator(
-            train_load(batch_size=self.bs, data_dir=train_data_dir,
-                       img_ext_lists=img_ext_lists, label_ext=label_ext, flatten=flatten),
+            train_load(batch_size=self.bs, train_vars=train_vars),
             validation_data=(val_data, val_labels),
             steps_per_epoch=self.steps_per_epoch,
             epochs=self.epochs, verbose=1, callbacks=callback_list)
@@ -80,7 +76,7 @@ class Model(object):
         y_2_list = H.history['val_loss']
         plt.plot(x_list, y_1_list, 'g*-', label='train_loss')
         plt.plot(x_list, y_2_list, 'r*-', label='val_loss')
-		# plt.plot(np.arange(0, len(H.history['acc'])), H.history['acc'], label='train_acc')
+        # plt.plot(np.arange(0, len(H.history['acc'])), H.history['acc'], label='train_acc')
         # plt.plot(np.arange(0, len(H.history['val_acc'])), H.history['val_acc'], label='val_acc')
         plt.title('Training Loss and Accuracy')
         plt.xlabel('Epoch #')

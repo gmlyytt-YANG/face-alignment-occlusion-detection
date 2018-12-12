@@ -479,7 +479,7 @@ def load_imgs_labels_core(img_path, bbox, img_size, normalizer=None, label_ext="
 
 
 def load_imgs_labels(img_root, img_size, occlu_include=False,
-                     normalizer=None, chosen="random", label_ext=".pts"):
+                     normalizer=None, chosen="random", label_ext=".pts", data_dict=None):
     """Load imgs and labels based on mat file
 
     :param img_root: img root dir
@@ -488,9 +488,17 @@ def load_imgs_labels(img_root, img_size, occlu_include=False,
     :param occlu_include:
     :param chosen: whether to choose specific indices of dataset or just random
     :param label_ext:
+    :param data_dict:
 
     :return chosen objs
     """
+    if data_dict is not None:
+        img_root = data_dict['img_root']
+        img_size = data_dict['img_size']
+        occlu_include = data_dict['occlu_include']
+        normalizer = data_dict['normalizer']
+        chosen = data_dict['chosen']
+        label_ext = data_dict['label_ext']
     img_paths, bboxes = load_basic_info('raw_300W_release.mat', img_root)
     if chosen == "random":
         length = len(img_paths)
@@ -548,5 +556,3 @@ def get_filenames(data_dir, img_ext_lists, label_ext):
         label_list.append(os.path.splitext(img)[0] + label_ext)
 
     return img_list, label_list
-
-
