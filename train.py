@@ -31,7 +31,7 @@ from utils import set_gpu
 
 # load config
 normalizer, mean_shape = load_config()
-set_gpu(ratio=0.5)
+set_gpu(ratio=0.9)
 
 # load parameter
 ap = argparse.ArgumentParser()
