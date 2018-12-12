@@ -18,10 +18,8 @@ import glob
 import numpy as np
 import os
 import scipy.io as scio
-import tensorflow as tf
-from keras import backend as K
 
-from config.init_param import data_param
+from config.init_param import data_param, occlu_param
 
 
 def logger(msg):
@@ -525,6 +523,18 @@ def load_imgs_labels(img_root=None, img_size=None, occlu_include=False, flatten=
             return np.array(faces), np.array(labels), np.array(occlus)
         else:
             return np.array(faces), np.array(labels)
+
+
+def load_imgs_occlus(data_dict=None):
+    if not data_dict['occlu_include']:
+        raise ValueError('invalid input!')
+    faces, landmarks, occlus = load_imgs_labels(data_dict=data_dict)
+    heatmaps = []
+    for (face, landmark) in zip(faces, landmarks):
+        heatmap = heat_map_compute(face, landmark, landmark_is_01=False,
+                                   img_color=True, radius=occlu_param['radius'])
+        heatmaps.append(heatmap)
+    return np.array(heatmaps), occlus
 
 
 def draw_landmark(img, landmarks):

@@ -104,12 +104,12 @@ def val_data_feed(data_dict=None):
     :param: normalizer:
     :param: print_debug:
     """
-    data_dir = val_vars['data_dir']
-    img_ext_lists = val_vars['img_ext_lists']
-    label_ext = val_vars['label_lists']
-    flatten = val_vars['flatten']
-    normalizer = val_vars['normalizer']
-    print_debug = val_vars['print_debug']
+    data_dir = data_dict['data_dir']
+    img_ext_lists = data_dict['img_ext_lists']
+    label_ext = data_dict['label_lists']
+    flatten = data_dict['flatten']
+    normalizer = data_dict['normalizer']
+    print_debug = data_dict['print_debug']
     img_name_list, label_name_list = \
         get_filenames([data_dir], img_ext_lists, label_ext)
 
@@ -119,9 +119,4 @@ def val_data_feed(data_dict=None):
                        chosen_indices=range(data_size), flatten=flatten,
                        normalizer=normalizer, print_debug=print_debug)
 
-    # for index in range(len(label_list)):
-    #     label_list[index] = [round(_, 2) for _ in label_list[index]]
-    #     print(label_list[index])
-    #     print('---------')
-    # label_list = np.array(label_list)
     return img_list, label_list
