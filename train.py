@@ -99,9 +99,6 @@ if args['phase'] == 'occlu':
         weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
         train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
                       'label_ext': label_ext, 'flatten': False}
-        # val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
-        #             'label_ext': label_ext, 'normalizer': normalizer,
-        #             'print_debug': data_param['print_debug']}
         val_vars = {'img_root': data_param['img_root_dir'], 'img_size': data_param['img_size'],
                     'label_ext': label_ext, 'normalizer': normalizer, 'chosen': range(3148, 3837),
                     'flatten': False, 'occlu_include': True, 'is_heatmap': True}
