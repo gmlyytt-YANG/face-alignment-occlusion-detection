@@ -36,7 +36,7 @@ class Model(object):
         self.metrics = metrics
         self.steps_per_epoch = steps_per_epochs
         self.classes = classes
-        self.esm = esm 
+        self.esm = esm
         self.final_act = final_act
 
     def train(self, model_structure=None, train_load=None,
@@ -74,7 +74,7 @@ class Model(object):
         y_list = [H.history['val_loss'], H.history['loss']]
         # plt.plot(x_list, y_1_list, 'g*-', label='train_loss')
         # plt.plot(x_list, y_2_list, 'r*-', label='val_loss')
-	# plt.plot(np.arange(0, len(H.history['acc'])), H.history['acc'], label='train_acc')
+        # plt.plot(np.arange(0, len(H.history['acc'])), H.history['acc'], label='train_acc')
         # plt.plot(np.arange(0, len(H.history['val_acc'])), H.history['val_acc'], label='val_acc')
         # plt.title('Training Loss and Accuracy')
         # plt.xlabel('Epoch #')
