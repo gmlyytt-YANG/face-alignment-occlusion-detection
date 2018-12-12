@@ -24,10 +24,10 @@ from config.parse_param import parse_param
 from model_structure.align_v1 import FaceAlignment
 from model_structure.occlu_detect import OcclusionDetection
 from ml import load_config
+from data_gen import load_imgs_labels
 from utils import get_filenames
 from utils import heat_map_compute
 from utils import load_basic_info
-from utils import load_imgs_labels
 from utils import logger
 from utils import set_gpu
 

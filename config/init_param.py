@@ -35,6 +35,8 @@ data_param = {
     'test_size': 0.3,  # split test size
     'random_state': 0,  # split random state
 
+    # dl related
+    'es_step': 20,
     # data augment
     'balance_num': 2,
     'mode': 'gaussian',

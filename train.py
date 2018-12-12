@@ -19,13 +19,13 @@ from keras.models import load_model
 
 from config.init_param import data_param, occlu_param, far_param, fap_param
 from config.parse_param import parse_param
+from data_gen import train_data_feed
+from data_gen import load_imgs_labels
+from data_gen import load_imgs_occlus
+from ml import load_config
 from model_structure.align_v1 import FaceAlignment
 from model_structure.occlu_detect import OcclusionDetection
-from prepare.data_gen import train_data_feed, val_data_feed
-from ml import load_config
 from utils import count_file
-from utils import load_imgs_labels
-from utils import load_imgs_occlus
 from utils import logger
 from utils import set_gpu
 
@@ -73,9 +73,6 @@ if args['phase'] == 'rough':
         weight_path = os.path.join(far_param['weight_path'], far_param['weight_name'])
         train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
                       'label_ext': label_ext, 'flatten': True}
-        # val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
-        #             'label_ext': label_ext, 'flatten': True,
-        #             'normalizer': normalizer, 'print_debug': data_param['print_debug']}
         val_vars = {'img_root': data_param['img_root_dir'], 'img_size': data_param['img_size'], 'label_ext': label_ext,
                     'normalizer': normalizer, 'chosen': range(3148, 3837), 'flatten': True, 'occlu_include': False}
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
@@ -102,9 +99,6 @@ if args['phase'] == 'occlu':
         weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
         train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
                       'label_ext': label_ext, 'flatten': False}
-        # val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
-        #             'label_ext': label_ext, 'normalizer': normalizer,
-        #             'print_debug': data_param['print_debug']}
         val_vars = {'img_root': data_param['img_root_dir'], 'img_size': data_param['img_size'],
                     'label_ext': label_ext, 'normalizer': normalizer, 'chosen': range(3148, 3837),
                     'flatten': False, 'occlu_include': True, 'is_heatmap': True}
@@ -137,6 +131,6 @@ if args['phase'] == 'precise':
                     'print_debug': data_param['print_debug']}
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
         face_align_rgr.train(model_structure=model_structure, train_load=train_data_feed, train_vars=train_vars,
-                             val_load=val_data_feed, val_vars=val_vars, weight_path=weight_path)
+                             val_load=load_imgs_labels, val_vars=val_vars, weight_path=weight_path)
 
 K.clear_session()
