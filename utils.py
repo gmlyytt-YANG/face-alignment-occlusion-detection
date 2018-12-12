@@ -46,12 +46,12 @@ def create_dir(path):
         os.makedirs(path)
 
 
-def count_file(paths, exts):
+def count_file(paths, ext_lists):
     count = 0
     for path in paths:
         for root, dirname, filenames in os.walk(path):
             for filename in filenames:
-                for ext in exts:
+                for ext in ext_lists:
                     if ext in filename:
                         count += 1
     return count
@@ -366,14 +366,14 @@ def color(landmark_elem, face_size, heat_map_mask, radius):
                 heat_map_mask[y_elem][x_elem] = heat
 
 
-def normalize_data(landmark, bbox=None, occlu_include=True, exts=".pts"):
+def normalize_data(landmark, bbox=None, occlu_include=True, label_ext=".pts"):
     """Normalize landmark
 
     :param: landmark:
     :param: bbox:
     :param: occlu_include: bool like obj, control whether landmark has col2(0 starting index)
     """
-    if exts == ".wdpts":
+    if label_ext == ".wdpts":
         landmark = np.reshape(landmark[:(data_param['landmark_num'] * 2)], (data_param['landmark_num'], 2))
     if bbox is None:
         min_x, min_y = np.min(landmark[:, :2], axis=0)
@@ -382,7 +382,6 @@ def normalize_data(landmark, bbox=None, occlu_include=True, exts=".pts"):
         min_x, min_y = bbox[0], bbox[2]
         w, h = bbox[1] - bbox[0], bbox[3] - bbox[2]
     normalized_landmark = (landmark[:, :2] - [min_x, min_y]) / [w, h]
-    print(normalized_landmark)
     if occlu_include:
         return np.hstack((normalized_landmark, np.expand_dims(landmark[:, 2], axis=1)))
     return normalized_landmark
@@ -438,113 +437,83 @@ def load_basic_info(mat_file, img_root=None):
     return img_paths, bboxes
 
 
-def load_rough_imgs_labels_core(img_path, bbox, img_size, normalizer=None, exts=".pts"):
+def wdpts_process(label_path, bbox, img_size):
+    landmark_ori = np.genfromtxt(label_path)
+    landmark = np.multiply(np.clip(normalize_data(landmark_ori, bbox, occlu_include=False, label_ext=".wdpts"), 0, 1),
+                           img_size)
+    return landmark
+
+
+def opts_process(label_path, bbox, img_size):
+    landmark_ori = np.genfromtxt(label_path)
+    landmark = normalize_data(landmark_ori, bbox, occlu_include=True)
+    landmark = np.multiply(np.clip(landmark[:, :2], 0, 1), img_size)
+    occlu = landmark[:, -1]
+    return landmark, occlu
+
+
+def pts_process(label_path, bbox, img_size):
+    landmark_ori = np.genfromtxt(label_path, skip_header=3, skip_footer=1)
+    landmark = np.multiply(np.clip(normalize_data(landmark_ori, bbox, occlu_include=False, label_ext=".pts"), 0, 1),
+                           img_size)
+    return landmark
+
+
+def load_imgs_labels_core(img_path, bbox, img_size, normalizer=None, label_ext=".pts"):
     img = cv2.imread(img_path)
     face = cv2.resize(get_face(img, bbox, need_to_convert_to_int=True),
                       (img_size, img_size))
     if normalizer is not None:
         face = normalizer.transform(face)
-    label_path = os.path.splitext(img_path)[0] + exts
-    landmark_ori = np.genfromtxt(label_path, skip_header=3, skip_footer=1)
-    if exts == ".wdpts":
-        landmark_ori = np.genfromtxt(label_path)
-    label = np.multiply(np.clip(normalize_data(landmark_ori, bbox, occlu_include=False, exts=exts), 0, 1),
-                        img_size)
-    # print(label)
-    # print('-------')
-    return face, label
+
+    label_path = os.path.splitext(img_path)[0] + label_ext
+    if label_ext == '.wdpts':
+        landmark = wdpts_process(label_path, bbox, img_size)
+    elif label_ext == '.opts':
+        landmark, occlu = opts_process(label_path, bbox, img_size)
+        return face, landmark, occlu
+    elif label_ext == '.pts':
+        landmark = pts_process(label_path, bbox, img_size)
+    else:
+        raise ValueError('there is no such exts')
+    return face, landmark
 
 
-def load_rough_imgs_labels(img_root, mat_file_name, img_size, mean_shape=None,
-                           normalizer=None, chosen="random", exts=".pts"):
-    """Load rough imgs and labels without normalization.
+def load_imgs_labels(img_root, img_size, occlu_include=False,
+                     normalizer=None, chosen="random", label_ext=".pts"):
+    """Load imgs and labels based on mat file
 
     :param img_root: img root dir
-    :param mat_file_name:
     :param img_size:
     :param normalizer:
-    :param mean_shape:
+    :param occlu_include:
     :param chosen: whether to choose specific indices of dataset or just random
-    :param exts:
+    :param label_ext:
 
     :return chosen objs
     """
-    img_paths, bboxes = load_basic_info(mat_file_name, img_root)
+    img_paths, bboxes = load_basic_info('raw_300W_release.mat', img_root)
     if chosen == "random":
         length = len(img_paths)
         index = np.random.randint(0, length)
-        return load_rough_imgs_labels_core(img_path=img_paths[index],
-                                           bbox=bboxes[index],
-                                           img_size=img_size,
-                                           normalizer=normalizer,
-                                           exts=exts)
+        return load_imgs_labels_core(img_path=img_paths[index], bbox=bboxes[index],
+                                     img_size=img_size, normalizer=normalizer, label_ext=label_ext)
     else:
         faces = []
         labels = []
-        for index in chosen:
-            face, label = load_rough_imgs_labels_core(img_path=img_paths[index],
-                                                      bbox=bboxes[index],
-                                                      img_size=img_size,
-                                                      normalizer=normalizer,
-                                                      exts=exts)
-            # show(face)
-            faces.append(face)
-            labels.append(label)
-        return faces, labels
-
-
-def load_rough_imgs_occlus_core(img_path, bbox, img_size, normalizer=None):
-    img = cv2.imread(img_path)
-    face = cv2.resize(get_face(img, bbox, need_to_convert_to_int=True),
-                      (img_size, img_size))
-    if normalizer:
-        face = normalizer.transform(face)
-    label_path = os.path.splitext(img_path)[0] + ".opts"
-
-    label = np.genfromtxt(label_path)
-    label = normalize_data(label, bbox, occlu_include=True)
-    landmark = np.multiply(np.clip(label[:, :2], 0, 1), img_size)
-    occlu = label[:, -1]
-    return face, landmark, occlu
-
-
-def load_rough_imgs_occlus(img_root, mat_file_name, img_size,
-                           normalizer=None, chosen="random"):
-    """Load rough imgs and occlus without normalization.
-
-    :param img_root: img root dir
-    :param mat_file_name:
-    :param img_size:
-    :param normalizer:
-    :param chosen: whether to choose specific indices of dataset or just random
-
-    :return chosen objs
-    """
-    img_paths, bboxes = load_basic_info(mat_file_name, img_root)
-    if chosen == "random":
-        length = len(img_paths)
-        index = np.random.randint(0, length)
-        return load_rough_imgs_occlus_core(img_path=img_paths[index],
-                                           bbox=bboxes[index],
-                                           img_size=img_size,
-                                           normalizer=normalizer)
-    else:
-        faces = []
-        landmarks = []
         occlus = []
         for index in chosen:
-            face, landmark, occlu = load_rough_imgs_occlus_core(img_path=img_paths[index],
-                                                                bbox=bboxes[index],
-                                                                img_size=img_size,
-                                                                normalizer=normalizer)
-            # print(face)
-            # print('---------------')
-            # print(label)
+            _ = load_imgs_labels_core(img_path=img_paths[index], bbox=bboxes[index],
+                                      img_size=img_size, normalizer=normalizer, label_ext=label_ext)
             # show(face)
-            faces.append(face)
-            landmarks.append(landmark)
-            occlus.append(occlu)
-        return faces, landmarks, occlus
+            faces.append(_[0])
+            labels.append(_[1])
+            if occlu_include:
+                occlus.append(_[2])
+        if occlu_include:
+            return faces, labels, occlus
+        else:
+            return faces, labels
 
 
 def draw_landmark(img, landmarks):
@@ -568,11 +537,11 @@ def extend(data_base, add_data):
     return data
 
 
-def get_filenames(data_dir, listext, label_ext):
+def get_filenames(data_dir, img_ext_lists, label_ext):
     img_list = []
     label_list = []
     for dir in data_dir:
-        for ext in listext:
+        for ext in img_ext_lists:
             p = os.path.join(dir, ext)
             img_list.extend(glob.glob(p))
 

@@ -14,9 +14,7 @@ Description: Data Generator
 """
 import cv2
 import numpy as np
-import tensorflow as tf
 
-from config.init_param import face_alignment_precise_param
 from utils import logger
 from utils import get_filenames
 
@@ -49,9 +47,7 @@ def load_img_label(img_name_list, label_name_list,
             img = normalizer.transform(img)
         label = load_label(label_name_list[index], flatten)
         img_list.append(img)
-        # print(img.shape)
         label_list.append(label)
-        # print(label)
         if print_debug and (count + 1) % 500 == 0:
             logger("loaded {} data".format(count + 1))
         count += 1
@@ -60,18 +56,18 @@ def load_img_label(img_name_list, label_name_list,
     return np.array(img_list), np.array(label_list)
 
 
-def train_data_feed(batch_size, data_dir, ext_lists, label_ext, flatten=False):
+def train_data_feed(batch_size, data_dir, img_ext_lists, label_ext, flatten=False):
     """Train data feed.
 
     :param: batch_size:
     :param: data_dir:
-    :param: ext_lists: img suffix lists.
+    :param: img_ext_lists: img suffix lists.
     :param: label_ext: label suffix.
     :param: mean_shape:
     :param: print_debug:
     """
     img_name_list, label_name_list = \
-        get_filenames([data_dir], ext_lists, label_ext)
+        get_filenames([data_dir], img_ext_lists, label_ext)
     data_size = len(img_name_list)
     batch_offset = 0
     indices = [_ for _ in range(data_size)]
@@ -85,36 +81,30 @@ def train_data_feed(batch_size, data_dir, ext_lists, label_ext, flatten=False):
             batch_offset = batch_size
         end = batch_offset
         chosen_indices = indices[start: end]
-        img_list, label_list = load_img_label(img_name_list=img_name_list,
-                                              label_name_list=label_name_list,
-                                              chosen_indices=chosen_indices,
-                                              flatten=flatten,
-                                              print_debug=False)
-        # for m in label_list:
-        #     print(m)
+        img_list, label_list = \
+            load_img_label(img_name_list=img_name_list, label_name_list=label_name_list,
+                           chosen_indices=chosen_indices, flatten=flatten, print_debug=False)
         yield img_list, label_list
 
 
-def val_data_feed(data_dir, ext_lists, label_ext,
+def val_data_feed(data_dir, img_ext_lists, label_ext,
                   flatten=False, normalizer=None, print_debug=False):
     """Validation data feed
 
     :param: data_dir:
-    :param: ext_lists: img suffix lists.
+    :param: img_ext_lists: img suffix lists.
     :param: label_ext: label suffix.
     :param: mean_shape:
     :param: normalizer:
     :param: print_debug:
     """
     img_name_list, label_name_list = \
-        get_filenames([data_dir], ext_lists, label_ext)
+        get_filenames([data_dir], img_ext_lists, label_ext)
 
     data_size = len(img_name_list)
-    img_list, label_list = load_img_label(img_name_list=img_name_list,
-                                          label_name_list=label_name_list,
-                                          chosen_indices=range(data_size),
-                                          flatten=flatten,
-                                          normalizer=normalizer,
-                                          print_debug=print_debug)
+    img_list, label_list = \
+        load_img_label(img_name_list=img_name_list, label_name_list=label_name_list,
+                       chosen_indices=range(data_size), flatten=flatten,
+                       normalizer=normalizer, print_debug=print_debug)
 
     return img_list, label_list

@@ -14,182 +14,114 @@ Description: Main Entry of Training
 """
 import argparse
 import os
-from keras.models import load_model
+import keras.backend as K
 
-from config.init_param import data_param, occlu_param, \
-    face_alignment_rough_param, face_alignment_precise_param
-from model_structure.vgg16 import Vgg16Regress, Vgg16CutFC2
-from model_structure.resnet import ResNet
+from config.init_param import data_param, occlu_param, far_param, fap_param
+from config.parse_param import parse_param
+from model_structure.align_v1 import FaceAlignment
+from model_structure.occlu_detect import OcclusionDetection
 from prepare.data_gen import train_data_feed, val_data_feed
-from ml import metric_compute
 from ml import load_config
-from ml import landmark_loss
-from ml import landmark_delta_loss
-from ml import landmark_delta_loss_compute
-from utils import load_rough_imgs_labels
-from utils import load_rough_imgs_occlus
+from utils import count_file
+from utils import load_imgs_labels
 from utils import logger
 from utils import set_gpu
+
+# load config
+normalizer, mean_shape = load_config()
+set_gpu(ratio=0.5)
 
 # load parameter
 ap = argparse.ArgumentParser()
 ap.add_argument('-c', '--content', type=str, help='description of model')
-ap.add_argument('-e', '--epoch', type=int, default=75,
-                help='epochs of training')
-ap.add_argument('-bs', '--batch_size', type=int, default=32,
-                help='batch size of training')
-ap.add_argument('-lr', '--init_lr', type=float, default=1e-3,
-                help='learning rate')
-ap.add_argument('-m', '--mode', type=str, default='val_compute',
-                help='mode of ML')
-ap.add_argument('-p', '--phase', type=str, default='rough',
-                help='phase of pipeline')
+ap.add_argument('-e', '--epochs', type=int, default=75, help='epochs of training')
+ap.add_argument('-bs', '--batch_size', type=int, default=32, help='batch size of training')
+ap.add_argument('-lr', '--init_lr', type=float, default=1e-3, help='learning rate')
+ap.add_argument('-m', '--mode', type=str, default='val_compute', help='mode of ML')
+ap.add_argument('-p', '--phase', type=str, default='rough', help='phase of pipeline')
+ap.add_argument('-f', '--feature', type=str, default='face', help='input feature type')
+ap.add_argument('-le', '--label_ext', type=str, default='.pts', help='label ext type')
+ap.add_argument('-mt', '--model_type', type=str, default='vgg16_clf', help='model type')
+ap.add_argument('-ln', '--loss_name', type=str, default='landmark_loss')
 args, unknown = ap.parse_known_args()
 args = vars(args)
 
-# load mean_shape and normalizer
-normalizer, mean_shape = load_config()
-
-# gpu related
-set_gpu(ratio=0.5)
+# parse parameter
+label_ext = args['label_ext']
+feature = args['feature']
+model_type = args['model_type']
+loss_name = args['loss_name']
+epochs = args['epochs']
+bs = args['batch_size']
+lr = args['init_lr']
+content = args['content']
+model_name = 'best_model_epochs={}_bs={}_lr={}_des={}.h5'.format(epochs, bs, lr, content)
+model_structure, loss, loss_compute, model = \
+    parse_param(model_type=model_type, loss_name=loss_name, model_name=model_name)
+train_data_dir = os.path.join(data_param['train_dir'], feature)
+train_num = count_file([train_data_dir], data_param['img_ext'])
+val_data_dir = os.path.join(data_param['val_dir'], feature)
 
 # face alignment rough
 if args['phase'] == 'rough':
-    face_alignment_rough_param['epochs'] = args['epoch']
-    face_alignment_rough_param['bs'] = args['batch_size']
-    face_alignment_rough_param['init_lr'] = args['init_lr']
-    face_alignment_rough_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_des={}_rough.h5'.format(
-        face_alignment_rough_param['epochs'],
-        face_alignment_rough_param['bs'],
-        face_alignment_rough_param['init_lr'],
-        args['content'])
-
-    # learning
-    from model_structure.align_v1 import FaceAlignment
-
-    face_align_rgr = FaceAlignment(lr=face_alignment_rough_param['init_lr'],
-                                   epochs=face_alignment_rough_param['epochs'],
-                                   bs=face_alignment_rough_param['bs'],
-                                   model_name=face_alignment_rough_param['model_name'],
-                                   loss=landmark_loss)
-    weight_path = os.path.join(face_alignment_rough_param['weight_path'], face_alignment_rough_param['weight_name'])
     if args['mode'] == 'train':
-        logger("-----------epochs: {}, bs: {}, lr: {} ---------".format(args['epoch'], args['batch_size'],
-                                                                        args['init_lr']))
-        face_align_rgr.train(model_structure=ResNet(),
-                             train_load=train_data_feed,
-                             val_load=val_data_feed,
-                             ext_lists=['*_face.png', '*_face.jpg'],
-                             label_ext='.pts',
-                             flatten=True,
-                             normalizer=normalizer,
+        face_align_rgr = FaceAlignment(lr=lr, epochs=epochs, bs=bs, model_name=model_name,
+                                       loss=loss, train_num=train_num)
+        weight_path = os.path.join(far_param['weight_path'], far_param['weight_name'])
+        logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
+        face_align_rgr.train(model_structure=model_structure, train_load=train_data_feed,
+                             val_load=val_data_feed, train_data_dir=train_data_dir,
+                             val_data_dir=val_data_dir, img_ext_lists=data_param['img_ext'],
+                             label_ext=label_ext, flatten=True, normalizer=normalizer,
                              weight_path=weight_path)
     if args['mode'] == 'val_compute':
         logger("loading data")
-        model = load_model(os.path.join(data_param['model_dir'], face_alignment_rough_param['model_name']),
-                           {'landmark_loss': landmark_loss})
-        faces, labels = load_rough_imgs_labels(img_root=data_param['img_root_dir'],
-                                               mat_file_name='raw_300W_release.mat',
-                                               img_size=data_param['img_size'],
-                                               normalizer=normalizer,
-                                               mean_shape=mean_shape,
-                                               chosen=range(3148, 3837))
-        logger("result of epochs {}, bs {}, lr {} ...".format(args['epoch'], args['batch_size'], args['init_lr']))
-        face_align_rgr.val_compute(imgs=faces, labels=labels, model=model)
+        faces, labels = load_imgs_labels(img_root=data_param['img_root_dir'],
+                                         img_size=data_param['img_size'],
+                                         normalizer=normalizer,
+                                         chosen=range(3148, 3837))
+        logger("epochs: {}, bs: {}, lr: {} ...".format(epochs, bs, lr))
+        FaceAlignment.val_compute(imgs=faces, labels=labels, model=model, loss_compute=loss_compute)
 
 # occlusion detection
 if args['phase'] == 'occlu':
-    occlu_param['epochs'] = args['epoch']
-    occlu_param['bs'] = args['batch_size']
-    occlu_param['init_lr'] = args['init_lr']
-    occlu_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_occlu.h5'.format(
-        occlu_param['epochs'],
-        occlu_param['bs'],
-        occlu_param['init_lr'])
-
-    # learning
-    from model_structure.occlu_detect import OcclusionDetection
-
-    occlu_clf = OcclusionDetection()
-    weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
     if args['mode'] == 'train':
-        occlu_clf.train(model_structure=Vgg16CutFC2(),
-                        train_load=train_data_feed,
-                        val_load=val_data_feed,
-                        ext_lists=['*_heatmap.png', '*_heatmap.jpg'],
-                        label_ext='.opts',
-                        weight_path=weight_path)
+        occlu_clf = OcclusionDetection(lr=lr, epochs=epochs, bs=bs,
+                                       model_name=model_name, loss='binary_crossentropy')
+        weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
+        logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
+        occlu_clf.train(model_structure=model_structure, train_load=train_data_feed,
+                        val_load=val_data_feed, train_data_dir=train_data_dir,
+                        val_data_dir=val_data_dir, img_ext_lists=data_param['img_ext'],
+                        label_ext=label_ext, weight_path=weight_path)
     elif args['mode'] == 'val_compute':
-        model = load_model(os.path.join(data_param['model_dir'], occlu_param['model_name']))
-        occlu_clf.val_compute(val_load=val_data_feed,
-                              ext_lists=['*_heatmap.png', '*_heatmap.jpg'],
-                              label_ext='.opts',
-                              model=model)
-    elif args['mode'] == 'test':
-        logger("loading imgs")
-        model = load_model(os.path.join(data_param['model_dir'], occlu_param['model_name']))
-        faces, landmarks, occlus = load_rough_imgs_occlus(
-            img_root=data_param['img_root_dir'],
-            mat_file_name='raw_300W_release.mat',
-            img_size=data_param['img_size'],
-            chosen=range(3148, 3837)
-        )
-        logger("predicting")
-        predictions = []
-        for face, landmark in zip(faces, landmarks):
-            prediction = occlu_clf.test(img=face,
-                                        landmark=landmark,
-                                        is_heat_map=True,
-                                        binary_output=True,
-                                        model=model)
-            # print(prediction)
-            predictions.append(prediction)
-            if data_param['print_debug'] and len(predictions) % 100 == 0:
-                logger("predicted {} imgs".format(len(predictions)))
-            # if len(predictions) == 100:
-            #     break
-        metric_compute(occlus, predictions)
+        logger('loading data')
+        faces, landmarks, occlus = load_imgs_labels(img_root=data_param['img_root_dir'],
+                                                    img_size=data_param['img_size'],
+                                                    normalizer=normalizer, occlu_include=True,
+                                                    label_ext=label_ext, chosen=range(3148, 3837))
+        logger("epochs: {}, bs: {}, lr: {} ...".format(epochs, bs, lr))
+        OcclusionDetection.val_compute(imgs=faces, landmarks=landmarks, occlus=occlus, model=model)
 
 # face precise alignment
 if args['phase'] == 'precise':
-    # learning
-    from model_structure.align_v1 import FaceAlignment
-
-    face_alignment_precise_param['epochs'] = args['epoch']
-    face_alignment_precise_param['bs'] = args['batch_size']
-    face_alignment_precise_param['init_lr'] = args['init_lr']
-    face_alignment_precise_param['model_name'] = 'best_model_epochs={}_bs={}_lr={}_rough.h5'.format(
-        face_alignment_precise_param['epochs'],
-        face_alignment_precise_param['bs'],
-        face_alignment_precise_param['init_lr'])
-
-    face_align_rgr = FaceAlignment(lr=face_alignment_precise_param['init_lr'],
-                                   epochs=face_alignment_precise_param['epochs'],
-                                   bs=face_alignment_precise_param['bs'],
-                                   model_name=face_alignment_precise_param['model_name'],
-                                   loss=landmark_delta_loss)
-
     if args['mode'] == 'train':
-        weight_path = os.path.join(face_alignment_precise_param['weight_path'],
-                                   face_alignment_precise_param['weight_name'])
-        face_align_rgr.train(model_structure=Vgg16Regress(),
-                             train_load=train_data_feed,
-                             val_load=val_data_feed,
-                             ext_lists=['*_face.png', '*_face.jpg'],
-                             label_ext='.wdpts',
-                             normalizer=normalizer,
-                             weight_path=weight_path)
+        face_align_rgr = FaceAlignment(lr=lr, epochs=epochs, bs=bs, model_name=model_name,
+                                       loss=loss, train_num=train_num)
+        weight_path = os.path.join(fap_param['weight_path'], fap_param['weight_name'])
+        logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
+        face_align_rgr.train(model_structure=model_structure, train_load=train_data_feed,
+                             val_load=val_data_feed, train_data_dir=train_data_dir,
+                             val_data_dir=val_data_dir, img_ext_lists=data_param['img_ext'],
+                             label_ext=label_ext, normalizer=normalizer, weight_path=weight_path)
 
     if args['mode'] == 'val_compute':
-        logger("loading imgs")
-        model = load_model(os.path.join(data_param['model_dir'], face_alignment_precise_param['model_name']))
-        faces, labels = load_rough_imgs_labels(img_root=data_param['img_root_dir'],
-                                               mat_file_name='raw_300W_release.mat',
-                                               img_size=data_param['img_size'],
-                                               normalizer=normalizer,
-                                               mean_shape=mean_shape,
-                                               chosen=range(3148, 3837),
-                                               exts=".wdpts")
-        logger("predicting")
-        face_align_rgr.val_compute(faces, labels, normalizer=normalizer, model=model,
-                                   loss_compute=landmark_delta_loss_compute)
+        logger("loading data")
+        faces, labels = load_imgs_labels(img_root=data_param['img_root_dir'],
+                                         img_size=data_param['img_size'],
+                                         normalizer=normalizer, chosen=range(3148, 3837),
+                                         label_ext=label_ext)
+        logger("epochs: {}, bs: {}, lr: {} ...".format(epochs, bs, lr))
+        FaceAlignment.val_compute(imgs=faces, labels=labels, model=model, loss_compute=loss_compute)
+
+K.clear_session()

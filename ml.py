@@ -74,13 +74,10 @@ def landmark_delta_loss(y_true, y_pred):
 
 def landmark_loss_compute(prediction, label):
     """loss compute of landmark_loss"""
-    _, mean_shape = load_config()
     landmark_true = np.reshape(label, (data_param['landmark_num'], 2))
-    landmark_pred = np.reshape(prediction, (data_param['landmark_num'], 2))
-    landmark_pred = landmark_pred + mean_shape
     left_eye = np.mean(landmark_true[36:42, :], axis=0)
     right_eye = np.mean(landmark_true[42:48, :], axis=0)
-    loss = np.mean(np.sqrt(np.sum((landmark_true - landmark_pred) ** 2, axis=-1)), axis=-1) / np.sqrt(
+    loss = np.mean(np.sqrt(np.sum((landmark_true - prediction) ** 2, axis=-1)), axis=-1) / np.sqrt(
         np.sum((right_eye - left_eye) ** 2))
     return loss
 

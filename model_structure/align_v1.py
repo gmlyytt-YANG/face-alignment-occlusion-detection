@@ -13,22 +13,17 @@ Date: 2018/11/10 17:43:31
 Description: Rough Face Alignment
 """
 import numpy as np
-import os
 
 from config.init_param import data_param
 from model_structure.base_model import Model
 from ml import classify
-from ml import landmark_loss_compute
 from utils import logger
-from utils import count_file
 
 
 class FaceAlignment(Model, object):
     """"Face Alignment Training"""
 
-    def __init__(self, lr, epochs, bs, model_name, loss):
-        train_dir = os.path.join(data_param['data_save_dir'], 'train')
-        train_num = count_file([train_dir], ["_face.png", "_face.jpg"])
+    def __init__(self, lr=None, epochs=None, bs=None, model_name=None, loss=None, train_num=None):
         super(FaceAlignment, self).__init__(
             lr=lr,
             epochs=epochs,
@@ -41,14 +36,14 @@ class FaceAlignment(Model, object):
         )
 
     @staticmethod
-    def val_compute(imgs, labels, normalizer=None, model=None, loss_compute=landmark_loss_compute):
+    def val_compute(imgs, labels, mean_shape=None,
+                    normalizer=None, model=None, loss_compute=None):
         """Compute interocular loss of input imgs and labels"""
         loss = 0.0
         count = 0
         for img, label in zip(imgs, labels):
-            if normalizer:
-                img = normalizer.transform(img)
-            prediction = classify(model, img)
+            prediction = FaceAlignment.test(img, mean_shape=mean_shape,
+                                            normalizer=normalizer, model=model)
             loss += loss_compute(prediction, label)
             count += 1
             if data_param['print_debug'] and count % 100 == 0:

@@ -17,12 +17,14 @@ import os
 
 data_param = {
     'print_debug': True,
+    'img_ext': ["*.png", "*.jpg"],
 
     # path related
     'root_dir': '../',
     'img_root_dir': os.path.join(os.path.abspath('..'), '0_DATASET/origin_img'),
     'model_dir': './model',
-    'data_save_dir': './data',
+    'train_dir': './data/train',
+    'val_dir': './data/val',
     'normalizer_dir': './model',
     'record_dir': './record',
 
@@ -38,7 +40,7 @@ data_param = {
     'mode': 'gaussian',
 }
 
-face_alignment_rough_param = {
+far_param = {
     # path-related
     'model_name': 'face_alignment_rough.h5',
 
@@ -66,7 +68,7 @@ occlu_param = {
     'weight_name': 'vgg16_weights_tf_dim_ordering_tf_kernels.h5'
 }
 
-face_alignment_precise_param = {
+fap_param = {
     # path-related
     'model_name': 'face_alignment_precise.h5',
 

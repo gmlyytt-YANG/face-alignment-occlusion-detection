@@ -12,56 +12,43 @@ Author: Yang Li
 Date: 2018/11/10 17:43:31
 Description: Occlusion Detection
 """
-import os
-
 from config.init_param import occlu_param, data_param
 from model_structure.base_model import Model
-from ml import metric_compute
 from ml import classify
 from utils import binary
 from utils import logger
+from ml import metric_compute
 from utils import heat_map_compute
-from utils import count_file
 
 
 class OcclusionDetection(Model, object):
     """Occlusion Detection Model"""
 
-    def __init__(self):
-        train_dir = os.path.join(data_param['data_save_dir'], 'train')
-        train_num = count_file([train_dir], ["_heatmap.png", "_heatmap.jpg"])
+    def __init__(self, lr=None, epochs=None, bs=None, model_name=None, loss=None, train_num=None):
         super(OcclusionDetection, self).__init__(
-            lr=occlu_param['init_lr'],
-            epochs=occlu_param['epochs'],
-            bs=occlu_param['bs'],
-            model_name=occlu_param['model_name'],
-            loss=occlu_param['loss'],
+            lr=lr,
+            epochs=epochs,
+            bs=bs,
+            model_name=model_name,
+            loss=loss,
             metrics=["accuracy"],
-            steps_per_epochs=train_num // occlu_param['bs'],
+            steps_per_epochs=train_num // bs,
             classes=data_param['landmark_num'],
             final_act="sigmoid",
         )
 
     @staticmethod
-    def val_compute(val_load, ext_lists, label_ext, model=None):
-        """Compute loss of imgs of ext_lists named label_ext"""
-        val_data, val_labels = val_load(data_dir=os.path.join(data_param['data_save_dir'], 'val'),
-                                        ext_lists=ext_lists,
-                                        label_ext=label_ext,
-                                        print_debug=data_param['print_debug'])
-
-        # forward
-        predict_labels = []
-        length = len(val_data)
-        for index in range(length):
-            prediction = [binary(_, threshold=0.5)
-                          for _ in classify(model, val_data[index])]
-            predict_labels.append(prediction)
-            if data_param['print_debug'] and (index + 1) % 500 == 0:
-                logger("predicted {} imgs".format(index + 1))
-
-        # compute
-        metric_compute(val_labels, predict_labels)
+    def val_compute(imgs, landmarks, occlus, model):
+        predictions = []
+        for face, landmark in zip(imgs, landmarks):
+            prediction = OcclusionDetection.test(img=face, landmark=landmark,
+                                                 is_heat_map=True, binary_output=True,
+                                                 model=model)
+            # print(prediction)
+            predictions.append(prediction)
+            if data_param['print_debug'] and len(predictions) % 100 == 0:
+                logger("predicted {} imgs".format(len(predictions)))
+        metric_compute(occlus, predictions)
 
     @staticmethod
     def test(img, landmark, is_heat_map=False, binary_output=False, model=None):

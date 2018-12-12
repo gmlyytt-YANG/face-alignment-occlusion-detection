@@ -41,40 +41,35 @@ class Model(object):
         self.classes = classes
         self.final_act = final_act
 
-    def train(self, model_structure, train_load, val_load,
-              ext_lists, label_ext, flatten=False, normalizer=None, weight_path=None):
+    def train(self, model_structure, train_load, val_load, img_ext_lists,
+              train_data_dir, val_data_dir, label_ext, flatten=False,
+              normalizer=None, weight_path=None):
         """Train procedure"""
         # load data
         logger('loading data')
-        val_data, val_labels = val_load(data_dir=os.path.join(data_param['data_save_dir'], 'val'),
-                                        ext_lists=ext_lists,
-                                        label_ext=label_ext,
-                                        flatten=flatten,
-                                        normalizer=normalizer,
-                                        print_debug=data_param['print_debug'])
+        val_data, val_labels = val_load(data_dir=val_data_dir, img_ext_lists=img_ext_lists,
+                                        label_ext=label_ext, flatten=flatten,
+                                        normalizer=normalizer, print_debug=data_param['print_debug'])
 
         # build model
         logger('building model')
         opt = Adam(lr=self.lr, decay=self.lr / self.epochs)
-        model = model_structure.build(width=data_param['img_size'],
-                                      height=data_param['img_size'],
-                                      depth=data_param['channel'],
-                                      classes=self.classes,
-                                      final_act=self.final_act,
-                                      weight_path=weight_path)
+        model = model_structure.build(width=data_param['img_size'], height=data_param['img_size'],
+                                      depth=data_param['channel'], classes=self.classes,
+                                      final_act=self.final_act, weight_path=weight_path)
         model.compile(loss=self.loss, optimizer=opt, metrics=self.metrics)
 
         logger('training')
         if not os.path.exists(data_param['model_dir']):
             os.makedirs(data_param['model_dir'])
         checkpoint = \
-            ModelCheckpoint(filepath=os.path.join(data_param['model_dir'], self.model_name))
+            ModelCheckpoint(filepath=os.path.join(data_param['model_dir'], self.model_name), save_best_only=True)
         # early_stopping = EarlyStopping(monitor='val_acc', patience=10, verbose=2)
         # callback_list = [checkpoint, early_stopping]
         callback_list = [checkpoint]
         H = model.fit_generator(
-            train_load(batch_size=self.bs, data_dir=os.path.join(data_param['data_save_dir'], 'train'),
-                       ext_lists=ext_lists, label_ext=label_ext, flatten=flatten),
+            train_load(batch_size=self.bs, data_dir=train_data_dir,
+                       img_ext_lists=img_ext_lists, label_ext=label_ext, flatten=flatten),
             validation_data=(val_data, val_labels),
             steps_per_epoch=self.steps_per_epoch,
             epochs=self.epochs, verbose=1, callbacks=callback_list)
