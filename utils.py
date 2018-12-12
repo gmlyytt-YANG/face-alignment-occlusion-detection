@@ -445,7 +445,7 @@ def opts_process(label_path, bbox, img_size):
     landmark_ori = np.genfromtxt(label_path)
     landmark = normalize_data(landmark_ori, bbox, occlu_include=True)
     landmark = np.multiply(np.clip(landmark[:, :2], 0, 1), img_size)
-    occlu = landmark[:, -1]
+    occlu = landmark_ori[:, -1]
     return landmark, occlu
 
 
@@ -468,6 +468,9 @@ def load_imgs_labels_core(img_path, bbox, img_size, normalizer=None, label_ext="
         landmark = wdpts_process(label_path, bbox, img_size)
     elif label_ext == '.opts':
         landmark, occlu = opts_process(label_path, bbox, img_size)
+        # print(landmark)
+        # print(occlu)
+        # print('---------')
         return face, landmark, occlu
     elif label_ext == '.pts':
         landmark = pts_process(label_path, bbox, img_size)
@@ -498,6 +501,7 @@ def load_imgs_labels(img_root=None, img_size=None, occlu_include=False, flatten=
         chosen = data_dict['chosen']
         label_ext = data_dict['label_ext']
         flatten = data_dict['flatten']
+    # print(label_ext)
     img_paths, bboxes = load_basic_info('raw_300W_release.mat', img_root)
     if chosen == "random":
         length = len(img_paths)
@@ -529,13 +533,19 @@ def load_imgs_occlus(data_dict=None):
     if not data_dict['occlu_include']:
         raise ValueError('invalid input!')
     faces, landmarks, occlus = load_imgs_labels(data_dict=data_dict)
-    heatmaps = []
-    for (face, landmark) in zip(faces, landmarks):
-        heatmap = heat_map_compute(face, landmark, landmark_is_01=False,
-                                   img_color=True, radius=occlu_param['radius'])
-        heatmaps.append(heatmap)
-    return np.array(heatmaps), occlus
-
+    # print(len(faces), len(landmarks), len(occlus))
+    if data_dict['is_heatmap']:
+        heatmaps = []
+        for (face, landmark) in zip(faces, landmarks):
+            heatmap = heat_map_compute(face, landmark, landmark_is_01=False,
+                                       img_color=True, radius=occlu_param['radius'])
+            heatmaps.append(heatmap)
+            if data_param['print_debug'] and len(heatmaps) % 100 == 0:
+                logger('processed {} heatmaps'.format(len(heatmaps)))
+            # if len(heatmaps) > 20:
+            #     break
+        return np.array(heatmaps), occlus
+    return faces, occlus
 
 def draw_landmark(img, landmarks):
     for i in range(len(landmarks)):
