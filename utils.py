@@ -51,7 +51,9 @@ def count_file(paths, ext_lists):
     for path in paths:
         for root, dirname, filenames in os.walk(path):
             for filename in filenames:
+                print(filename)
                 for ext in ext_lists:
+                    print(ext)
                     if ext in filename:
                         count += 1
     return count

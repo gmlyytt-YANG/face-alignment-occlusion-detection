@@ -47,6 +47,7 @@ class Model(object):
         """Train procedure"""
         # load data
         logger('loading data')
+        print(self.lr, self.epochs, self.bs, self.model_name, self.loss, self.steps_per_epoch)
         val_data, val_labels = val_load(data_dir=val_data_dir, img_ext_lists=img_ext_lists,
                                         label_ext=label_ext, flatten=flatten,
                                         normalizer=normalizer, print_debug=data_param['print_debug'])

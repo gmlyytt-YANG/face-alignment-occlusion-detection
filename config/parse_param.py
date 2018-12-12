@@ -24,7 +24,7 @@ from ml import landmark_delta_loss_compute
 from config.init_param import data_param
 
 
-def parse_param(model_type, loss_name, model_name):
+def parse_param(model_type, loss_name):
     if model_type == 'vgg16_clf':
         model_structure = Vgg16CutFC2()
     elif model_type == 'vgg16_rgr':
@@ -42,9 +42,4 @@ def parse_param(model_type, loss_name, model_name):
     else:
         loss = None
         loss_compute = None
-    if loss is not None:
-        model = load_model(os.path.join(data_param['model_dir'], model_name), {loss_name: loss})
-    else:
-        model = load_model(os.path.join(data_param['model_dir'], model_name))
-
-    return model_structure, loss, loss_compute, model
+    return model_structure, loss, loss_compute

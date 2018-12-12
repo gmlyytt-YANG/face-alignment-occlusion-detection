@@ -57,8 +57,8 @@ bs = args['batch_size']
 lr = args['init_lr']
 content = args['content']
 model_name = 'best_model_epochs={}_bs={}_lr={}_des={}.h5'.format(epochs, bs, lr, content)
-model_structure, loss, loss_compute, model = \
-    parse_param(model_type=model_type, loss_name=loss_name, model_name=model_name)
+model_structure, loss, loss_compute = \
+    parse_param(model_type=model_type, loss_name=loss_name)
 train_data_dir = os.path.join(data_param['train_dir'], feature)
 train_num = count_file([train_data_dir], data_param['img_ext'])
 val_data_dir = os.path.join(data_param['val_dir'], feature)
@@ -66,6 +66,7 @@ val_data_dir = os.path.join(data_param['val_dir'], feature)
 # face alignment rough
 if args['phase'] == 'rough':
     if args['mode'] == 'train':
+        print(train_num)
         face_align_rgr = FaceAlignment(lr=lr, epochs=epochs, bs=bs, model_name=model_name,
                                        loss=loss, train_num=train_num)
         weight_path = os.path.join(far_param['weight_path'], far_param['weight_name'])
@@ -77,6 +78,10 @@ if args['phase'] == 'rough':
                              weight_path=weight_path)
     if args['mode'] == 'val_compute':
         logger("loading data")
+        if loss_name != 'no':
+            model = load_model(os.path.join(data_param['model_dir'], model_name), {loss_name: loss})
+        else:
+            model = load_model(os.path.join(data_param['model_dir'], model_name))
         faces, labels = load_imgs_labels(img_root=data_param['img_root_dir'],
                                          img_size=data_param['img_size'],
                                          normalizer=normalizer,
@@ -97,6 +102,10 @@ if args['phase'] == 'occlu':
                         label_ext=label_ext, weight_path=weight_path)
     elif args['mode'] == 'val_compute':
         logger('loading data')
+        if loss_name != 'no':
+            model = load_model(os.path.join(data_param['model_dir'], model_name), {loss_name: loss})
+        else:
+            model = load_model(os.path.join(data_param['model_dir'], model_name))
         faces, landmarks, occlus = load_imgs_labels(img_root=data_param['img_root_dir'],
                                                     img_size=data_param['img_size'],
                                                     normalizer=normalizer, occlu_include=True,
@@ -118,6 +127,10 @@ if args['phase'] == 'precise':
 
     if args['mode'] == 'val_compute':
         logger("loading data")
+        if loss_name != 'no':
+            model = load_model(os.path.join(data_param['model_dir'], model_name), {loss_name: loss})
+        else:
+            model = load_model(os.path.join(data_param['model_dir'], model_name))
         faces, labels = load_imgs_labels(img_root=data_param['img_root_dir'],
                                          img_size=data_param['img_size'],
                                          normalizer=normalizer, chosen=range(3148, 3837),
