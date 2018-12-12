@@ -24,7 +24,7 @@ from utils import heat_map_compute
 class OcclusionDetection(Model, object):
     """Occlusion Detection Model"""
 
-    def __init__(self, lr=None, epochs=None, bs=None, model_name=None, loss=None, train_num=None):
+    def __init__(self, lr=None, epochs=None, bs=None, model_name=None, loss=None, esm=None, train_num=None):
         super(OcclusionDetection, self).__init__(
             lr=lr,
             epochs=epochs,
@@ -33,6 +33,7 @@ class OcclusionDetection(Model, object):
             loss=loss,
             metrics=["accuracy"],
             steps_per_epochs=train_num // bs,
+            esm=esm,
             classes=data_param['landmark_num'],
             final_act="sigmoid",
         )

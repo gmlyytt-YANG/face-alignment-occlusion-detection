@@ -23,7 +23,7 @@ data_param = {
     'root_dir': '../',
     'img_root_dir': os.path.join(os.path.abspath('..'), '0_DATASET/origin_img'),
     'model_dir': './model',
-    'train_dir': './data/train',
+    'train_dir': './data/all',
     'val_dir': './data/val',
     'normalizer_dir': './model',
     'record_dir': './record',
@@ -45,6 +45,7 @@ far_param = {
     'model_name': 'face_alignment_rough.h5',
 
     # dl-related
+    'es_monitor': 'val_loss',
     'epochs': 100,
     'init_lr': 1e-3,
     'bs': 64,
@@ -60,6 +61,7 @@ occlu_param = {
     'radius': 10,
 
     # dl-related
+    'es_monitor': 'val_acc',
     'epochs': 100,
     'init_lr': 1e-3,
     'loss': 'binary_crossentropy',
@@ -73,6 +75,7 @@ fap_param = {
     'model_name': 'face_alignment_precise.h5',
 
     # dl-related
+    'es_monitor': 'val_loss',
     'epochs': 100,
     'init_lr': 1e-3,
     'bs': 64,

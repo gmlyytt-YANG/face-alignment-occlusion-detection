@@ -61,14 +61,14 @@ model_structure, loss, loss_compute = \
     parse_param(model_type=model_type, loss_name=loss_name)
 train_data_dir = os.path.join(data_param['train_dir'], feature)
 train_num = count_file([train_data_dir], data_param['img_ext'])
+# print(train_num)
 val_data_dir = os.path.join(data_param['val_dir'], feature)
 
 # face alignment rough
 if args['phase'] == 'rough':
     if args['mode'] == 'train':
-        print(train_num)
         face_align_rgr = FaceAlignment(lr=lr, epochs=epochs, bs=bs, model_name=model_name,
-                                       loss=loss, train_num=train_num)
+                                       loss=loss, train_num=train_num, esm=fap_param['es_monitor'])
         weight_path = os.path.join(far_param['weight_path'], far_param['weight_name'])
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
         face_align_rgr.train(model_structure=model_structure, train_load=train_data_feed,
@@ -92,7 +92,7 @@ if args['phase'] == 'rough':
 # occlusion detection
 if args['phase'] == 'occlu':
     if args['mode'] == 'train':
-        occlu_clf = OcclusionDetection(lr=lr, epochs=epochs, bs=bs,
+        occlu_clf = OcclusionDetection(lr=lr, epochs=epochs, bs=bs, esm=occlu_param['es_monitor'],
                                        model_name=model_name, loss='binary_crossentropy')
         weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
@@ -117,7 +117,7 @@ if args['phase'] == 'occlu':
 if args['phase'] == 'precise':
     if args['mode'] == 'train':
         face_align_rgr = FaceAlignment(lr=lr, epochs=epochs, bs=bs, model_name=model_name,
-                                       loss=loss, train_num=train_num)
+                                       loss=loss, train_num=train_num, esm=fap_param['es_monitor'])
         weight_path = os.path.join(fap_param['weight_path'], fap_param['weight_name'])
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
         face_align_rgr.train(model_structure=model_structure, train_load=train_data_feed,

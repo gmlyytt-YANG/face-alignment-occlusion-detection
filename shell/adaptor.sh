@@ -75,10 +75,10 @@ done
 if [ ${show} = "nohup" ];then
     nohup python adaptor.py -le ${label_ext} -f ${feature} -e1 ${epochs1}\
          -bs1 ${bs1} -lr1 ${lr1} -mt1 ${mt1} -ln1 ${ln1} -c1 ${c1} -e1 ${epochs1} -bs1 ${bs1} -lr1 ${lr1}\
-         -mt1 ${mt1} -ln1 ${ln1} -c1 ${c1} -dAgg\
+         -mt1 ${mt1} -ln1 ${ln1} -c1 ${c1}\
     > logs/epochs1=${epochs1}_bs1=${bs1}_lr1=${lr1}_content1=${c1}_epochs2=${epochs2}_bs2=${bs2}_lr2=${lr2}_content2=${c2}.log 2>&1 &
 else
     python adaptor.py -le ${label_ext} -f ${feature} -e1 ${epochs1}\
          -bs1 ${bs1} -lr1 ${lr1} -mt1 ${mt1} -ln1 ${ln1} -c1 ${c1} -e1 ${epochs1} -bs1 ${bs1} -lr1 ${lr1}\
-         -mt1 ${mt1} -ln1 ${ln1} -c1 ${c1} -dAgg
+         -mt1 ${mt1} -ln1 ${ln1} -c1 ${c1}
 fi
