@@ -75,8 +75,8 @@ if args['phase'] == 'rough':
         # val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
         #             'label_ext': label_ext, 'flatten': True,
         #             'normalizer': normalizer, 'print_debug': data_param['print_debug']}
-        val_vars = {'img_root': data_param['img_root_dir'], 'img_size': data_param['img_size'],
-                    'normalizer': normalizer, 'chosen': range(3148, 3837), 'occlu_include': False}
+        val_vars = {'img_root': data_param['img_root_dir'], 'img_size': data_param['img_size'], 'label_ext': label_ext,
+                    'normalizer': normalizer, 'chosen': range(3148, 3837), 'flatten': True, 'occlu_include': False}
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
         face_align_rgr.train(model_structure=model_structure, train_load=train_data_feed, train_vars=train_vars,
                              val_load=load_imgs_labels, val_vars=val_vars, weight_path=weight_path)
