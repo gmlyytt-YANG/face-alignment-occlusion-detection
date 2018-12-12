@@ -15,7 +15,7 @@ Description: Program Main Entry
 import os
 
 from config.init_param import data_param
-from prepare.img_server import ImageServer
+from img_server import ImageServer
 from utils import load_basic_info
 
 # load data(img, bbox, pts)
