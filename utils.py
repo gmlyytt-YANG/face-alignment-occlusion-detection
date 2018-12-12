@@ -478,7 +478,7 @@ def load_imgs_labels_core(img_path, bbox, img_size, normalizer=None, label_ext="
     return face, landmark
 
 
-def load_imgs_labels(img_root, img_size, occlu_include=False,
+def load_imgs_labels(img_root=None, img_size=None, occlu_include=False, flatten=False,
                      normalizer=None, chosen="random", label_ext=".pts", data_dict=None):
     """Load imgs and labels based on mat file
 
@@ -499,6 +499,7 @@ def load_imgs_labels(img_root, img_size, occlu_include=False,
         normalizer = data_dict['normalizer']
         chosen = data_dict['chosen']
         label_ext = data_dict['label_ext']
+        flatten = data_dict['flatten']
     img_paths, bboxes = load_basic_info('raw_300W_release.mat', img_root)
     if chosen == "random":
         length = len(img_paths)
@@ -514,13 +515,16 @@ def load_imgs_labels(img_root, img_size, occlu_include=False,
                                       img_size=img_size, normalizer=normalizer, label_ext=label_ext)
             # show(face)
             faces.append(_[0])
-            labels.append(_[1])
+            label = _[1]
+            if flatten:
+                label = label.flatten()
+            labels.append(label)
             if occlu_include:
                 occlus.append(_[2])
         if occlu_include:
-            return faces, labels, occlus
+            return np.array(faces), np.array(labels), np.array(occlus)
         else:
-            return faces, labels
+            return np.array(faces), np.array(labels)
 
 
 def draw_landmark(img, landmarks):

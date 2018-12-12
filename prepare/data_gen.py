@@ -56,7 +56,7 @@ def load_img_label(img_name_list, label_name_list,
     return np.array(img_list), np.array(label_list)
 
 
-def train_data_feed(batch_size, train_vars=None):
+def train_data_feed(batch_size, data_dict=None):
     """Train data feed.
 
     :param: batch_size:
@@ -66,10 +66,10 @@ def train_data_feed(batch_size, train_vars=None):
     :param: mean_shape:
     :param: print_debug:
     """
-    data_dir = train_vars['data_dir']
-    img_ext_lists = train_vars['img_ext_lists']
-    label_ext = train_vars['label_lists']
-    flatten = train_vars['flatten']
+    data_dir = data_dict['data_dir']
+    img_ext_lists = data_dict['img_ext_lists']
+    label_ext = data_dict['label_ext']
+    flatten = data_dict['flatten']
     img_name_list, label_name_list = \
         get_filenames([data_dir], img_ext_lists, label_ext)
     data_size = len(img_name_list)
@@ -87,14 +87,14 @@ def train_data_feed(batch_size, train_vars=None):
         img_list, label_list = \
             load_img_label(img_name_list=img_name_list, label_name_list=label_name_list,
                            chosen_indices=chosen_indices, flatten=flatten, print_debug=False)
-        for index in range(len(label_list)):
-            label_list[index] = [round(_, 2) for _ in label_list[index]]
-        label_list = np.array(label_list)
+        # for index in range(len(label_list)):
+        #     label_list[index] = [round(_, 2) for _ in label_list[index]]
+        # label_list = np.array(label_list)
 
         yield img_list, label_list
 
 
-def val_data_feed(val_vars=None):
+def val_data_feed(data_dict=None):
     """Validation data feed
 
     :param: data_dir:
@@ -119,9 +119,9 @@ def val_data_feed(val_vars=None):
                        chosen_indices=range(data_size), flatten=flatten,
                        normalizer=normalizer, print_debug=print_debug)
 
-    for index in range(len(label_list)):
-        label_list[index] = [round(_, 2) for _ in label_list[index]]
+    # for index in range(len(label_list)):
+    #     label_list[index] = [round(_, 2) for _ in label_list[index]]
     #     print(label_list[index])
     #     print('---------')
-    label_list = np.array(label_list)
+    # label_list = np.array(label_list)
     return img_list, label_list

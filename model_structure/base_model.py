@@ -44,8 +44,7 @@ class Model(object):
         """Train procedure"""
         # load data
         logger('loading data')
-        print(self.lr, self.epochs, self.bs, self.model_name, self.loss, self.steps_per_epoch)
-        val_data, val_labels = val_load(val_vars=val_vars)
+        val_data, val_labels = val_load(data_dict=val_vars)
 
         # build model
         logger('building model')
@@ -64,7 +63,7 @@ class Model(object):
         callback_list = [checkpoint, early_stopping]
         # callback_list = [checkpoint]
         H = model.fit_generator(
-            train_load(batch_size=self.bs, train_vars=train_vars),
+            train_load(batch_size=self.bs, data_dict=train_vars),
             validation_data=(val_data, val_labels),
             steps_per_epoch=self.steps_per_epoch,
             epochs=self.epochs, verbose=1, callbacks=callback_list)
