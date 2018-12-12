@@ -382,7 +382,7 @@ def normalize_data(landmark, bbox=None, occlu_include=True, exts=".pts"):
         min_x, min_y = bbox[0], bbox[2]
         w, h = bbox[1] - bbox[0], bbox[3] - bbox[2]
     normalized_landmark = (landmark[:, :2] - [min_x, min_y]) / [w, h]
-    print(normalized_landmark)
+    # print(normalized_landmark)
     if occlu_include:
         return np.hstack((normalized_landmark, np.expand_dims(landmark[:, 2], axis=1)))
     return normalized_landmark

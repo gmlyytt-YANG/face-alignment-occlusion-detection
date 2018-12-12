@@ -55,8 +55,8 @@ def load_img_label(img_name_list, label_name_list,
         if print_debug and (count + 1) % 500 == 0:
             logger("loaded {} data".format(count + 1))
         count += 1
-        if (index + 1) > 1000:
-            break
+        # if (index + 1) > 1000:
+        #     break
     return np.array(img_list), np.array(label_list)
 
 
