@@ -62,9 +62,7 @@ def landmark_delta_loss(y_true, y_pred):
     """
     landmark_true = y_true[:, :136]
     landmark_rough = y_true[:, 136:272]
-    occlu_ratio = K.variable(K.constant(value=1 - y_true[:, 272:340], shape=[-1, 68], dtype=K.floatx()))
-    occlu_ratio[occlu_ratio <= 0.1] = 0.1
-    occlu_ratio[occlu_ratio >= 0.9] = 1.0
+    occlu_ratio = K.clip(1 - y_true[:, 272:340], 0.1, 1)
     landmark_true = K.reshape(landmark_true, (-1, data_param['landmark_num'], 2))
     landmark_rough = K.reshape(landmark_rough, (-1, data_param['landmark_num'], 2))
 
@@ -90,9 +88,7 @@ def landmark_loss_compute(prediction, label):
 def landmark_delta_loss_compute(prediction, label):
     landmark_true = label[:136]
     landmark_rough = label[136:272]
-    occlu_ratio = 1 - label[272:340]
-    occlu_ratio[occlu_ratio <= 0.1] = 0.1
-    occlu_ratio[occlu_ratio >= 0.9] = 1.0
+    occlu_ratio = np.clip(1 - label[272:340], 0.1, 1)
     landmark_rough = np.reshape(landmark_rough, (data_param['landmark_num'], 2))
     landmark_true = np.reshape(landmark_true, (data_param['landmark_num'], 2))
     left_eye = np.mean(landmark_true[36:42, :], axis=0)
