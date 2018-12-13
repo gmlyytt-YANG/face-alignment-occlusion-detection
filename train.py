@@ -37,7 +37,7 @@ host_name = socket.gethostname()
 if host_name == 'KB249-workstation':
     set_gpu(ratio=0.5)
 else: 
-    set_gpu(ratio=0.9)
+    set_gpu(ratio=0.4)
 
 # load parameter
 ap = argparse.ArgumentParser()
@@ -100,6 +100,7 @@ if args['phase'] == 'rough':
 # occlusion detection
 if args['phase'] == 'occlu':
     if args['mode'] == 'train':
+        print(val_data_dir)
         occlu_clf = OcclusionDetection(lr=lr, epochs=epochs, bs=bs, model_name=model_name, 
                                        loss='binary_crossentropy', train_num=train_num, esm=occlu_param['es_monitor'])
         weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
