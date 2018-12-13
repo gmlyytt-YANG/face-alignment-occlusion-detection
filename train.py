@@ -21,7 +21,6 @@ from config.init_param import data_param, occlu_param, far_param, fap_param
 from config.parse_param import parse_param
 from data_gen import train_data_feed
 from data_gen import val_data_feed
-from data_gen import load_imgs_labels
 from data_gen import load_imgs_occlus
 from ml import load_config
 from model_structure.align_v1 import FaceAlignment
@@ -35,7 +34,7 @@ normalizer, mean_shape = load_config()
 host_name = socket.gethostname()
 if host_name == 'KB249-workstation':
     set_gpu(ratio=0.5)
-else: 
+else:
     set_gpu(ratio=0.4)
 
 # load parameter
@@ -106,7 +105,7 @@ if args['phase'] == 'occlu':
         train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
                       'label_ext': label_ext, 'flatten': False}
         val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
-                    'label_ext': label_ext, 'flatten': False}
+                    'label_ext': label_ext, 'flatten': False, 'occlu_include': True, }
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
         occlu_clf.train(model_structure=model_structure, train_load=train_data_feed, train_vars=train_vars,
                         val_load=val_data_feed, val_vars=val_vars, weight_path=weight_path)
