@@ -26,7 +26,7 @@ data_param = {
     'model_dir': './model',
     'train_dir': './data/all',
     'val_dir': './data/test',
-    'normalizer_dir': './model',
+    'normalizer_dir': './tmp',
     'record_dir': './record',
 
     # dataset related
