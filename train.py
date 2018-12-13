@@ -16,6 +16,7 @@ import argparse
 import os
 import keras.backend as K
 from keras.models import load_model
+import socket
 
 from config.init_param import data_param, occlu_param, far_param, fap_param
 from config.parse_param import parse_param
@@ -31,7 +32,11 @@ from utils import set_gpu
 
 # load config
 normalizer, mean_shape = load_config()
-set_gpu(ratio=0.9)
+host_name = socket.gethostname()
+if host_name == 'KB249-workstation':
+    set_gpu(ratio=0.5)
+else: 
+    set_gpu(ratio=0.9)
 
 # load parameter
 ap = argparse.ArgumentParser()
