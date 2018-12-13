@@ -25,5 +25,5 @@ img_server = ImageServer(img_size=data_param['img_size'],
                          color=True if data_param['channel'] == 3 else False,
                          print_debug=True)
 # process 
-chosen_indices = range(3148)
+chosen_indices = range(3837)
 img_server.process(img_paths, bboxes, chosen_indices)
