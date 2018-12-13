@@ -71,10 +71,26 @@ def train_data_feed(batch_size, data_dict=None):
         yield np.array(img_list), np.array(label_list)
 
 
-def wdpts_process(label_path, bbox, img_size):
-    landmark_ori = np.genfromtxt(label_path)
-    landmark = np.multiply(np.clip(normalize_data(landmark_ori, bbox, occlu_include=False, label_ext=".wdpts"), 0, 1),
-                           img_size)
+def val_data_feed(data_dict=None):
+    data_dir = data_dict['data_dir']
+    img_ext_lists = data_dict['img_ext_lists']
+    label_ext = data_dict['label_ext']
+    flatten = data_dict['flatten']
+    img_name_list, label_name_list = \
+        get_filenames([data_dir], img_ext_lists, label_ext)
+    data_size = len(img_name_list)
+    img_list = []
+    label_list = []
+    for index in range(data_size):
+        img = cv2.imread(img_name_list[index])
+        label = load_label(label_name_list[index], flatten)
+        img_list.append(img)
+        label_list.append(label)
+    return np.array(img_list), np.array(label_list)
+
+
+def wdpts_process(label_path):
+    landmark = np.genfromtxt(label_path)
     return landmark
 
 
@@ -102,7 +118,7 @@ def load_imgs_labels_core(img_path, bbox, img_size, normalizer=None, label_ext="
 
     label_path = os.path.splitext(img_path)[0] + label_ext
     if label_ext == '.wdpts':
-        landmark = wdpts_process(label_path, bbox, img_size)
+        landmark = wdpts_process(label_path)
     elif label_ext == '.opts':
         landmark, occlu = opts_process(label_path, bbox, img_size)
         # print(landmark)

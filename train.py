@@ -21,6 +21,7 @@ import socket
 from config.init_param import data_param, occlu_param, far_param, fap_param
 from config.parse_param import parse_param
 from data_gen import train_data_feed
+from data_gen import val_data_feed
 from data_gen import load_imgs_labels
 from data_gen import load_imgs_occlus
 from ml import load_config
@@ -67,13 +68,13 @@ model_structure, loss, loss_compute = \
     parse_param(model_type=model_type, loss_name=loss_name)
 train_data_dir = os.path.join(data_param['train_dir'], feature)
 train_num = count_file([train_data_dir], data_param['img_ext'])
-# print(train_num)
 val_data_dir = os.path.join(data_param['val_dir'], feature)
 
 # face alignment rough
 if args['phase'] == 'rough':
     if args['mode'] == 'train':
-        face_align_rgr = FaceAlignment(lr=lr, epochs=epochs, bs=bs, model_name=model_name,
+        face_align_rgr = FaceAlignment(lr=lr, epochs=epochs, bs=bs,
+                                       model_name=model_name, classes=data_param['landmark_num'] * 2,
                                        loss=loss, train_num=train_num, esm=fap_param['es_monitor'])
         weight_path = os.path.join(far_param['weight_path'], far_param['weight_name'])
         train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
@@ -83,18 +84,18 @@ if args['phase'] == 'rough':
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
         face_align_rgr.train(model_structure=model_structure, train_load=train_data_feed, train_vars=train_vars,
                              val_load=load_imgs_labels, val_vars=val_vars, weight_path=weight_path)
-        if args['mode'] == 'val_compute':
-            logger("loading data")
-            if loss_name != 'no':
-                model = load_model(os.path.join(data_param['model_dir'], model_name), {loss_name: loss})
-            else:
-                model = load_model(os.path.join(data_param['model_dir'], model_name))
-            faces, labels = load_imgs_labels(img_root=data_param['img_root_dir'],
-                                             img_size=data_param['img_size'],
-                                             normalizer=normalizer,
-                                             chosen=range(3148, 3837))
-            logger("epochs: {}, bs: {}, lr: {} ...".format(epochs, bs, lr))
-            FaceAlignment.val_compute(imgs=faces, labels=labels, model=model, loss_compute=loss_compute)
+        # if args['mode'] == 'val_compute':
+        #     logger("loading data")
+        #     if loss_name != 'no':
+        #         model = load_model(os.path.join(data_param['model_dir'], model_name), {loss_name: loss})
+        #     else:
+        #         model = load_model(os.path.join(data_param['model_dir'], model_name))
+        #     faces, labels = load_imgs_labels(img_root=data_param['img_root_dir'],
+        #                                      img_size=data_param['img_size'],
+        #                                      normalizer=normalizer,
+        #                                      chosen=range(3148, 3837))
+        #     logger("epochs: {}, bs: {}, lr: {} ...".format(epochs, bs, lr))
+        #     FaceAlignment.val_compute(imgs=faces, labels=labels, model=model, loss_compute=loss_compute)
 
 # occlusion detection
 if args['phase'] == 'occlu':
@@ -110,23 +111,24 @@ if args['phase'] == 'occlu':
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
         occlu_clf.train(model_structure=model_structure, train_load=train_data_feed, train_vars=train_vars,
                         val_load=load_imgs_occlus, val_vars=val_vars, weight_path=weight_path)
-    elif args['mode'] == 'val_compute':
-        logger('loading data')
-        if loss_name != 'no':
-            model = load_model(os.path.join(data_param['model_dir'], model_name), {loss_name: loss})
-        else:
-            model = load_model(os.path.join(data_param['model_dir'], model_name))
-        faces, landmarks, occlus = load_imgs_labels(img_root=data_param['img_root_dir'],
-                                                    img_size=data_param['img_size'],
-                                                    normalizer=normalizer, occlu_include=True,
-                                                    label_ext=label_ext, chosen=range(3148, 3837))
-        logger("epochs: {}, bs: {}, lr: {} ...".format(epochs, bs, lr))
-        OcclusionDetection.val_compute(imgs=faces, landmarks=landmarks, occlus=occlus, model=model)
+    # elif args['mode'] == 'val_compute':
+    #     logger('loading data')
+    #     if loss_name != 'no':
+    #         model = load_model(os.path.join(data_param['model_dir'], model_name), {loss_name: loss})
+    #     else:
+    #         model = load_model(os.path.join(data_param['model_dir'], model_name))
+    #     faces, landmarks, occlus = load_imgs_labels(img_root=data_param['img_root_dir'],
+    #                                                 img_size=data_param['img_size'],
+    #                                                 normalizer=normalizer, occlu_include=True,
+    #                                                 label_ext=label_ext, chosen=range(3148, 3837))
+    #     logger("epochs: {}, bs: {}, lr: {} ...".format(epochs, bs, lr))
+    #     OcclusionDetection.val_compute(imgs=faces, landmarks=landmarks, occlus=occlus, model=model)
 
 # face precise alignment
 if args['phase'] == 'precise':
     if args['mode'] == 'train':
         face_align_rgr = FaceAlignment(lr=lr, epochs=epochs, bs=bs, model_name=model_name,
+                                       classes=data_param['landmark_num'] * 2,
                                        loss=loss, train_num=train_num)
         weight_path = os.path.join(fap_param['weight_path'], fap_param['weight_name'])
         train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
@@ -136,6 +138,6 @@ if args['phase'] == 'precise':
                     'print_debug': data_param['print_debug']}
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
         face_align_rgr.train(model_structure=model_structure, train_load=train_data_feed, train_vars=train_vars,
-                             val_load=load_imgs_labels, val_vars=val_vars, weight_path=weight_path)
+                             val_load=val_data_feed, val_vars=val_vars, weight_path=weight_path)
 
 K.clear_session()
