@@ -109,7 +109,7 @@ if args['phase'] == 'occlu':
                     'label_ext': label_ext, 'flatten': False}
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
         occlu_clf.train(model_structure=model_structure, train_load=train_data_feed, train_vars=train_vars,
-                        val_load=load_imgs_occlus, val_vars=val_vars, weight_path=weight_path)
+                        val_load=val_data_feed, val_vars=val_vars, weight_path=weight_path)
     # elif args['mode'] == 'val_compute':
     #     logger('loading data')
     #     if loss_name != 'no':
