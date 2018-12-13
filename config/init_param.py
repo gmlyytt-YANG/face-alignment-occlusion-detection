@@ -21,6 +21,7 @@ data_param = {
 
     # path related
     'root_dir': '../',
+    'data_save_dir': './tmp',
     'img_root_dir': os.path.join(os.path.abspath('..'), '0_DATASET/origin_img'),
     'model_dir': './model',
     'train_dir': './data/all',
