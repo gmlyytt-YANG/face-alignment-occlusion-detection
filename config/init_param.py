@@ -24,7 +24,7 @@ data_param = {
     'img_root_dir': os.path.join(os.path.abspath('..'), '0_DATASET/origin_img'),
     'model_dir': './model',
     'train_dir': './data/all',
-    'val_dir': './data/val',
+    'val_dir': './data/test',
     'normalizer_dir': './model',
     'record_dir': './record',
 
