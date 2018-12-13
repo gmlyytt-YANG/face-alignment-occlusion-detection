@@ -34,6 +34,8 @@ data_param = {
     'img_size': 112,
     'test_size': 0.3,  # split test size
     'random_state': 0,  # split random state
+    'left_eye_range': [36, 42],
+    'right_eye_range': [42, 48],
 
     # dl related
     'es_step': 20,

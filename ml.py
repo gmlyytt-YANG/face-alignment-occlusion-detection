@@ -49,8 +49,8 @@ def landmark_loss(y_true, y_pred):
     landmark_true = K.reshape(y_true, (-1, data_param['landmark_num'], 2))
     landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
     landmark_pred = landmark_pred + mean_shape
-    left_eye = K.mean(landmark_true[:, 36:42, :], axis=1)
-    right_eye = K.mean(landmark_true[:, 42:48, :], axis=1)
+    left_eye = K.mean(landmark_true[:, data_param['left_right_range'][0]:data_param['left_right_range'][1], :], axis=1)
+    right_eye = K.mean(landmark_true[:, data_param['left_right_range'][0]:data_param['left_right_range'][1], :], axis=1)
     loss = K.mean(K.mean(K.sqrt(K.sum((landmark_true - landmark_pred) ** 2, axis=-1)), axis=-1)
                   / K.sqrt(K.sum((right_eye - left_eye) ** 2, axis=-1)))
     return loss
@@ -60,16 +60,16 @@ def landmark_delta_loss(y_true, y_pred):
     """Self defined loss function of delta loss
         loss = sqrt(sum((weight * (landmark_true - landmark_rough) - landmark_pred) ^ 2))
     """
-    landmark_true = y_true[:, :136]
-    landmark_rough = y_true[:, 136:272]
-    occlu_ratio = K.clip(1 - y_true[:, 272:340], 0.1, 1)
+    landmark_true = y_true[:, :data_param['landmark_num'] * 2]
+    landmark_rough = y_true[:, data_param['landmark_num'] * 2:data_param['landmark_num'] * 4]
+    occlu_ratio = K.clip(1 - y_true[:, data_param['landmark_num'] * 4:data_param['landmark_num'] * 5], 0.1, 1)
     landmark_true = K.reshape(landmark_true, (-1, data_param['landmark_num'], 2))
     landmark_rough = K.reshape(landmark_rough, (-1, data_param['landmark_num'], 2))
 
     landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
     final_pred = landmark_pred / occlu_ratio + landmark_rough
-    left_eye = K.mean(landmark_true[:, 36:42, :], axis=1)
-    right_eye = K.mean(landmark_true[:, 42:48, :], axis=1)
+    left_eye = K.mean(landmark_true[:, data_param['left_eye_range'][0]:data_param['left_eye_range'][1], :], axis=1)
+    right_eye = K.mean(landmark_true[:, data_param['right_eye_range'][0]:data_param['right_eye_range'][1], :], axis=1)
     loss = K.mean(K.mean(K.sqrt(K.sum((landmark_true - final_pred) ** 2, axis=-1)), axis=-1)
                   / K.sqrt(K.sum((right_eye - left_eye) ** 2, axis=-1)))
     return loss
@@ -78,21 +78,21 @@ def landmark_delta_loss(y_true, y_pred):
 def landmark_loss_compute(prediction, label):
     """loss compute of landmark_loss"""
     landmark_true = np.reshape(label, (data_param['landmark_num'], 2))
-    left_eye = np.mean(landmark_true[36:42, :], axis=0)
-    right_eye = np.mean(landmark_true[42:48, :], axis=0)
+    left_eye = np.mean(landmark_true[data_param['left_eye_range'][0]:data_param['left_eye_range'][1], :], axis=0)
+    right_eye = np.mean(landmark_true[data_param['right_eye_range'][0]:data_param['right_eye_range'][1], :], axis=0)
     loss = np.mean(np.sqrt(np.sum((landmark_true - prediction) ** 2, axis=-1)), axis=-1) / np.sqrt(
         np.sum((right_eye - left_eye) ** 2))
     return loss
 
 
 def landmark_delta_loss_compute(prediction, label):
-    landmark_true = label[:136]
-    landmark_rough = label[136:272]
-    occlu_ratio = np.clip(1 - label[272:340], 0.1, 1)
+    landmark_true = label[:data_param['landmark_num'] * 2]
+    landmark_rough = label[data_param['landmark_num'] * 2:data_param['landmark_num'] * 4]
+    occlu_ratio = np.clip(1 - label[data_param['landmark_num'] * 4:data_param['landmark_num'] * 5], 0.1, 1)
     landmark_rough = np.reshape(landmark_rough, (data_param['landmark_num'], 2))
     landmark_true = np.reshape(landmark_true, (data_param['landmark_num'], 2))
-    left_eye = np.mean(landmark_true[36:42, :], axis=0)
-    right_eye = np.mean(landmark_true[42:48, :], axis=0)
+    left_eye = np.mean(landmark_true[data_param['left_eye_range'][0]:data_param['left_eye_range'][1], :], axis=0)
+    right_eye = np.mean(landmark_true[data_param['right_eye_range'][0]:data_param['right_eye_range'][1], :], axis=0)
     prediction_all = \
         np.reshape(prediction, (data_param['landmark_num'], 2)) / np.expand_dims(occlu_ratio,
                                                                                  axis=-1) + landmark_rough
