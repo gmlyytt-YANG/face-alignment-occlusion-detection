@@ -23,7 +23,8 @@ from utils import logger
 class FaceAlignment(Model, object):
     """"Face Alignment Training"""
 
-    def __init__(self, lr=None, epochs=None, bs=None, model_name=None, esm=None, loss=None, train_num=None):
+    def __init__(self, lr=None, epochs=None, bs=None,
+                 model_name=None, classes=None, esm=None, loss=None, train_num=None):
         super(FaceAlignment, self).__init__(
             lr=lr,
             epochs=epochs,
@@ -32,7 +33,7 @@ class FaceAlignment(Model, object):
             loss=loss,
             metrics=["accuracy"],
             steps_per_epochs=train_num // bs,
-            classes=data_param['landmark_num'] * 2,
+            classes=classes,
             esm=esm
         )
 
