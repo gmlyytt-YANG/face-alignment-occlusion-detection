@@ -45,7 +45,6 @@ class Model(object):
         # load data
         logger('loading data')
         val_data, val_labels = val_load(data_dict=val_vars)
-
         # build model
         logger('building model')
         opt = Adam(lr=self.lr, decay=self.lr / self.epochs)

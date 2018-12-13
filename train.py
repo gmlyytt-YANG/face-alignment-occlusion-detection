@@ -108,7 +108,7 @@ if args['phase'] == 'occlu':
                     'label_ext': label_ext, 'flatten': False, 'occlu_include': True, }
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
         occlu_clf.train(model_structure=model_structure, train_load=train_data_feed, train_vars=train_vars,
-                        val_load=load_imgs_occlus, val_vars=val_vars, weight_path=weight_path)
+                        val_load=val_data_feed, val_vars=val_vars, weight_path=weight_path)
     # elif args['mode'] == 'val_compute':
     #     logger('loading data')
     #     if loss_name != 'no':
@@ -131,7 +131,7 @@ if args['phase'] == 'precise':
                                        loss=loss, train_num=train_num)
         weight_path = os.path.join(fap_param['weight_path'], fap_param['weight_name'])
         train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
-                      'label_ext': label_ext, 'flatten': True}
+                      'label_ext': label_ext, 'flatten': False}
         val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
                     'label_ext': label_ext, 'flatten': True}
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
