@@ -62,12 +62,13 @@ def landmark_delta_loss(y_true, y_pred):
     """
     landmark_true = y_true[:, :data_param['landmark_num'] * 2]
     landmark_rough = y_true[:, data_param['landmark_num'] * 2:data_param['landmark_num'] * 4]
-    occlu_ratio = K.clip(1 - y_true[:, data_param['landmark_num'] * 4:data_param['landmark_num'] * 5], 0.1, 1)
+    occlu_ratio = K.clip(1 - y_true[:, data_param['landmark_num'] * 4:data_param['landmark_num'] * 5], 
+                         data_param['clip_left'], data_param['clip_right'])
     landmark_true = K.reshape(landmark_true, (-1, data_param['landmark_num'], 2))
     landmark_rough = K.reshape(landmark_rough, (-1, data_param['landmark_num'], 2))
 
     landmark_pred = K.reshape(y_pred, (-1, data_param['landmark_num'], 2))
-    final_pred = landmark_pred / occlu_ratio + landmark_rough
+    final_pred = landmark_pred / K.expand_dims(occlu_ratio, axis=-1) + landmark_rough
     left_eye = K.mean(landmark_true[:, data_param['left_eye_range'][0]:data_param['left_eye_range'][1], :], axis=1)
     right_eye = K.mean(landmark_true[:, data_param['right_eye_range'][0]:data_param['right_eye_range'][1], :], axis=1)
     loss = K.mean(K.mean(K.sqrt(K.sum((landmark_true - final_pred) ** 2, axis=-1)), axis=-1)
@@ -88,7 +89,8 @@ def landmark_loss_compute(prediction, label):
 def landmark_delta_loss_compute(prediction, label):
     landmark_true = label[:data_param['landmark_num'] * 2]
     landmark_rough = label[data_param['landmark_num'] * 2:data_param['landmark_num'] * 4]
-    occlu_ratio = np.clip(1 - label[data_param['landmark_num'] * 4:data_param['landmark_num'] * 5], 0.1, 1)
+    occlu_ratio = np.clip(1 - label[data_param['landmark_num'] * 4:data_param['landmark_num'] * 5], 
+                          data_param['clip_left'], data_param['clip_right'])
     landmark_rough = np.reshape(landmark_rough, (data_param['landmark_num'], 2))
     landmark_true = np.reshape(landmark_true, (data_param['landmark_num'], 2))
     left_eye = np.mean(landmark_true[data_param['left_eye_range'][0]:data_param['left_eye_range'][1], :], axis=0)

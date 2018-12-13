@@ -39,6 +39,9 @@ data_param = {
 
     # dl related
     'es_step': 20,
+    'clip_left': 1, 
+    'clip_right': 1,
+
     # data augment
     'balance_num': 2,
     'mode': 'gaussian',
