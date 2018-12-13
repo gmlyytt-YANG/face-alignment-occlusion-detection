@@ -128,14 +128,14 @@ if args['phase'] == 'occlu':
 if args['phase'] == 'precise':
     if args['mode'] == 'train':
         face_align_rgr = FaceAlignment(lr=lr, epochs=epochs, bs=bs, model_name=model_name,
-                                       classes=data_param['landmark_num'] * 2,
+                                       classes=data_param['landmark_num'] * 2, esm=fap_param['es_monitor'],
                                        loss=loss, train_num=train_num)
         weight_path = os.path.join(fap_param['weight_path'], fap_param['weight_name'])
         train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
                       'label_ext': label_ext}
         val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
                     'label_ext': label_ext, 'normalizer': normalizer,
-                    'print_debug': data_param['print_debug']}
+                    'print_debug': data_param['print_debug'], 'flatten': True}
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
         face_align_rgr.train(model_structure=model_structure, train_load=train_data_feed, train_vars=train_vars,
                              val_load=val_data_feed, val_vars=val_vars, weight_path=weight_path)
