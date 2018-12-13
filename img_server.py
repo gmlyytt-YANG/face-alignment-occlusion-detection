@@ -91,9 +91,11 @@ class ImageServer(object):
         logger("balancing")
         self._balance()
 
-        # splitting
-        logger("train validation splitting")
-        self._train_val_split()
+        # # splitting
+        # logger("train validation splitting")
+        # self._train_val_split()
+
+        self._save()
 
     def _prepare(self, img_paths, bboxes, chosen_indices=range(1)):
         """Getting data
@@ -113,8 +115,8 @@ class ImageServer(object):
             self.img_paths.append(img_path)
             if self.print_debug and (index + 1) % 500 == 0:
                 logger("processed {} basic infos".format(index + 1))
-            # if (index + 1) >= 10:
-            #     break
+            if (index + 1) >= 10:
+                break
 
     def _load_imgs(self):
         """Load imgs"""
@@ -148,6 +150,9 @@ class ImageServer(object):
 
         self.data_size = len(self.occlusions)
 
+        for index in range(len(self.aug_landmarks)):
+            self.aug_landmarks[index] = np.multiply(self.aug_landmarks[index], np.array([self.img_size, self.img_size]))
+
         del self.landmarks
 
     def _normalize_imgs(self):
@@ -170,7 +175,7 @@ class ImageServer(object):
             face = self.faces[index]
             landmark = self.aug_landmarks[index]
             self.heat_maps.append(heat_map_compute(face, landmark,
-                                                   landmark_is_01=True,
+                                                   landmark_is_01=False,
                                                    img_color=self.color,
                                                    radius=occlu_param['radius']))
             if self.print_debug and (index + 1) % 500 == 0:
@@ -224,7 +229,7 @@ class ImageServer(object):
             # save data
             img_path = os.path.join(data_dir, add_postfix(name, "_{}".format(phase)))
             cv2.imwrite(img_path, img)
-            np.savetxt(os.path.splitext(img_path)[0] + ".pts", landmark, fmt="%.10f")
+            np.savetxt(os.path.splitext(img_path)[0] + ".pts", landmark, fmt="%.4f")
             np.savetxt(os.path.splitext(img_path)[0] + ".opts", occlusion, fmt="%d")
 
     def _img_split(self, phase="face"):
@@ -252,3 +257,16 @@ class ImageServer(object):
         # save data
         self._img_split(phase="face")
         self._img_split(phase="heatmap")
+
+    def _save_data_core(self, phase='face'):
+        data_dir = os.path.join(data_param['data_save_dir'], phase)
+        for index in range(len(self.faces)):
+            name = self.names[index]
+            img_path = os.path.join(data_dir, add_postfix(name, "_{}".format(phase)))
+            cv2.imwrite(img_path, self.faces[index])
+            np.savetxt(os.path.splitext(img_path)[0] + ".pts", self.aug_landmarks[index], fmt="%.4f")
+            np.savetxt(os.path.splitext(img_path)[0] + ".opts", self.occlusions[index], fmt="%d")
+
+    def _save(self):
+        self._save_data_core(phase='face')
+        self._save_data_core(phase='heatmap')
