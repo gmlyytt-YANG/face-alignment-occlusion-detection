@@ -87,7 +87,7 @@ if args['phase'] == 'rough':
 if args['phase'] == 'occlu':
     # training
     occlu_clf = OcclusionDetection(lr=lr, epochs=epochs, bs=bs, model_name=model_name,
-                                   loss='binary_crossentropy', train_num=train_num, esm=occlu_param['es_monitor'])
+                                   loss=loss, train_num=train_num, esm=occlu_param['es_monitor'])
     weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
     train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
                   'label_ext': label_ext, 'flatten': False}

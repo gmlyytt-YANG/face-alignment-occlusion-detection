@@ -393,6 +393,11 @@ def heat_map_compute(face, landmark, landmark_is_01, img_color, radius):
     :param radius:
     """
     face_size = face.shape[:2]
+    # pixel = np.reshape([(x, y) for y in range(face_size[1]) for x in range(face_size[0])],
+    #                    (1, face_size[0], face_size[1], 2))
+    # landmark = landmark[:, np.newaxis, np.newaxis, :]
+    # values = pixel - landmark
+    # values =
     if img_color:
         heat_map_mask = np.zeros_like(face[:, :, 0], dtype=np.float)
     else:
