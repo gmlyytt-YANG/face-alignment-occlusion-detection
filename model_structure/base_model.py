@@ -69,3 +69,5 @@ class Model(object):
         filename = os.path.splitext(os.path.join(data_param['record_dir'], self.model_name))[0]
         np.savetxt(filename + '_{}.txt'.format(self.esm), H.history[self.esm])
         logger('min val loss of {} is {}'.format(filename, np.min(H.history[self.esm])))
+
+        return val_data, val_labels

@@ -77,6 +77,19 @@ model_structure2, loss2, loss_compute2, model2 = \
     parse_param(model_type=mt2, loss_name=ln2, model_name=model_name2)
 
 
+# elif args['mode'] == 'val_compute':
+#     logger('loading data')
+#     if loss_name != 'no':
+#         model = load_model(os.path.join(data_param['model_dir'], model_name), {loss_name: loss})
+#     else:
+#         model = load_model(os.path.join(data_param['model_dir'], model_name))
+#     faces, landmarks, occlus = load_imgs_labels(img_root=data_param['img_root_dir'],
+#                                                 img_size=data_param['img_size'],
+#                                                 normalizer=normalizer, occlu_include=True,
+#                                                 label_ext=label_ext, chosen=range(3148, 3837))
+#     logger("epochs: {}, bs: {}, lr: {} ...".format(epochs, bs, lr))
+#     OcclusionDetection.val_compute(imgs=faces, landmarks=landmarks, occlus=occlus, model=model)
+
 def get_pipe_data(img):
     """Get weighted landmark based on rough face alignment
        and occlusion detection"""

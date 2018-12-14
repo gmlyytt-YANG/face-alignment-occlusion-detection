@@ -39,23 +39,33 @@ class OcclusionDetection(Model, object):
         )
 
     @staticmethod
-    def val_compute(imgs, landmarks, occlus, model):
+    def val_compute(data, occlus, model, is_heatmap=False):
         predictions = []
-        for face, landmark in zip(imgs, landmarks):
-            prediction = OcclusionDetection.test(img=face, landmark=landmark,
-                                                 is_heat_map=True, binary_output=True,
-                                                 model=model)
-            # print(prediction)
-            predictions.append(prediction)
-            if data_param['print_debug'] and len(predictions) % 100 == 0:
-                logger("predicted {} imgs".format(len(predictions)))
+        if is_heatmap:
+            for face, landmark in data:
+                prediction = \
+                    OcclusionDetection.test(img=face, landmark=landmark, is_heatmap=is_heatmap,
+                                            binary_output=True, model=model)
+                # print(prediction)
+                predictions.append(prediction)
+                if data_param['print_debug'] and len(predictions) % 100 == 0:
+                    logger("predicted {} imgs".format(len(predictions)))
+        else:
+            for face in data:
+                prediction = \
+                    OcclusionDetection.test(img=face, is_heatmap=is_heatmap,
+                                            binary_output=True, model=model)
+                # print(prediction)
+                predictions.append(prediction)
+                if data_param['print_debug'] and len(predictions) % 100 == 0:
+                    logger("predicted {} imgs".format(len(predictions)))
         metric_compute(occlus, predictions)
 
     @staticmethod
-    def test(img, landmark, is_heat_map=False, binary_output=False, model=None):
+    def test(img, landmark=None, is_heatmap=False, binary_output=False, model=None):
         """Classify img"""
         net_input = img
-        if is_heat_map:
+        if is_heatmap:
             net_input = heat_map_compute(img, landmark,
                                          landmark_is_01=False,
                                          img_color=True,
