@@ -32,9 +32,6 @@ do
     "-lr")
         lr="$2"
         ;;
-    "-m")
-        mode="$2"
-        ;;
     "-p")
         phase="$2"
         ;;
@@ -57,11 +54,11 @@ done
 # run cmd
 if [ ${show} = "nohup" ];then
     nohup python train.py -s ${show} -c ${content} -e ${epochs}\
-        -bs ${bs} -lr ${lr} -m ${mode} -p ${phase} -f ${feature}\
+        -bs ${bs} -lr ${lr} -p ${phase} -f ${feature}\
         -le ${label_ext} -mt ${model_type} -ln ${loss_name}\
     > logs/epochs=${epochs}_bs=${bs}_initlr=${lr}_mode=${mode}_phase=${phase}_content=${content}.log 2>&1 &
 else
     python train.py -s ${show} -c ${content} -e ${epochs}\
-        -bs ${bs} -lr ${lr} -m ${mode} -p ${phase} -f ${feature}\
+        -bs ${bs} -lr ${lr} -p ${phase} -f ${feature}\
         -le ${label_ext} -mt ${model_type} -ln ${loss_name}
 fi

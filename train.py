@@ -33,7 +33,7 @@ from utils import set_gpu
 normalizer, mean_shape = load_config()
 host_name = socket.gethostname()
 if host_name == 'KB249-workstation':
-    set_gpu(ratio=0.3)
+    set_gpu(ratio=0.5)
 else:
     set_gpu(ratio=0.4)
 
