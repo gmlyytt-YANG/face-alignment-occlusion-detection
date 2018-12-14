@@ -115,8 +115,8 @@ class ImageServer(object):
             self.img_paths.append(img_path)
             if self.print_debug and (index + 1) % 500 == 0:
                 logger("processed {} basic infos".format(index + 1))
-            if (index + 1) >= 10:
-                break
+            # if (index + 1) >= 10:
+            #     break
 
     def _load_imgs(self):
         """Load imgs"""
@@ -260,6 +260,7 @@ class ImageServer(object):
 
     def _save_data_core(self, phase='face'):
         data_dir = os.path.join(data_param['data_save_dir'], phase)
+        create_dir(data_dir)
         for index in range(len(self.faces)):
             name = self.names[index]
             img_path = os.path.join(data_dir, add_postfix(name, "_{}".format(phase)))

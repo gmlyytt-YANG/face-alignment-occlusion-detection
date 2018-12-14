@@ -33,7 +33,7 @@ from utils import set_gpu
 normalizer, mean_shape = load_config()
 host_name = socket.gethostname()
 if host_name == 'KB249-workstation':
-    set_gpu(ratio=0.5)
+    set_gpu(ratio=0.3)
 else:
     set_gpu(ratio=0.4)
 
@@ -65,12 +65,12 @@ model_name = 'best_model_epochs={}_bs={}_lr={}_des={}.h5'.format(epochs, bs, lr,
 model_structure, loss, loss_compute = \
     parse_param(model_type=model_type, loss_name=loss_name)
 train_data_dir = os.path.join(data_param['train_dir'], feature)
+val_data_dir = os.path.join(data_param['val_dir'], feature)
 train_num = count_file([train_data_dir], data_param['img_ext'])
 
 # face alignment rough
 if args['phase'] == 'rough':
     if args['mode'] == 'train':
-        val_data_dir = data_param['val_dir']
         face_align_rgr = FaceAlignment(lr=lr, epochs=epochs, bs=bs,
                                        model_name=model_name, classes=data_param['landmark_num'] * 2,
                                        loss=loss, train_num=train_num, esm=fap_param['es_monitor'])
@@ -98,14 +98,13 @@ if args['phase'] == 'rough':
 # occlusion detection
 if args['phase'] == 'occlu':
     if args['mode'] == 'train':
-        val_data_dir = data_param['val_dir']
         occlu_clf = OcclusionDetection(lr=lr, epochs=epochs, bs=bs, model_name=model_name,
                                        loss='binary_crossentropy', train_num=train_num, esm=occlu_param['es_monitor'])
         weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
         train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
                       'label_ext': label_ext, 'flatten': False}
         val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
-                    'label_ext': label_ext, 'flatten': False, 'occlu_include': True, }
+                    'label_ext': label_ext, 'flatten': False}
         logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
         occlu_clf.train(model_structure=model_structure, train_load=train_data_feed, train_vars=train_vars,
                         val_load=val_data_feed, val_vars=val_vars, weight_path=weight_path)

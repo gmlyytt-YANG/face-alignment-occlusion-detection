@@ -80,7 +80,6 @@ def val_data_feed(data_dict=None):
     img_ext_lists = data_dict['img_ext_lists']
     label_ext = data_dict['label_ext']
     flatten = data_dict['flatten']
-    occlu = data_dict['occlu']
     img_name_list, label_name_list = \
         get_filenames([data_dir], img_ext_lists, label_ext)
     data_size = len(img_name_list)
@@ -88,13 +87,12 @@ def val_data_feed(data_dict=None):
     label_list = []
     for index in range(data_size):
         img = cv2.imread(img_name_list[index])
-        if occlu:
-            label = load_label(label_name_list[index], flatten)
+        label = load_label(label_name_list[index], flatten)
         img_list.append(img)
         label_list.append(label)
     return np.array(img_list), np.array(label_list)
 
-
+    
 def wdpts_process(label_path):
     landmark = np.genfromtxt(label_path)
     return landmark
