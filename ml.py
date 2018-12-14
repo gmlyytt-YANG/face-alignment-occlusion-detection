@@ -43,18 +43,6 @@ def load_config():
     return normalizer, mean_shape
 
 
-def weighted_binary_crossentropy(y_true, y_pred):
-    # Calculate the binary crossentropy
-    b_ce = K.binary_crossentropy(y_true, y_pred)
-
-    # Apply the weights
-    weight_vector = y_true * 0.97 + (1. - y_true) * 0.03
-    weighted_b_ce = weight_vector * b_ce
-
-    # Return the mean error
-    return K.mean(weighted_b_ce)
-
-
 def landmark_loss(y_true, y_pred):
     """Self defined loss function of landmark"""
     _, mean_shape = load_config()

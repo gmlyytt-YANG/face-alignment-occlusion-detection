@@ -20,7 +20,7 @@ from ml import landmark_loss_compute
 from ml import landmark_delta_loss
 from ml import landmark_delta_loss_compute
 from ml import weighted_binary_crossentropy
-
+from ml import binary_crossentropy
 
 def parse_param(model_type, loss_name):
     if model_type == 'vgg16_clf':
@@ -37,10 +37,10 @@ def parse_param(model_type, loss_name):
     elif loss_name == 'landmark_delta_loss':
         loss = landmark_delta_loss
         loss_compute = landmark_delta_loss_compute
-    elif loss_name == 'wbc':
-        loss = weighted_binary_crossentropy
+    elif loss_name == 'binary_crossentropy':
+        loss = binary_crossentropy
         loss_compute = None
     else:
-        loss = None
+        loss = loss_name
         loss_compute = None
     return model_structure, loss, loss_compute

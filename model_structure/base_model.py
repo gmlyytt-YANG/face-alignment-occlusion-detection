@@ -39,7 +39,7 @@ class Model(object):
         self.esm = esm
         self.final_act = final_act
 
-    def train(self, model_structure=None, train_load=None,
+    def train(self, model_structure=None, train_load=None, class_weight=None,
               train_vars=None, val_load=None, val_vars=None, weight_path=None):
         """Train procedure"""
         # load data
@@ -63,7 +63,7 @@ class Model(object):
         H = model.fit_generator(
             train_load(batch_size=self.bs, data_dict=train_vars),
             validation_data=(val_data, val_labels),
-            steps_per_epoch=self.steps_per_epoch,
+            steps_per_epoch=self.steps_per_epoch, class_weight=class_weight,
             epochs=self.epochs, verbose=1, callbacks=callback_list)
 
         filename = os.path.splitext(os.path.join(data_param['record_dir'], self.model_name))[0]

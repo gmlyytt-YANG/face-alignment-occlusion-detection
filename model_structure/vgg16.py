@@ -99,7 +99,7 @@ class Vgg16Regress(Vgg16Base, object):
 
         # Regression block
         x = Flatten(name='flatten')(x)
-        x = Dense(512, name='fc1_self')(x)
+        x = Dense(4096, name='fc1_self')(x)
         # x = Dense(1000, activation='relu', name='fc1_self')(x)
         x = Dense(classes, name='predictions_self')(x)
         model = Model(input, x)

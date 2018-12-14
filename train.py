@@ -71,41 +71,69 @@ train_num = count_file([train_data_dir], data_param['img_ext'])
 
 # face alignment rough
 if args['phase'] == 'rough':
-    face_align_rgr = FaceAlignment(lr=lr, epochs=epochs, bs=bs,
-                                   model_name=model_name, classes=data_param['landmark_num'] * 2,
-                                   loss=loss, train_num=train_num, esm=fap_param['es_monitor'])
+    face_align_rgr = FaceAlignment(lr=lr, 
+                                   epochs=epochs, 
+                                   bs=bs,
+                                   model_name=model_name, 
+                                   classes=data_param['landmark_num'] * 2,
+                                   loss=loss, 
+                                   train_num=train_num, 
+                                   esm=fap_param['es_monitor'])
     weight_path = os.path.join(far_param['weight_path'], far_param['weight_name'])
-    train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
-                  'label_ext': label_ext, 'flatten': True}
-    val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
-                'label_ext': label_ext, 'flatten': True}
+    train_vars = {'data_dir': train_data_dir, 
+                  'img_ext_lists': data_param['img_ext'],
+                  'label_ext': label_ext, 
+                  'flatten': True}
+    val_vars = {'data_dir': val_data_dir, 
+                'img_ext_lists': data_param['img_ext'],
+                'label_ext': label_ext, 
+                'flatten': True}
     logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
-    face_align_rgr.train(model_structure=model_structure, train_load=train_data_feed, train_vars=train_vars,
-                         val_load=val_data_feed, val_vars=val_vars, weight_path=weight_path)
+    face_align_rgr.train(model_structure=model_structure, 
+                         train_load=train_data_feed, 
+                         train_vars=train_vars,
+                         val_load=val_data_feed, 
+                         val_vars=val_vars, 
+                         weight_path=weight_path)
 
 # occlusion detection
 if args['phase'] == 'occlu':
     # training
-    occlu_clf = OcclusionDetection(lr=lr, epochs=epochs, bs=bs, model_name=model_name,
-                                   loss=loss, train_num=train_num, esm=occlu_param['es_monitor'])
+    occlu_clf = OcclusionDetection(lr=lr, 
+                                   epochs=epochs, 
+                                   bs=bs, 
+                                   model_name=model_name,
+                                   loss='weighted_binary_crossentropy', 
+                                   train_num=train_num, 
+                                   esm=occlu_param['es_monitor'])
     weight_path = os.path.join(occlu_param['weight_path'], occlu_param['weight_name'])
-    train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
-                  'label_ext': label_ext, 'flatten': False}
-    val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
-                'label_ext': label_ext, 'flatten': False}
+    train_vars = {'data_dir': train_data_dir, 
+                  'img_ext_lists': data_param['img_ext'],
+                  'label_ext': label_ext, 
+                  'flatten': False}
+    val_vars = {'data_dir': val_data_dir, 
+                'img_ext_lists': data_param['img_ext'],
+                'label_ext': label_ext, 
+                'flatten': False}
     logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
-    val_data, val_labels = occlu_clf.train(model_structure=model_structure, train_load=train_data_feed,
-                                           train_vars=train_vars, val_load=val_data_feed,
-                                           val_vars=val_vars, weight_path=weight_path)
+    val_data, val_labels = occlu_clf.train(model_structure=model_structure, 
+                                           train_load=train_data_feed,
+                                           train_vars=train_vars, 
+                                           val_load=val_data_feed, 
+                                           val_vars=val_vars, 
+                                           weight_path=weight_path)
     # evaluating
+    val_data, val_labels = val_data_feed(data_dict=val_vars)
     logger('total_occlu_ratio is {}'.format(occlu_total_ratio(val_labels)))
-    if loss_name != 'no':
-        model = load_model(os.path.join(data_param['model_dir'], model_name), {loss_name: loss})
-    else:
+    if loss_name == 'no':
         model = load_model(os.path.join(data_param['model_dir'], model_name))
+    else:
+        model = load_model(os.path.join(data_param['model_dir'], model_name), {loss_name: loss})
     if feature == 'heatmap':
-        val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
-                    'label_ext': '.pts', 'flatten': False}
+        val_vars = {'data_dir': val_data_dir, 
+                    'img_ext_lists': data_param['img_ext'],
+                    'label_ext': '.pts', 
+                    'flatten': False}
         _, landmarks = val_data_feed(data_dict=val_vars)
         data = zip(val_data, landmarks)
         is_heatmap = True
@@ -117,16 +145,28 @@ if args['phase'] == 'occlu':
 # face precise alignment
 if args['phase'] == 'precise':
     val_data_dir = data_param['val_dir']
-    face_align_rgr = FaceAlignment(lr=lr, epochs=epochs, bs=bs, model_name=model_name,
-                                   classes=data_param['landmark_num'] * 2, esm=fap_param['es_monitor'],
+    face_align_rgr = FaceAlignment(lr=lr, 
+                                   epochs=epochs, 
+                                   bs=bs, 
+                                   model_name=model_name,
+                                   classes=data_param['landmark_num'] * 2, 
+                                   esm=fap_param['es_monitor'],
                                    loss=loss, train_num=train_num)
     weight_path = os.path.join(fap_param['weight_path'], fap_param['weight_name'])
-    train_vars = {'data_dir': train_data_dir, 'img_ext_lists': data_param['img_ext'],
-                  'label_ext': label_ext, 'flatten': False}
-    val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
-                'label_ext': label_ext, 'flatten': True}
+    train_vars = {'data_dir': train_data_dir, 
+                  'img_ext_lists': data_param['img_ext'],
+                  'label_ext': label_ext, 
+                  'flatten': False}
+    val_vars = {'data_dir': val_data_dir, 
+                'img_ext_lists': data_param['img_ext'],
+                'label_ext': label_ext, 
+                'flatten': True}
     logger("epochs: {}, bs: {}, lr: {}".format(epochs, bs, lr))
-    face_align_rgr.train(model_structure=model_structure, train_load=train_data_feed, train_vars=train_vars,
-                         val_load=val_data_feed, val_vars=val_vars, weight_path=weight_path)
+    face_align_rgr.train(model_structure=model_structure, 
+                         train_load=train_data_feed, 
+                         train_vars=train_vars,
+                         val_load=val_data_feed, 
+                         val_vars=val_vars, 
+                         weight_path=weight_path)
 
 K.clear_session()
