@@ -43,6 +43,11 @@ def load_config():
     return normalizer, mean_shape
 
 
+def occlu_loss(y_true, y_pred):
+    y_true = y_true * 3
+    return K.mean(K.square(y_pred - y_true), axis=-1)
+
+
 def landmark_loss(y_true, y_pred):
     """Self defined loss function of landmark"""
     _, mean_shape = load_config()
@@ -62,7 +67,7 @@ def landmark_delta_loss(y_true, y_pred):
     """
     landmark_true = y_true[:, :data_param['landmark_num'] * 2]
     landmark_rough = y_true[:, data_param['landmark_num'] * 2:data_param['landmark_num'] * 4]
-    occlu_ratio = K.clip(1 - y_true[:, data_param['landmark_num'] * 4:data_param['landmark_num'] * 5], 
+    occlu_ratio = K.clip(1 - y_true[:, data_param['landmark_num'] * 4:data_param['landmark_num'] * 5],
                          data_param['clip_left'], data_param['clip_right'])
     landmark_true = K.reshape(landmark_true, (-1, data_param['landmark_num'], 2))
     landmark_rough = K.reshape(landmark_rough, (-1, data_param['landmark_num'], 2))
@@ -89,7 +94,7 @@ def landmark_loss_compute(prediction, label):
 def landmark_delta_loss_compute(prediction, label):
     landmark_true = label[:data_param['landmark_num'] * 2]
     landmark_rough = label[data_param['landmark_num'] * 2:data_param['landmark_num'] * 4]
-    occlu_ratio = np.clip(1 - label[data_param['landmark_num'] * 4:data_param['landmark_num'] * 5], 
+    occlu_ratio = np.clip(1 - label[data_param['landmark_num'] * 4:data_param['landmark_num'] * 5],
                           data_param['clip_left'], data_param['clip_right'])
     landmark_rough = np.reshape(landmark_rough, (data_param['landmark_num'], 2))
     landmark_true = np.reshape(landmark_true, (data_param['landmark_num'], 2))
