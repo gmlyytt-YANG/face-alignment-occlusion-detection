@@ -53,8 +53,7 @@ class OcclusionDetection(Model, object):
         else:
             for face in data:
                 prediction = \
-                    OcclusionDetection.test(img=face, is_heatmap=is_heatmap,
-                                            binary_output=True, model=model)
+                    OcclusionDetection.test(img=face, binary_output=True, model=model)
                 # print(prediction)
                 predictions.append(prediction)
                 if data_param['print_debug'] and len(predictions) % 100 == 0:

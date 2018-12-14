@@ -103,7 +103,7 @@ if args['phase'] == 'occlu':
         model = load_model(os.path.join(data_param['model_dir'], model_name))
     if feature == 'heatmap':
         val_vars = {'data_dir': val_data_dir, 'img_ext_lists': data_param['img_ext'],
-                    'label_ext': '.pts', 'flatten': True}
+                    'label_ext': '.pts', 'flatten': False}
         _, landmarks = val_data_feed(data_dict=val_vars)
         data = zip(val_data, landmarks)
         is_heatmap = True
