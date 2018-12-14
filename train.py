@@ -106,10 +106,11 @@ if args['phase'] == 'occlu':
                     'label_ext': '.pts', 'flatten': True}
         _, landmarks = val_data_feed(data_dict=val_vars)
         data = zip(val_data, landmarks)
+        is_heatmap = True
     else:
         data = val_vars
-    OcclusionDetection.val_compute(data, val_labels, model=model)
-
+        is_heatmap = False
+    OcclusionDetection.val_compute(data, val_labels, model=model, is_heatmap=is_heatmap)
 
 # face precise alignment
 if args['phase'] == 'precise':
