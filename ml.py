@@ -147,6 +147,11 @@ def occlu_ratio_compute(labels):
             count += 1
     return float(count) / len(labels)
 
+def occlu_total_ratio(labels):
+    count = 0
+    for index in range(len(labels)):
+        count += np.sum(labels[index])
+    return float(count) / (len(labels) * len(labels[0]))
 
 def accuracy_compute(labels, predictions):
     count = 0

@@ -23,6 +23,7 @@ from config.parse_param import parse_param
 from data_gen import train_data_feed
 from data_gen import val_data_feed
 from ml import load_config
+from ml import occlu_total_ratio
 from model_structure.align_v1 import FaceAlignment
 from model_structure.occlu_detect import OcclusionDetection
 from utils import count_file
@@ -97,6 +98,7 @@ if args['phase'] == 'occlu':
                                            train_vars=train_vars, val_load=val_data_feed,
                                            val_vars=val_vars, weight_path=weight_path)
     # evaluating
+    logger('total_occlu_ratio is {}'.format(occlu_total_ratio(val_labels)))
     if loss_name != 'no':
         model = load_model(os.path.join(data_param['model_dir'], model_name), {loss_name: loss})
     else:
@@ -108,7 +110,7 @@ if args['phase'] == 'occlu':
         data = zip(val_data, landmarks)
         is_heatmap = True
     else:
-        data = val_vars
+        data = val_data
         is_heatmap = False
     OcclusionDetection.val_compute(data, val_labels, model=model, is_heatmap=is_heatmap)
 
