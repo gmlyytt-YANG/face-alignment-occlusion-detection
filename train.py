@@ -23,7 +23,6 @@ from config.parse_param import parse_param
 from data_gen import train_data_feed
 from data_gen import val_data_feed
 from ml import load_config
-from ml import occlu_loss
 from model_structure.align_v1 import FaceAlignment
 from model_structure.occlu_detect import OcclusionDetection
 from utils import count_file
